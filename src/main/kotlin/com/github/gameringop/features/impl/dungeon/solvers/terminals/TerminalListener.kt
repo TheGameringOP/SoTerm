@@ -55,6 +55,7 @@ object TerminalListener {
                     currentItems.clear()
 
                     TerminalSolver.onTerminalOpen()
+                    AutoTerminal.reset()
                 }
                 else reset()
             }
@@ -67,6 +68,7 @@ object TerminalListener {
 
                 if (currentItems.size == currentType?.slotCount || currentType == TerminalType.MELODY) {
                     TerminalSolver.onItemsUpdated(packet.slot, packet.item)
+                    if (AutoTerminal.enabled) AutoTerminal.onItemsUpdated()
                 }
             }
 
@@ -124,7 +126,9 @@ object TerminalListener {
         currentTitle = ""
         currentItems.clear()
         lastWindowId = - 1
+        HumanClickOrder.lastClickedSlot = null
         TerminalSolver.onTerminalClose()
+        AutoTerminal.reset()
         TerminalType.reset()
     }
 }
