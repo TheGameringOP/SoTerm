@@ -1,6 +1,6 @@
 package com.github.gameringop.features.impl.dungeon.solvers.terminals
 
-import com.github.gameringop.SoTerm
+import com.github.gameringop.SoTerms
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.features.Feature
@@ -68,10 +68,14 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
     override fun onEnable() {
         super.onEnable()
+        AutoTerminal.register()
     }
 
     override fun onDisable() {
         super.onDisable()
+        if (! AutoTerminal.enabled) {
+            AutoTerminal.unregister()
+        }
     }
 
     override fun init() {
@@ -180,6 +184,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         register<ContainerEvent.MouseClick> {
             if (! TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
+            if (AutoTerminal.enabled && AutoTerminal.shouldAutoSolve(termType)) return@register
             event.isCanceled = true
             if (TerminalListener.checkFcDelay()) return@register
 
@@ -272,7 +277,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
             if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
 
-            if (SoTerm.debugFlags.contains("terminal")) {
+            if (SoTerms.debugFlags.contains("terminal")) {
                 ChatUtils.modMessage("Resync Timeout Triggered")
             }
 
@@ -281,6 +286,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 queue.clear()
                 solve()
                 isClicked = false
+            }
+
+            if (AutoTerminal.enabled) {
+                TerminalType.clickedStartWithSlots.clear()
+                solve()
+                AutoTerminal.onItemsUpdated()
             }
         }
     }
@@ -294,7 +305,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             mc.player
         )
 
-        if (SoTerm.debugFlags.contains("terminal")) {
+        if (SoTerms.debugFlags.contains("terminal")) {
             ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
         }
 
@@ -386,6 +397,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     if (correct != null) TerminalType.melodyCorrect = correct
                     TerminalType.melodyButton = button.toInt()
                     TerminalType.melodyCurrent = current
+                    AutoTerminal.reset()
                 }
             }
         }
