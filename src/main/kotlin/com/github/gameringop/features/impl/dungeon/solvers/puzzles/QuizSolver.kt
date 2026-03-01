@@ -1,0 +1,135 @@
+package com.github.gameringop.features.impl.dungeon.solvers.puzzles
+
+import com.github.gameringop.SoTerm.mc
+import com.github.gameringop.event.impl.ChatMessageEvent
+import com.github.gameringop.event.impl.DungeonEvent
+import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.answerColor
+import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.quizTimer
+import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.DataDownloader
+import com.github.gameringop.utils.NumbersUtils.toFixed
+import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.Utils.startsWithOneOf
+import com.github.gameringop.utils.dungeons.DungeonListener
+import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
+import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.render.Render2D
+import com.github.gameringop.utils.render.Render3D
+import com.github.gameringop.utils.render.RenderContext
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.core.BlockPos
+
+object QuizSolver {
+    private data class TriviaAnswer(var blockPos: BlockPos, var isCorrect: Boolean)
+
+    private val quizSolutions by lazy {
+        DataDownloader.loadJson<Map<String, List<String>>>("quizSolutions.json")
+    }
+
+    private val triviaOptions = List(3) { TriviaAnswer(BlockPos.ZERO, false) }
+
+    private var triviaAnswers: List<String>? = null
+    private var correctAnswer: String? = null
+
+    private var inQuiz = false
+    private var questionsStarted = false
+    private var answerTime: Long = 0
+
+
+    fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
+        if (event.room.name != "Quiz") return
+        if (inQuiz) return
+
+        inQuiz = true
+        val center = event.room.centerPos
+        val rotation = 360 - event.room.rotation !!
+
+        triviaOptions[0].blockPos = ScanUtils.getRealCoord(BlockPos(5, 70, - 9), center, rotation)
+        triviaOptions[1].blockPos = ScanUtils.getRealCoord(BlockPos(0, 70, - 6), center, rotation)
+        triviaOptions[2].blockPos = ScanUtils.getRealCoord(BlockPos(- 5, 70, - 9), center, rotation)
+    }
+
+    fun onChat(event: ChatMessageEvent) {
+        if (! LocationUtils.inDungeon) return
+        val message = event.unformattedText
+        val trimmed = message.trim()
+
+        if (message.contains("I am Oruo the Omniscient. I have lived many lives.")) {
+            questionsStarted = true
+            answerTime = DungeonListener.currentTime + 12 * 20
+            return
+        }
+
+        if (message.startsWith("[STATUE] Oruo the Omniscient: ") && message.endsWith("correctly!")) {
+            answerTime = DungeonListener.currentTime + (8.5 * 20).toInt()
+
+            if (message.contains("answered the final question")) {
+                questionsStarted = false
+                reset()
+            }
+            else if (message.contains("answered Question #")) {
+                triviaOptions.forEach { it.isCorrect = false }
+            }
+
+            return
+        }
+
+        if (trimmed.startsWithOneOf("ⓐ", "ⓑ", "ⓒ")) {
+            val optionChar = trimmed[0]
+            triviaAnswers?.firstOrNull { message.endsWith(it) }?.let { matchedAnswer ->
+                correctAnswer = "$optionChar $matchedAnswer"
+
+                when (optionChar) {
+                    'ⓐ' -> triviaOptions[0].isCorrect = true
+                    'ⓑ' -> triviaOptions[1].isCorrect = true
+                    'ⓒ' -> triviaOptions[2].isCorrect = true
+                }
+
+                ThreadUtils.scheduledTaskServer(2) {
+                    ChatUtils.modMessage("&dQuizSolver &f> &aCorrect answer is: &b${"$optionChar $matchedAnswer"}")
+                }
+            }
+            return
+        }
+
+        val newAnswers = when {
+            trimmed == "What SkyBlock year is it?" -> {
+                val year = (((System.currentTimeMillis() / 1000) - 1560276000) / 446400).toInt() + 1
+                listOf("Year $year")
+            }
+
+            else -> quizSolutions.entries.find { message.contains(it.key) }?.value
+        }
+
+        if (newAnswers != null) triviaAnswers = newAnswers
+    }
+
+    fun onRenderWorld(ctx: RenderContext) {
+        if (! inQuiz || triviaAnswers == null) return
+        triviaOptions.forEach { answer ->
+            if (! answer.isCorrect) return@forEach
+            Render3D.renderBlock(ctx, answer.blockPos, answerColor.value, phase = true)
+        }
+    }
+
+    fun onRenderOverlay(ctx: GuiGraphics) {
+        if (quizTimer.value && answerTime > 0 && questionsStarted) {
+            val secondsLeft = ((answerTime - DungeonListener.currentTime) / 20.0).toFixed(1)
+            Render2D.drawCenteredString(
+                ctx,
+                "§dQuiz: §b$secondsLeft",
+                mc.window.guiScaledWidth / 2f,
+                mc.window.guiScaledHeight / 3f,
+                scale = 3f
+            )
+        }
+    }
+
+    fun reset() {
+        inQuiz = false
+        triviaOptions.forEach { it.isCorrect = false }
+        triviaAnswers = null
+        correctAnswer = null
+        answerTime = - 1
+    }
+}

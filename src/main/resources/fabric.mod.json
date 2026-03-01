@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "soterm",
+  "version": "${version}",
+  "name": "SoTerm",
+  "description": "1.21.10 port of the greatest skyblock mod ever made!",
+  "authors": [
+    "TheGameringOP"
+  ],
+  "contact": {
+    "homepage": "https://github.com/TheGameringOP",
+    "sources": "https://github.com/TheGameringOP/SoTerm-1.21.10"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/soterm/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      {
+        "value": "com.github.gameringop.SoTerm",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "mixins": [
+    "soterm.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "~1.21.10",
+    "java": ">=21",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*"
+  }
+}
