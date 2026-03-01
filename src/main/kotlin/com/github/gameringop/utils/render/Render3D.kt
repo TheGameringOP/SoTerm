@@ -111,7 +111,7 @@ object Render3D {
         matrices.pushPose()
         matrices.translate(- cameraPos.x, - cameraPos.y, - cameraPos.z)
 
-        val buffer = ctx.consumers !!.getBuffer(if (phase) NoammRenderLayers.FILLED_THROUGH_WALLS else NoammRenderLayers.FILLED)
+        val buffer = ctx.consumers !!.getBuffer(if (phase) RenderLayers.FILLED_THROUGH_WALLS else RenderLayers.FILLED)
 
         val r = color.red / 255f
         val g = color.green / 255f
@@ -199,7 +199,7 @@ object Render3D {
 
         if (fill) ShapeRenderer.addChainedFilledBoxVertices(
             matrices,
-            consumers.getBuffer(if (phase) NoammRenderLayers.FILLED_THROUGH_WALLS else NoammRenderLayers.FILLED),
+            consumers.getBuffer(if (phase) RenderLayers.FILLED_THROUGH_WALLS else RenderLayers.FILLED),
             xd - hw, yd, zd - hw,
             xd + hw, yd + hd, zd + hw,
             fillColor.red / 255f, fillColor.green / 255f, fillColor.blue / 255f, fillColor.alpha / 255f
@@ -208,8 +208,8 @@ object Render3D {
         if (outline) ShapeRenderer.renderLineBox(
             matrices.last(),
             consumers.getBuffer(
-                if (phase) NoammRenderLayers.getLinesThroughWalls(lineWidth.toDouble())
-                else NoammRenderLayers.getLines(
+                if (phase) RenderLayers.getLinesThroughWalls(lineWidth.toDouble())
+                else RenderLayers.getLines(
                     lineWidth.toDouble()
                 )
             ),
@@ -322,7 +322,7 @@ object Render3D {
         matrixStack.translate(- cameraPos.x, - cameraPos.y, - cameraPos.z)
 
         val buffer =
-            (consumers as MultiBufferSource.BufferSource).getBuffer(NoammRenderLayers.getLinesThroughWalls(2.5))
+            (consumers as MultiBufferSource.BufferSource).getBuffer(RenderLayers.getLinesThroughWalls(2.5))
         val cameraPoint = cameraPos.add(Vec3.directionFromRotation(camera.xRot, camera.yRot))
         val normal = point.toVector3f().sub(cameraPoint.x.toFloat(), cameraPoint.y.toFloat(), cameraPoint.z.toFloat())
             .normalize()
