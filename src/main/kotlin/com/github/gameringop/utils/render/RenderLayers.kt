@@ -18,7 +18,7 @@ object RenderLayers {
         RenderType.create(
             "lines_through_walls",
             RenderType.TRANSIENT_BUFFER_SIZE, false, false,
-            NoammRenderPipelines.LINES_THROUGH_WALLS,
+            RenderPipelines.LINES_THROUGH_WALLS,
             CompositeState.builder()
                 .setLineState(RenderStateShard.LineStateShard(OptionalDouble.of(width)))
                 .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
@@ -49,7 +49,7 @@ object RenderLayers {
 
     val FILLED_THROUGH_WALLS: RenderType.CompositeRenderType = RenderType.create(
         "filled_through_walls", RenderType.TRANSIENT_BUFFER_SIZE, false, true,
-        NoammRenderPipelines.FILLED_THROUGH_WALLS,
+        RenderPipelines.FILLED_THROUGH_WALLS,
         CompositeState.builder()
             .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
             .createCompositeState(false)
