@@ -5,7 +5,8 @@
 
 > 1.21.10 port of the greatest skyblock mod ever!
 
-<img width="2559" height="1439" alt="image" src="https://github.com/user-attachments/assets/4185f869-e178-408d-8f28-987c9d8e1bf4" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5388b1cb-655a-4daf-a4db-a410b186d8f3" />
+
 
 ⚠️ This project is still a work in progress.  
 
@@ -31,7 +32,7 @@
 
 ## 🤝 Contributions
 
-Contributions are always welcome! If you have a feature idea or want to fix a bug, feel free to open an issue or submit a pull request. (unless Liore says “nah” 😄)
+Contributions are always welcome! If you have a feature idea or want to fix a bug, feel free to open an issue or submit a pull request.
 
 * Open an **Issue** to suggest something
 * Make a **Pull Request** to add/fix stuff
