@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.RenderType.CompositeState
 import java.util.OptionalDouble
 import java.util.function.DoubleFunction
 
-object NoammRenderLayers {
+object RenderLayers {
     private val linesThroughWallsLayers: Double2ObjectMap<RenderType.CompositeRenderType> = Double2ObjectOpenHashMap()
     private val linesLayers: Double2ObjectMap<RenderType.CompositeRenderType> = Double2ObjectOpenHashMap()
 
