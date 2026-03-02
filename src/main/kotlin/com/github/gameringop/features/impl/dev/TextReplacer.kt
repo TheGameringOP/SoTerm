@@ -15,7 +15,7 @@ import java.util.regex.Pattern
 
 object TextReplacer {
     val replaceMap = ConcurrentHashMap<String, String>().apply {
-        put("SoTerm", "{\"text\":\"\",\"extra\":[{\"text\":\"S\",\"color\":\"#C90000\",\"bold\":true},{\"text\":\"o\",\"color\":\"#9F0000\",\"bold\":true},{\"text\":\"T\",\"color\":\"#740000\",\"bold\":true},{\"text\":\"e\",\"color\":\"#550000\",\"bold\":true},{\"text\":\"r\",\"color\":\"#2F0000\",\"bold\":true},{\"text\":\"m\",\"color\":\"#140000\",\"bold\":true}]}")
+        put("SoTerm", "{\"text\":\"\",\"extra\":[{\"text\":\"S\",\"color\":\"#FF0000\",\"bold\":true},{\"text\":\"o\",\"color\":\"#E40000\",\"bold\":true},{\"text\":\"T\",\"color\":\"#C20000\",\"bold\":true},{\"text\":\"e\",\"color\":\"#B20000\",\"bold\":true},{\"text\":\"r\",\"color\":\"#9B0000\",\"bold\":true},{\"text\":\"m\",\"color\":\"#840000\",\"bold\":true}]}")
     }
 
     private val cache = ConcurrentHashMap<String, Component>()
