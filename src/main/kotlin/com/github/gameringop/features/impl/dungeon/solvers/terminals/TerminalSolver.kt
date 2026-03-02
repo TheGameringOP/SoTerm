@@ -51,7 +51,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val numbersSecondColor by ColorSetting("Numbers: 2nd Click", Color(0, 255, 0, 155)).showIf { numbers.value }
     val numbersThirdColor by ColorSetting("Numbers: 3rd Click", Color(0, 255, 0, 55)).showIf { numbers.value }
     val rubixPositiveColor by ColorSetting("Rubix: Positive (+)", Color(0, 255, 0, 255)).showIf { rubix.value }
-    val rubixNegativeColor by ColorSetting("Rubix: Negative (-)", Color(205, 0, 0, 255)).showIf { rubix.value }
+    val rubixNegativeColor by ColorSetting("Rubix: Negative (-)", Color(255, 0, 0, 255)).showIf { rubix.value }
     val melodyColumnColor by ColorSetting("Melody: Column", Color(255, 0, 255, 127)).showIf { melody.value }
     val melodyIndicatorColor by ColorSetting("Melody: Indicator", Color(0, 255, 0, 255)).showIf { melody.value }
     val melodyWrongColor by ColorSetting("Melody: Wrong", Color(255, 0, 0, 255)).showIf { melody.value }
