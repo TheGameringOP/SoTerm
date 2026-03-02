@@ -69,10 +69,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
     override fun onEnable() {
         super.onEnable()
+        register()
     }
 
     override fun onDisable() {
         super.onDisable()
+        unregister()
     }
 
     override fun init() {
@@ -425,5 +427,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     fun onTerminalClose() {
         queue.clear()
         solution.clear()
+    }
+
+    fun register() {
+        TerminalListener.packetRecivedListener.register()
+        TerminalListener.packetSentListener.register()
+        TerminalListener.tickListener.register()
+        TerminalListener.worldChangeListener.register()
+        Scheduler.tickListener.register()
+        Scheduler.timeListener.register()
+    }
+
+    fun unregister() {
+        TerminalListener.packetRecivedListener.unregister()
+        TerminalListener.packetSentListener.unregister()
+        TerminalListener.tickListener.unregister()
+        TerminalListener.worldChangeListener.unregister()
+        Scheduler.timeListener.unregister()
+        Scheduler.tickListener.unregister()
     }
 }
