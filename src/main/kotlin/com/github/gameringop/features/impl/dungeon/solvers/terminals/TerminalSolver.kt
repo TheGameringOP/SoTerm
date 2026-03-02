@@ -165,7 +165,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 }
             }
 
-            if (mode.value == 1 && queueString) Render2D.drawCenteredString(
+            if (mode.value == 1 && queueString.value) Render2D.drawCenteredString(
                 event.context,
                 "Queue: ${queue.size}",
                 offsetX + width / 2,
