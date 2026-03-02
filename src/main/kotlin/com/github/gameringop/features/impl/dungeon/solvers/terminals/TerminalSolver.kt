@@ -38,7 +38,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val backgroundColor by ColorSetting("Background Color", Color(0, 0, 0, 100)).section("Settings - UI")
     val borderColor by ColorSetting("Border Color", Color(255, 255, 255))
     val titleColor by ColorSetting("Title Text Color", Color.WHITE)
-    val queueString by ToggleSetting("Queue: Shows Number").showIf {mode.value == 1}
+    val queueString by ToggleSetting("Queue: Shows Number").showIf { mode.value == 1 }
     val queueColor by ColorSetting("Queue Text Color", Color.CYAN)
     val overlayTextColor by ColorSetting("Overlay Text Color", Color.WHITE)
 
