@@ -38,12 +38,10 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
 	private val mode by DropdownSetting("Render Mode", 2, listOf("Fill", "Outline", "Filled Outline"))
 	
 	private val esp by ToggleSetting("See Through Walls")
-    private val espBats by ToggleSetting("Highlight Bats", true).withDescription("Highlights Bats in Dungeons.").showIf { esp.value }
-    private val espFels by ToggleSetting("Highlight Fels", false).withDescription("Highlights Fels, even when they are invisible.").showIf { esp.value }
 
     private val starMobColor by ColorSetting("Star Mob Color", Color.GREEN, false).section("General Colors").withDescription("Default color for all Starred mobs.")
     private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.").showIf { espBats.value }
-    private val felColor by ColorSetting("Fel Color", Color.PINK, false).withDescription("The color used for fels.").showIf { espFels.value }
+    private val felColor by ColorSetting("Fel Color", Color.GREEN, false).withDescription("The color used for fels.").showIf { espFels.value }
 
 
     override fun init() {
@@ -110,8 +108,8 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
     }
 
     private fun getColor(entity: Entity): Color? {
-        if (entity is Bat) return if (espBats.value && ! entity.isInvisible && ! entity.isPassenger) batColor.value else null
-        if (entity is EnderMan) return if (espFels.value && entity.name.unformattedText == "Dinnerbone") felColor.value else null
+        if (entity is Bat) return if (! entity.isPassenger) batColor.value else null
+        if (entity is EnderMan) return if (entity.name.unformattedText == "Dinnerbone") felColor.value else null
         if (entity is Player) {
             val name = entity.name.unformattedText.takeUnless { it.isBlank() } ?: return null
             if (name.contains("Shadow Assassin")) return starMobColor.value
