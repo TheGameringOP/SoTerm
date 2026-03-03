@@ -67,7 +67,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val solution = mutableListOf<TerminalClick>()
     private val queue = mutableListOf<TerminalClick>()
     private var isClicked = false
-    private var melodyRow = 16
 
     override fun onEnable() {
         super.onEnable()
@@ -146,9 +145,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             }
 
             if (TerminalListener.currentType == TerminalType.MELODY) {
-                val correct = TerminalType.melodyCorrect
-                val button = TerminalType.melodyButton
-                val current = TerminalType.melodyCurrent
+                val correct = TerminalType.melodyState.correct
+                val button = TerminalType.melodyState.button
+                val current = TerminalType.melodyState.current
 
                 if (correct != null && button != null && current != null) {
                     drawSlot(event.context, offsetX + (correct + 1) * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
@@ -204,7 +203,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val slotX = floor((mx - offsetX) / 18).toInt()
             val slotY = floor((my - offsetY) / 18).toInt()
 
-            if (slotX !in 0 .. 8 || slotY < 0) return@register
+            if (slotX !in 0..8 || slotY < 0) return@register
 
             val slot = slotX + slotY * 9
             if (slot >= windowSize) return@register
@@ -223,19 +222,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 }
 
                 TerminalListener.currentType == TerminalType.MELODY -> {
-                    if (SoTerm.debugFlags.contains("melody") && slot == melodyRow && slot.equalsOneOf(16, 25, 34, 43)) ChatUtils.modMessage("Row: ${(melodyRow+2)/9-1} | Current: ${TerminalType.melodyCurrent} | Correct: ${TerminalType.melodyCorrect}")
-                    if (melodyBlock.value) {
-                        if (TerminalType.melodyCurrent != null && TerminalType.melodyCorrect != null && TerminalType.melodyCurrent != TerminalType.melodyCorrect) return@register
-                        if (SoTerm.debugFlags.contains("melodyRow") && slot == melodyRow && slot.equalsOneOf(16, 25, 34, 43)) ChatUtils.modMessage("Slot: ${(slot+2)/9-1} | Row: ${(melodyRow+2)/9-1}")
-                        if (slot.equalsOneOf(16, 25, 34, 43) && slot == melodyRow) {
-                            sendClickPacket(slot, 0)
-                            melodyRow += 9
-                        }
-                    }
-                    else if (slot.equalsOneOf(16, 25, 34, 43)) {
-                        sendClickPacket(slot, 0)
-                        if (TerminalType.melodyCurrent != null && TerminalType.melodyCorrect != null && TerminalType.melodyCurrent != TerminalType.melodyCorrect) melodyRow += 9
-                    }
+                    handleMelodyClick(slot)
                     return@register
                 }
 
@@ -246,6 +233,75 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
             if (mode.value != 0) predict(click)
             if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
+        }
+    }
+
+    private fun handleMelodyClick(slot: Int) {
+        val melodyState = TerminalType.melodyState
+        val currentTime = System.currentTimeMillis()
+        
+        val melodyRows = listOf(16, 25, 34, 43)
+        
+        if (slot in melodyRows) {
+            val clickedRowIndex = melodyRows.indexOf(slot)
+            
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("Clicked row $clickedRowIndex (slot $slot) | Expected: ${melodyState.expectedNextRow}")
+            }
+            
+            if (melodyBlock.value) {
+                val current = TerminalType.melodyState.current
+                val correct = TerminalType.melodyState.correct
+                
+                if (current != null && correct != null) {
+                    if (current != correct) {
+                        if (SoTerm.debugFlags.contains("melody")) {
+                            ChatUtils.modMessage("Blocked click - wrong column (current: $current, correct: $correct)")
+                        }
+                        return
+                    }
+                }
+                
+                val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
+                
+                if (clickedRowIndex == expectedRowIndex) {
+                    sendClickPacket(slot, 0)
+                    
+                    melodyState.expectedNextRow += 9
+                    melodyState.lastClickTime = currentTime
+                    melodyState.clickHistory.add(clickedRowIndex)
+                    
+                    if (SoTerm.debugFlags.contains("melody")) {
+                        ChatUtils.modMessage("Clicked expected row $clickedRowIndex, next expected: ${melodyState.expectedNextRow}")
+                    }
+                } else {
+                    if (currentTime - melodyState.lastClickTime > 300) {
+                        if (SoTerm.debugFlags.contains("melody")) {
+                            ChatUtils.modMessage("Possible desync - clicked $clickedRowIndex but expected $expectedRowIndex")
+                        }
+                        
+                        val lastClicked = melodyState.clickHistory.lastOrNull()
+                        if (lastClicked != null && clickedRowIndex == lastClicked + 1) {
+                            melodyState.expectedNextRow = slot + 9
+                            sendClickPacket(slot, 0)
+                            melodyState.clickHistory.add(clickedRowIndex)
+                            melodyState.lastClickTime = currentTime
+                            
+                            if (SoTerm.debugFlags.contains("melody")) {
+                                ChatUtils.modMessage("Recovered from desync, new expected: ${melodyState.expectedNextRow}")
+                            }
+                        }
+                    }
+                }
+            } else {
+                sendClickPacket(slot, 0)
+                
+                if (TerminalType.melodyState.current != null && TerminalType.melodyState.correct != null) {
+                    if (TerminalType.melodyState.current != TerminalType.melodyState.correct) {
+                        melodyState.expectedNextRow += 9
+                    }
+                }
+            }
         }
     }
 
@@ -273,7 +329,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
         else if (TerminalListener.currentType == TerminalType.RUBIX) {
             val currentSolution = solution.find { it.slotId == click.slotId } ?: return
-            val change = if (click.btn == 0) - 1 else 1
+            val change = if (click.btn == 0) -1 else 1
             val newDiff = currentSolution.btn + change
 
             if (newDiff == 0) solution.remove(currentSolution)
@@ -376,7 +432,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 for (i in 0 until 5) {
                     panes.forEach { (_, itemStack) ->
                         val itemIdx = TerminalType.rubixOrder.indexOf(itemStack.item)
-                        if (itemIdx != - 1) {
+                        if (itemIdx != -1) {
                             val dist = abs(i - itemIdx)
                             val clicksNeeded = if (dist > 2) 5 - dist else dist
                             costs[i] += clicksNeeded
@@ -386,10 +442,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 val origin = costs.indices.minByOrNull { costs[it] } ?: 0
                 panes.forEach { (slotId, itemStack) ->
                     val currentIdx = TerminalType.rubixOrder.indexOf(itemStack.item)
-                    if (currentIdx != - 1 && currentIdx != origin) {
+                    if (currentIdx != -1 && currentIdx != origin) {
                         var diff = origin - currentIdx
                         if (diff > 2) diff -= 5
-                        if (diff < - 2) diff += 5
+                        if (diff < -2) diff += 5
                         solution.add(TerminalClick(slotId, diff))
                     }
                 }
@@ -400,9 +456,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     val correct = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key?.minus(1)
                     val button = floor((updatedSlot1 / 9).toDouble()) - 1
                     val current = updatedSlot1 % 9 - 1
-                    if (correct != null) TerminalType.melodyCorrect = correct
-                    TerminalType.melodyButton = button.toInt()
-                    TerminalType.melodyCurrent = current
+                    if (correct != null) {
+                        TerminalType.melodyState.correct = correct
+                    }
+                    TerminalType.melodyState.button = button.toInt()
+                    TerminalType.melodyState.current = current
                 }
             }
         }
@@ -410,7 +468,24 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
     fun onItemsUpdated(slot: Int = 0, item: ItemStack = ItemStack.EMPTY) {
         solve(slot, item)
-
+        
+        if (TerminalListener.currentType == TerminalType.MELODY) {
+            val melodyState = TerminalType.melodyState
+            val current = melodyState.current
+            val correct = melodyState.correct
+            val button = melodyState.button
+            
+            if (current != null && correct != null && button != null) {
+                if (current == correct) {
+                    melodyState.needsResync = false
+                } else {
+                    if (System.currentTimeMillis() - melodyState.lastClickTime > 500) {
+                        melodyState.needsResync = true
+                    }
+                }
+            }
+        }
+        
         if (mode.value == 1 && queue.isNotEmpty() && enabled) {
             val nextClick = queue[0]
 
@@ -431,20 +506,19 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (isValid) {
                 queue.forEach(::predict)
                 click(queue.removeAt(0))
-            }
-            else queue.clear()
+            } else queue.clear()
         }
     }
 
     fun onTerminalOpen() {
-        ::isClicked.set(false)
-        melodyRow = 16
+        isClicked = false
+        TerminalType.reset()
     }
 
     fun onTerminalClose() {
         queue.clear()
         solution.clear()
-        melodyRow = 16
+        TerminalType.reset()
     }
 
     fun register() {
