@@ -282,42 +282,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
     }
 
-    override fun onItemsUpdated(slot: Int, item: ItemStack) {
-        solve(slot, item)
-        
-        if (TerminalListener.currentType == TerminalType.MELODY && waitingForLimeMove) {
-            if (item.item == Items.LIME_STAINED_GLASS_PANE && slot != lastLimeSlot) {
-                waitingForLimeMove = false
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Lime glass moved from $lastLimeSlot to $slot, clicks re-enabled")
-                }
-            }
-        }
-        
-        if (mode.value == 1 && queue.isNotEmpty() && enabled) {
-            val nextClick = queue[0]
-
-            val isValid = when (TerminalListener.currentType) {
-                TerminalType.NUMBERS -> {
-                    val firstSol = solution.firstOrNull()
-                    firstSol != null && firstSol.slotId == nextClick.slotId
-                }
-
-                TerminalType.RUBIX -> {
-                    val sol = solution.find { it.slotId == nextClick.slotId }
-                    sol != null && ((sol.btn > 0 && nextClick.btn == 0) || (sol.btn < 0 && nextClick.btn == 1))
-                }
-
-                else -> solution.any { it.slotId == nextClick.slotId }
-            }
-
-            if (isValid) {
-                queue.forEach(::predict)
-                click(queue.removeAt(0))
-            } else queue.clear()
-        }
-    }
-
     private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
         when (slotStyle.value) {
             0 -> Render2D.drawRect(ctx, x, y, w, h, color)
@@ -476,6 +440,42 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     TerminalType.melodyState.current = current
                 }
             }
+        }
+    }
+
+    fun onItemsUpdated(slot: Int, item: ItemStack) {
+        solve(slot, item)
+        
+        if (TerminalListener.currentType == TerminalType.MELODY && waitingForLimeMove) {
+            if (item.item == Items.LIME_STAINED_GLASS_PANE && slot != lastLimeSlot) {
+                waitingForLimeMove = false
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("Lime glass moved from $lastLimeSlot to $slot, clicks re-enabled")
+                }
+            }
+        }
+        
+        if (mode.value == 1 && queue.isNotEmpty() && enabled) {
+            val nextClick = queue[0]
+
+            val isValid = when (TerminalListener.currentType) {
+                TerminalType.NUMBERS -> {
+                    val firstSol = solution.firstOrNull()
+                    firstSol != null && firstSol.slotId == nextClick.slotId
+                }
+
+                TerminalType.RUBIX -> {
+                    val sol = solution.find { it.slotId == nextClick.slotId }
+                    sol != null && ((sol.btn > 0 && nextClick.btn == 0) || (sol.btn < 0 && nextClick.btn == 1))
+                }
+
+                else -> solution.any { it.slotId == nextClick.slotId }
+            }
+
+            if (isValid) {
+                queue.forEach(::predict)
+                click(queue.removeAt(0))
+            } else queue.clear()
         }
     }
 
