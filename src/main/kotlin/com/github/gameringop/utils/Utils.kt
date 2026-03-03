@@ -7,7 +7,7 @@ import java.net.URI
 import kotlin.reflect.KClass
 
 object Utils {
-    val favoriteColor = Color(0, 134, 255)
+    val favoriteColor = Color(0, 255, 0)
 
     fun openDiscordLink() {
         // to not false flag regex rat scanners
