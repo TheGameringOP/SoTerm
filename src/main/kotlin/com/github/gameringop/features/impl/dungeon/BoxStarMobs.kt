@@ -74,7 +74,8 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
             checked.clear()
         }
 
-        register<RenderWorldEvent> { event ->
+        register<RenderWorldEvent> {
+    		val event = it.event
 			if (!LocationUtils.inDungeon || inBoss) return@register
 			if (starMobs.isEmpty()) return@register
 
