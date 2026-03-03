@@ -74,7 +74,8 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
             checked.clear()
         }
 
-		register<RenderWorldEvent> { event ->
+		register<RenderWorldEvent> { ctxEvent ->
+			val event = ctxEvent.event
 		    if (!LocationUtils.inDungeon || inBoss) return@register
 		    if (starMobs.isEmpty()) return@register
 		
@@ -83,7 +84,8 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
 		        if (!entity.isAlive) continue
 		        val color = getColor(entity) ?: starMobColor.value
 		        val partial = event.partialTicks
-		
+    			val ctx = event.ctx
+				
 		        val interpX = entity.xOld + (entity.x - entity.xOld) * partial
 		        val interpY = entity.yOld + (entity.y - entity.yOld) * partial
 		        val interpZ = entity.zOld + (entity.z - entity.zOld) * partial
@@ -92,7 +94,7 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
 		        val height = entity.boundingBox.ysize
 		
 		        Render3D.renderBox(
-		            event.ctx,
+		            ctx,
 		            interpX,
 		            interpY,
 		            interpZ,
