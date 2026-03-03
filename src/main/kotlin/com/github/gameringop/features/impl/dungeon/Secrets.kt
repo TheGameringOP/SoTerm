@@ -47,7 +47,7 @@ object Secrets: Feature() {
         .withDescription("The color of the secret highlight box.")
         .showIf { secretClicked.value }
 
-    private val mode by DropdownSetting("Render Mode", 2, listOf("Fill", "Outline", "Filled Outline"))
+    private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
         .withDescription("Choose how the box is rendered.")
         .showIf { secretClicked.value }
 
