@@ -19,7 +19,9 @@ import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.location.LocationUtils.dungeonFloorNumber
 import com.github.gameringop.utils.location.LocationUtils.inBoss
 import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.render.RenderHelper // Add this import
+import com.github.gameringop.utils.render.RenderHelper.renderX
+import com.github.gameringop.utils.render.RenderHelper.renderY
+import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -82,7 +84,6 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
                 val entity = mc.level?.getEntity(id) ?: continue
                 if (!entity.isAlive) continue
 
-                // Get interpolated position from RenderHelper
                 val renderX = entity.renderX
                 val renderY = entity.renderY
                 val renderZ = entity.renderZ
@@ -93,7 +94,6 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
                 
                 val color = getColor(entity) ?: starMobColor.value
 
-                // Use interpolated position for rendering
                 Render3D.renderBox(
                     ctx = event.ctx,
                     x = renderX,
