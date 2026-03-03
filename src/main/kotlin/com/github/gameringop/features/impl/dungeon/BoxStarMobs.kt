@@ -30,15 +30,15 @@ import net.minecraft.world.entity.monster.EnderMan
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 
-object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
+object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
     private val dungeonMobRegex = Regex("^.+❤$")
 
     private val starMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
 
-	private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
-	
-	private val esp by ToggleSetting("See Through Walls")
+    private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
+    
+    private val esp by ToggleSetting("See Through Walls")
 
     private val starMobColor by ColorSetting("Star Mob Color", Color.GREEN, false).section("General Colors").withDescription("Default color for all Starred mobs.")
     private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.")
@@ -75,52 +75,40 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
         }
 
         register<RenderWorldEvent> {
-			if (!LocationUtils.inDungeon || inBoss) return@register
-			if (starMobs.isEmpty()) return@register
+            if (!LocationUtils.inDungeon || inBoss) return@register
+            if (starMobs.isEmpty()) return@register
 
-			for (id in starMobs) {
-				val entity = mc.level?.getEntity(id) ?: continue
-				if (!entity.isAlive) continue
+            for (id in starMobs) {
+                val entity = mc.level?.getEntity(id) ?: continue
+                if (!entity.isAlive) continue
 
-                val renderBB = entity.renderBoundingBox
+                // Get interpolated position from RenderHelper
+                val renderX = entity.renderX
+                val renderY = entity.renderY
+                val renderZ = entity.renderZ
                 
-				val color = getColor(entity) ?: starMobColor.value
+                val bb = entity.boundingBox
+                val width = bb.xsize
+                val height = bb.ysize
+                
+                val color = getColor(entity) ?: starMobColor.value
 
-				Render3D.renderBox(
-					event.ctx,
-					renderBB,
-					outlineColor = color,
-					fillColor = color.withAlpha(50),
+                // Use interpolated position for rendering
+                Render3D.renderBox(
+                    ctx = event.ctx,
+                    x = renderX,
+                    y = renderY,
+                    z = renderZ,
+                    width = width,
+                    height = height,
+                    outlineColor = color,
+                    fillColor = color.withAlpha(50),
                     outline = mode.value.equalsOneOf(1, 2),
                     fill = mode.value.equalsOneOf(0, 2),
-					phase = esp.value
-				)
-			}
-		}
-    }
-
-    private fun Render3D.Companion.renderBox(
-        ctx: RenderContext,
-        bb: net.minecraft.world.phys.AABB,
-        outlineColor: Color,
-        fillColor: Color,
-        outline: Boolean,
-        fill: Boolean,
-        phase: Boolean
-    ) {
-        renderBox(
-            ctx,
-            (bb.minX + bb.maxX) / 2.0,
-            bb.minY,
-            (bb.minZ + bb.maxZ) / 2.0,
-            bb.xsize,
-            bb.ysize,
-            outlineColor,
-            fillColor,
-            outline,
-            fill,
-            phase
-        )
+                    phase = esp.value
+                )
+            }
+        }
     }
 
     private fun getColor(entity: Entity): Color? {
