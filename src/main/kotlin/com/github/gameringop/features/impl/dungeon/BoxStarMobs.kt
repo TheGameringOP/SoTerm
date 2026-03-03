@@ -35,7 +35,7 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
     private val starMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
 
-	private val mode by DropdownSetting("Render Mode", 2, listOf("Fill", "Outline", "Filled Outline"))
+	private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
 	
 	private val esp by ToggleSetting("See Through Walls")
 
