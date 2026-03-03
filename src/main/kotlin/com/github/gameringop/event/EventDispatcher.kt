@@ -39,7 +39,7 @@ object EventDispatcher {
 
     fun init() {
         WorldRenderEvents.END_MAIN.register { context ->
-            EventBus.post(RenderWorldEvent(RenderContext.fromContext(context)))
+            EventBus.post(RenderWorldEvent(RenderContext.fromContext(context), mc.deltaFrameTime.toFloat()))
         }
 
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
