@@ -67,6 +67,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val solution = mutableListOf<TerminalClick>()
     private val queue = mutableListOf<TerminalClick>()
     private var isClicked = false
+    private val clickCooldowns = mutableMapOf<Int, Long>()
 
     override fun onEnable() {
         super.onEnable()
@@ -240,6 +241,13 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         val melodyState = TerminalType.melodyState
         val currentTime = System.currentTimeMillis()
         
+        if (currentTime - (clickCooldowns[slot] ?: 0) < 150) {
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("Click cooldown for slot $slot")
+            }
+            return
+        }
+        
         val melodyRows = listOf(16, 25, 34, 43)
         
         if (slot in melodyRows) {
@@ -253,18 +261,39 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 val current = TerminalType.melodyState.current
                 val correct = TerminalType.melodyState.correct
                 
-                if (current != null && correct != null) {
-                    if (current != correct) {
+                if (current == null || correct == null) {
+                    val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
+                    
+                    if (clickedRowIndex == expectedRowIndex) {
+                        clickCooldowns[slot] = currentTime
+                        sendClickPacket(slot, 0)
+                        
+                        melodyState.expectedNextRow += 9
+                        melodyState.lastClickTime = currentTime
+                        melodyState.clickHistory.add(clickedRowIndex)
+                        
                         if (SoTerm.debugFlags.contains("melody")) {
-                            ChatUtils.modMessage("Blocked click - wrong column (current: $current, correct: $correct)")
+                            ChatUtils.modMessage("Clicked expected row $clickedRowIndex (position-based), next expected: ${melodyState.expectedNextRow}")
                         }
-                        return
+                    } else {
+                        if (SoTerm.debugFlags.contains("melody")) {
+                            ChatUtils.modMessage("Blocked click - wrong row (position-based)")
+                        }
                     }
+                    return
+                }
+                
+                if (current != correct) {
+                    if (SoTerm.debugFlags.contains("melody")) {
+                        ChatUtils.modMessage("Blocked click - wrong column (current: $current, correct: $correct)")
+                    }
+                    return
                 }
                 
                 val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
                 
                 if (clickedRowIndex == expectedRowIndex) {
+                    clickCooldowns[slot] = currentTime
                     sendClickPacket(slot, 0)
                     
                     melodyState.expectedNextRow += 9
@@ -283,6 +312,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                         val lastClicked = melodyState.clickHistory.lastOrNull()
                         if (lastClicked != null && clickedRowIndex == lastClicked + 1) {
                             melodyState.expectedNextRow = slot + 9
+                            clickCooldowns[slot] = currentTime
                             sendClickPacket(slot, 0)
                             melodyState.clickHistory.add(clickedRowIndex)
                             melodyState.lastClickTime = currentTime
@@ -294,6 +324,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             } else {
+                clickCooldowns[slot] = currentTime
                 sendClickPacket(slot, 0)
                 
                 if (TerminalType.melodyState.current != null && TerminalType.melodyState.correct != null) {
@@ -518,6 +549,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     fun onTerminalClose() {
         queue.clear()
         solution.clear()
+        clickCooldowns.clear()
         TerminalType.reset()
     }
 
