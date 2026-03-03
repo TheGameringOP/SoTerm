@@ -41,7 +41,7 @@ object StarMob: Feature("Highlights all starred mobs in a dungeon.") {
     private val espBats by ToggleSetting("Highlight Bats", true).withDescription("Highlights Bats in Dungeons.").showIf { esp.value }
     private val espFels by ToggleSetting("Highlight Fels", false).withDescription("Highlights Fels, even when they are invisible.").showIf { esp.value }
 
-    private val starMobColor by ColorSetting("Star Mob Color", Color.YELLOW, false).section("General Colors").withDescription("Default color for all Starred mobs.")
+    private val starMobColor by ColorSetting("Star Mob Color", Color.GREEN, false).section("General Colors").withDescription("Default color for all Starred mobs.")
     private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.").showIf { espBats.value }
     private val felColor by ColorSetting("Fel Color", Color.PINK, false).withDescription("The color used for fels.").showIf { espFels.value }
 
