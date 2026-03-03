@@ -224,6 +224,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
                 TerminalListener.currentType == TerminalType.MELODY -> {
                     if (SoTerm.debugFlags.contains("melody") && slot == melodyRow && slot.equalsOneOf(16, 25, 34, 43)) ChatUtils.modMessage("Row: ${(melodyRow+2)/9-1} | Current: ${TerminalType.melodyCurrent} | Correct: ${TerminalType.melodyCorrect}")
+                    if (SoTerm.debugFlags.contains("melodyRow") && slot == melodyRow && slot.equalsOneOf(16, 25, 34, 43)) ChatUtils.modMessage("Slot: ${(slot+2)/9-1} | Row: ${(melodyRow+2)/9-1}")
                     if (melodyBlock.value) {
                         if (TerminalType.melodyCurrent != null && TerminalType.melodyCorrect != null && TerminalType.melodyCurrent != TerminalType.melodyCorrect) return@register
                         if (slot.equalsOneOf(16, 25, 34, 43) && slot == melodyRow) {
