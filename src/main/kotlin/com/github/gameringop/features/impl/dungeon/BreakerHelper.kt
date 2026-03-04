@@ -24,7 +24,7 @@ object BreakerHelper: Feature("Zero Ping Dungeon Breaker") {
         Blocks.BARRIER, Blocks.BEDROCK, Blocks.COMMAND_BLOCK, Blocks.TNT, Blocks.CHEST, Blocks.PLAYER_HEAD,
         Blocks.PLAYER_WALL_HEAD, Blocks.TRAPPED_CHEST, Blocks.END_PORTAL_FRAME, Blocks.END_PORTAL, Blocks.STICKY_PISTON,
         Blocks.PISTON_HEAD, Blocks.PISTON, Blocks.MOVING_PISTON, Blocks.LEVER, Blocks.STONE_BUTTON,
-        Blocks.SKELETON_SKULL, Blocks.SKELETON_WALL_SKULL, Blocks.WITHER_SKELETON_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL, Blocks.COAL_BLOCK
+        Blocks.SKELETON_SKULL, Blocks.SKELETON_WALL_SKULL, Blocks.WITHER_SKELETON_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL
     )
 
     override fun init() {
@@ -44,7 +44,7 @@ object BreakerHelper: Feature("Zero Ping Dungeon Breaker") {
         if (! LocationUtils.inDungeon) return
         if (mc.player?.mainHandItem?.skyblockId != "DUNGEONBREAKER") return
         if (ScanUtils.currentRoom?.data?.type.equalsOneOf(RoomType.PUZZLE, RoomType.FAIRY)) return
-        val state = WorldUtils.getStateAt(pos).takeUnless { it.block in blacklist || it.block == Blocks.OBSIDIAN } ?: return
+        val state = WorldUtils.getStateAt(pos).takeUnless { it.block in blacklist || it.block == Blocks.OBSIDIAN || it.block == Blocks.COAL_BLOCK } ?: return
 
         mc.level?.removeBlock(pos, false)
         mc.level?.playLocalSound(
