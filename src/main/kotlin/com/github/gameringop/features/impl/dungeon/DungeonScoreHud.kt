@@ -24,39 +24,33 @@ import kotlin.math.ceil
 
 object DungeonScoreHud : Feature("Dungeon Score HUD") {
     
-    // Renamed to avoid conflict with Feature.enabled
     private val hudEnabled by ToggleSetting("Enabled", true).section("Main")
     private val minimized by ToggleSetting("Minimized Mode", false)
         .withDescription("Shows only the score and rank in one line")
     
-    // Spirit Tracking
     private val spiritTracking by DropdownSetting("Spirit Tracking", 1, listOf(
         "Off (No Spirit bonus)",
         "Assume Yes (Most parties have Spirit)",
         "Auto (Requires API Key)"
     )).section("Spirit Tracking")
     
-    // Section toggles
     private val showDungeonStatus by ToggleSetting("Show Dungeon Status", true).section("Sections")
     private val showScoreSection by ToggleSetting("Show Score Section", true)
     
-    // Dungeon Status sub-toggles
-    private val showDeaths by ToggleSetting("Show Deaths", true).showIf { showDungeonStatus.get() }
-    private val showMissingPuzzles by ToggleSetting("Show Missing Puzzles", true).showIf { showDungeonStatus.get() }
-    private val showFailedPuzzles by ToggleSetting("Show Failed Puzzles", true).showIf { showDungeonStatus.get() }
-    private val showSecrets by ToggleSetting("Show Secrets", true).showIf { showDungeonStatus.get() }
-    private val showCrypts by ToggleSetting("Show Crypts", true).showIf { showDungeonStatus.get() }
-    private val showMimic by ToggleSetting("Show Mimic", true).showIf { showDungeonStatus.get() }
+    private val showDeaths by ToggleSetting("Show Deaths", true).showIf { showDungeonStatus.value }
+    private val showMissingPuzzles by ToggleSetting("Show Missing Puzzles", true).showIf { showDungeonStatus.value }
+    private val showFailedPuzzles by ToggleSetting("Show Failed Puzzles", true).showIf { showDungeonStatus.value }
+    private val showSecrets by ToggleSetting("Show Secrets", true).showIf { showDungeonStatus.value }
+    private val showCrypts by ToggleSetting("Show Crypts", true).showIf { showDungeonStatus.value }
+    private val showMimic by ToggleSetting("Show Mimic", true).showIf { showDungeonStatus.value }
     
-    // Score sub-toggles
-    private val showSkillScore by ToggleSetting("Show Skill Score", true).showIf { showScoreSection.get() }
-    private val showExploreScore by ToggleSetting("Show Explore Score", true).showIf { showScoreSection.get() }
-    private val showSpeedScore by ToggleSetting("Show Speed Score", true).showIf { showScoreSection.get() }
-    private val showBonusScore by ToggleSetting("Show Bonus Score", true).showIf { showScoreSection.get() }
-    private val showTotalScore by ToggleSetting("Show Total Score", true).showIf { showScoreSection.get() }
-    private val showRank by ToggleSetting("Show Rank", true).showIf { showScoreSection.get() }
+    private val showSkillScore by ToggleSetting("Show Skill Score", true).showIf { showScoreSection.value }
+    private val showExploreScore by ToggleSetting("Show Explore Score", true).showIf { showScoreSection.value }
+    private val showSpeedScore by ToggleSetting("Show Speed Score", true).showIf { showScoreSection.value }
+    private val showBonusScore by ToggleSetting("Show Bonus Score", true).showIf { showScoreSection.value }
+    private val showTotalScore by ToggleSetting("Show Total Score", true).showIf { showScoreSection.value }
+    private val showRank by ToggleSetting("Show Rank", true).showIf { showScoreSection.value }
     
-    // Colors
     private val headerColor by ColorSetting("Header Color", Color(0, 150, 255)).section("Colors")
     private val textColor by ColorSetting("Text Color", Color.WHITE)
     private val valueColor by ColorSetting("Value Color", Color(85, 255, 85))
@@ -73,7 +67,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     
     private val hud by hudElement(
         name = "Dungeon Score HUD",
-        enabled = { hudEnabled.get() && LocationUtils.inDungeon && !LocationUtils.inBoss },
+        enabled = { hudEnabled.value && LocationUtils.inDungeon && !LocationUtils.inBoss },
         shouldDraw = { true }
     ) { ctx, demo ->
         if (demo) {
@@ -92,30 +86,30 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     private fun drawDemo(ctx: Render2D.Context): Pair<Float, Float> {
         textLines.clear()
         
-        if (minimized.get()) {
+        if (minimized.value) {
             textLines.add("§eScore: §e300 §7(§6§lS+§7)")
         } else {
-            if (showDungeonStatus.get()) {
+            if (showDungeonStatus.value) {
                 textLines.add("§9Dungeon Status")
-                if (showDeaths.get()) textLines.add("§f• §eDeaths:§c 0")
-                if (showMissingPuzzles.get()) textLines.add("§f• §eMissing Puzzles:§c 0")
-                if (showFailedPuzzles.get()) textLines.add("§f• §eFailed Puzzles:§c 0")
-                if (showSecrets.get()) textLines.add("§f• §eSecrets: §a50§7/§a50 §7(§6Total: 50§7)")
-                if (showCrypts.get()) textLines.add("§f• §eCrypts:§a 5")
-                if (showMimic.get() && (LocationUtils.dungeonFloorNumber ?: 0) >= 6) {
+                if (showDeaths.value) textLines.add("§f• §eDeaths:§c 0")
+                if (showMissingPuzzles.value) textLines.add("§f• §eMissing Puzzles:§c 0")
+                if (showFailedPuzzles.value) textLines.add("§f• §eFailed Puzzles:§c 0")
+                if (showSecrets.value) textLines.add("§f• §eSecrets: §a50§7/§a50 §7(§6Total: 50§7)")
+                if (showCrypts.value) textLines.add("§f• §eCrypts:§a 5")
+                if (showMimic.value && (LocationUtils.dungeonFloorNumber ?: 0) >= 6) {
                     textLines.add("§f• §eMimic:§a ✔")
                 }
                 textLines.add("")
             }
             
-            if (showScoreSection.get()) {
+            if (showScoreSection.value) {
                 textLines.add("§6Score")
-                if (showSkillScore.get()) textLines.add("§f• §eSkill Score:§a 100")
-                if (showExploreScore.get()) textLines.add("§f• §eExplore Score:§a 100 §7(§e60 §7+ §640§7)")
-                if (showSpeedScore.get()) textLines.add("§f• §eSpeed Score:§a 100")
-                if (showBonusScore.get()) textLines.add("§f• §eBonus Score:§a 17")
-                if (showTotalScore.get()) textLines.add("§f• §eTotal Score:§a 317 §7(§6+10§7)")
-                if (showRank.get()) textLines.add("§f• §eRank: §6§lS+")
+                if (showSkillScore.value) textLines.add("§f• §eSkill Score:§a 100")
+                if (showExploreScore.value) textLines.add("§f• §eExplore Score:§a 100 §7(§e60 §7+ §640§7)")
+                if (showSpeedScore.value) textLines.add("§f• §eSpeed Score:§a 100")
+                if (showBonusScore.value) textLines.add("§f• §eBonus Score:§a 17")
+                if (showTotalScore.value) textLines.add("§f• §eTotal Score:§a 317 §7(§6+10§7)")
+                if (showRank.value) textLines.add("§f• §eRank: §6§lS+")
             }
         }
         
@@ -123,7 +117,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         var maxWidth = 0f
         
         textLines.forEach { line ->
-            Render2D.drawString(ctx, line, 0, y.toInt(), textColor.get())
+            Render2D.drawString(ctx, line, 0, y.toInt(), textColor.value)
             maxWidth = maxOf(maxWidth, line.width().toFloat())
             y += 9f
         }
@@ -138,7 +132,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         val totalScore = ScoreCalculation.score
         val rank = getRank(totalScore)
         
-        if (minimized.get()) {
+        if (minimized.value) {
             val scoreColor = when {
                 totalScore >= 300 -> 'a'
                 totalScore >= 270 -> 'e'
@@ -146,25 +140,24 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             }
             textLines.add("§eScore: §$scoreColor$totalScore §7($rank§7)")
         } else {
-            // Dungeon Status section
-            if (showDungeonStatus.get()) {
+            if (showDungeonStatus.value) {
                 textLines.add("§9Dungeon Status")
                 
-                if (showDeaths.get()) {
+                if (showDeaths.value) {
                     val spiritText = getSpiritText()
                     val deathsText = "§f• §eDeaths:§c ${ScoreCalculation.deathCount}$spiritText"
                     textLines.add(deathsText)
                 }
                 
-                if (showMissingPuzzles.get()) {
+                if (showMissingPuzzles.value) {
                     textLines.add("§f• §eMissing Puzzles:§c $missingPuzzles")
                 }
                 
-                if (showFailedPuzzles.get()) {
+                if (showFailedPuzzles.value) {
                     textLines.add("§f• §eFailed Puzzles:§c $failedPuzzles")
                 }
                 
-                if (showSecrets.get()) {
+                if (showSecrets.value) {
                     val foundSecrets = ScoreCalculation.foundSecrets
                     val totalSecrets = DungeonListener.totalSecrets
                     val neededSecrets = calculateNeededSecrets()
@@ -175,12 +168,12 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
                     textLines.add(secretsText)
                 }
                 
-                if (showCrypts.get()) {
+                if (showCrypts.value) {
                     val cryptsColor = if (ScoreCalculation.cryptsCount >= 5) "§a" else "§c"
                     textLines.add("§f• §eCrypts: $cryptsColor${ScoreCalculation.cryptsCount}")
                 }
                 
-                if (showMimic.get() && floorNum >= 6) {
+                if (showMimic.value && floorNum >= 6) {
                     val mimicText = "§f• §eMimic:§l${if (ScoreCalculation.mimicKilled) "§a ✔" else "§c ✘"}"
                     textLines.add(mimicText)
                 }
@@ -188,40 +181,39 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
                 textLines.add("")
             }
             
-            // Score section
-            if (showScoreSection.get()) {
+            if (showScoreSection.value) {
                 textLines.add("§6Score")
                 
-                if (showSkillScore.get()) {
+                if (showSkillScore.value) {
                     val skillScore = calculateSkillScore()
                     textLines.add("§f• §eSkill Score:§a $skillScore")
                 }
                 
-                if (showExploreScore.get()) {
+                if (showExploreScore.value) {
                     val clearScore = calculateClearScore()
                     val secretsScore = calculateSecretsScore()
                     val exploreScore = clearScore + secretsScore
                     textLines.add("§f• §eExplore Score:§a $exploreScore §7(§e$clearScore §7+ §6$secretsScore§7)")
                 }
                 
-                if (showSpeedScore.get()) {
+                if (showSpeedScore.value) {
                     val speedScore = calculateSpeedScore()
                     textLines.add("§f• §eSpeed Score:§a $speedScore")
                 }
                 
-                if (showBonusScore.get()) {
+                if (showBonusScore.value) {
                     val bonusScore = calculateBonusScore()
                     val displayedBonus = if (floorNum == 0) ceil(bonusScore * 0.7).toInt() else bonusScore
                     textLines.add("§f• §eBonus Score:§a $displayedBonus")
                 }
                 
-                if (showTotalScore.get()) {
+                if (showTotalScore.value) {
                     val totalLine = "§f• §eTotal Score:§a $totalScore" + 
                         (if (isPaul && floorNum != 0) " §7(§6+10§7)" else if (isPaul && floorNum == 0) " §7(§6+7§7)" else "")
                     textLines.add(totalLine)
                 }
                 
-                if (showRank.get()) {
+                if (showRank.value) {
                     textLines.add("§f• §eRank: $rank")
                 }
             }
@@ -231,7 +223,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         var maxWidth = 0f
         
         textLines.forEach { line ->
-            Render2D.drawString(ctx, line, 0, y.toInt(), textColor.get())
+            Render2D.drawString(ctx, line, 0, y.toInt(), textColor.value)
             maxWidth = maxOf(maxWidth, line.width().toFloat())
             y += 9f
         }
@@ -240,14 +232,13 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     }
     
     private fun getSpiritText(): String {
-        return when (spiritTracking.get()) {
-            0 -> "" // Off
-            1 -> " §7(§6Spirit§7)" // Assume Yes
-            2 -> { // Auto
+        return when (spiritTracking.value) {
+            0 -> ""
+            1 -> " §7(§6Spirit§7)"
+            2 -> {
                 if (firstDeathHadSpirit) {
                     " §7(§6Spirit§7)"
                 } else if (!checkedSpiritForFirstDeath && ScoreCalculation.deathCount > 0) {
-                    // Check if any teammate has Spirit when first death occurs
                     checkedSpiritForFirstDeath = true
                     val hasSpirit = DungeonListener.dungeonTeammatesNoSelf.any { 
                         HypixelAPI.getSpiritStatus(it.name) == true 
@@ -277,13 +268,12 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     }
     
     private fun calculateSkillScore(): Int {
-        // Note: totalRooms is private in ScoreCalculation, so we need to calculate it
         val totalRooms = if (ScoreCalculation.completedRooms > 0 && ScoreCalculation.clearedPercentage > 0) {
             (ScoreCalculation.completedRooms / (ScoreCalculation.clearedPercentage / 100.0)).toInt()
         } else 36
         
         val completedRooms = ScoreCalculation.completedRooms + 
-            (if (!DungeonListener.watcherCleared) 1 else 0) + 
+            (if (DungeonListener.watcherClearTime == null) 1 else 0) + 
             (if (!LocationUtils.inBoss) 1 else 0)
         
         val clearPercent = if (totalRooms > 0) completedRooms.toDouble() / totalRooms else 0.0
@@ -304,7 +294,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         } else 36
         
         val completedRooms = ScoreCalculation.completedRooms + 
-            (if (!DungeonListener.watcherCleared) 1 else 0) + 
+            (if (DungeonListener.watcherClearTime == null) 1 else 0) + 
             (if (!LocationUtils.inBoss) 1 else 0)
         
         val clearPercent = if (totalRooms > 0) completedRooms.toDouble() / totalRooms else 0.0
