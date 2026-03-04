@@ -324,6 +324,21 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         
         return if (floorNum == 0) rawScore.coerceIn(14, 70) else rawScore.coerceIn(20, 100)
     }
+
+    private fun calculateClearScore(): Int {
+        val totalRooms = if (ScoreCalculation.completedRooms > 0 && ScoreCalculation.clearedPercentage > 0) {
+            (ScoreCalculation.completedRooms / (ScoreCalculation.clearedPercentage / 100.0)).toInt()
+        } else 36
+        
+        val completedRooms = ScoreCalculation.completedRooms + 
+            (if (DungeonListener.watcherClearTime == null) 1 else 0) + 
+            (if (!LocationUtils.inBoss) 1 else 0)
+        
+        val clearPercent = if (totalRooms > 0) completedRooms.toDouble() / totalRooms else 0.0
+        val rawScore = (60 * clearPercent).coerceIn(0.0, 60.0)
+        
+        return if (LocationUtils.dungeonFloor == "E") (rawScore * 0.7).toInt() else rawScore.toInt()
+    }
     
     private fun calculateSecretsScore(): Int {
         val found = ScoreCalculation.foundSecrets
