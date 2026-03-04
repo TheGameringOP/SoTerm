@@ -111,23 +111,40 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         
         ThreadUtils.scheduledTask(0) {
             try {
+                val url = "https://api.hypixel.net/v2/player?name=Hypixel"
+                
+                // Debug: show the URL being requested
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7Request URL: $url")
+                    ChatUtils.modMessage("§7API Key: ${apiKey.value.take(8)}...${apiKey.value.takeLast(4)}")
+                }
+                
                 val request = Request.Builder()
-                    .url("https://api.hypixel.net/v2/player?name=Hypixel")
+                    .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "SoTerm-Mod/1.0") // Add user agent
+                    .header("User-Agent", "SoTerm-Mod/1.0")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
                     val responseBody = response.body?.string() ?: ""
                     
-                    // Log response info for debugging
+                    // Always show response code
                     ChatUtils.modMessage("§7Response code: ${response.code}")
-                    ChatUtils.modMessage("§7Content-Type: ${response.header("Content-Type")}")
+                    
+                    // Show more details for 403
+                    if (response.code == 403) {
+                        ChatUtils.modMessage("§c403 Forbidden - Your API key is likely invalid or has been revoked")
+                        if (SoTerm.debugFlags.contains("link")) {
+                            ChatUtils.modMessage("§7Response headers: ${response.headers}")
+                            ChatUtils.modMessage("§7Raw response: ${responseBody.take(200)}")
+                        }
+                        return@use
+                    }
                     
                     // Check if it's HTML (common error response)
                     if (responseBody.trimStart().startsWith("<")) {
-                        ChatUtils.modMessage("§cReceived HTML instead of JSON - possible rate limit or API issue")
-                        if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§cReceived HTML instead of JSON")
+                        if (SoTerm.debugFlags.contains("link")) {
                             ChatUtils.modMessage("§7First 200 chars: ${responseBody.take(200)}")
                         }
                         return@use
@@ -138,14 +155,15 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         gson.fromJson(responseBody, Map::class.java)
                     } catch (e: Exception) {
                         ChatUtils.modMessage("§cFailed to parse JSON response")
-                        ChatUtils.modMessage("§7Raw response: ${responseBody.take(100)}")
+                        if (SoTerm.debugFlags.contains("link")) {
+                            ChatUtils.modMessage("§7Raw response: ${responseBody.take(200)}")
+                        }
                         return@use
                     }
                     
                     if (response.isSuccessful && jsonResponse["success"] == true) {
                         ChatUtils.modMessage("§aAPI key is valid!")
                         
-                        // Show rate limit info if available
                         val rateLimit = response.header("RateLimit-Limit")
                         val rateRemaining = response.header("RateLimit-Remaining")
                         if (rateLimit != null && rateRemaining != null) {
@@ -158,7 +176,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 }
             } catch (e: Exception) {
                 ChatUtils.modMessage("§cFailed to test API key: ${e.message}")
-                e.printStackTrace()
+                if (SoTerm.debugFlags.contains("link")) {
+                    e.printStackTrace()
+                }
             }
         }
     }
