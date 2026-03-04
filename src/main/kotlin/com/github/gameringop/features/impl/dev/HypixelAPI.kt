@@ -18,15 +18,15 @@ import java.util.concurrent.TimeUnit
 
 object HypixelAPI : Feature("Hypixel API Integration") {
     
-    private val apiEnabled by ToggleSetting("Enabled", false).section("Main")
-    private val apiKey by TextInputSetting("API Key", "").section("Main")
+    private val apiEnabled by ToggleSetting("Enabled", false).section("API")
+    private val apiKey by TextInputSetting("API Key", "")
         .withDescription("Get your API key from https://developer.hypixel.net/")
     
-    private val testKey by ButtonSetting("Test API Key", false).section("Main") {
+    private val testKey by ButtonSetting("Test API Key", false) {
         testApiKey()
     }
     
-    private val clearCache by ButtonSetting("Clear Spirit Cache", false).section("Main") {
+    private val clearCache by ButtonSetting("Clear Spirit Cache", false) {
         spiritCache.clear()
         ChatUtils.modMessage("§aSpirit pet cache cleared!")
     }
