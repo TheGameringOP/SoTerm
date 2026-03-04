@@ -233,28 +233,8 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             0 -> ""
             1 -> " §7(§6Spirit§7)"
             2 -> {
-                val allTeammates = DungeonListener.dungeonTeammatesNoSelf + (DungeonListener.thePlayer?.let { listOf(it) } ?: emptyList())
                 
-                // Only trigger checks for uncached players ONCE, not every frame
-                allTeammates.forEach { teammate ->
-                    if (HypixelAPI.getSpiritStatus(teammate.name) == null && !spiritDebugLogged.contains("checking_${teammate.name}")) {
-                        spiritDebugLogged.add("checking_${teammate.name}")
-                        HypixelAPI.checkSpiritPet(teammate.name)
-                    }
-                }
-                
-                val anySpirit = allTeammates.any { teammate ->
-                    val status = HypixelAPI.getSpiritStatus(teammate.name)
-                    val hasSpirit = status == true || HypixelAPI.hasAssumedSpirit(teammate.name)
-                    
-                    if (SoTerm.debugFlags.contains("spirit") && hasSpirit && spiritDebugLogged.add("spirit_${teammate.name}")) {
-                        ChatUtils.modMessage("§eSpirit debug - ${teammate.name}: status=$status, assumed=${HypixelAPI.hasAssumedSpirit(teammate.name)}")
-                    }
-                    
-                    hasSpirit
-                }
-                
-                if (anySpirit) {
+                if (firstDeathHadSpirit) {
                     " §7(§6Spirit§7)"
                 } else {
                     ""
@@ -296,27 +276,13 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             0 -> ScoreCalculation.deathCount * 2
             1 -> (ScoreCalculation.deathCount * 2) - 1
             2 -> {
-                val allTeammates = DungeonListener.dungeonTeammatesNoSelf + (DungeonListener.thePlayer?.let { listOf(it) } ?: emptyList())
-                
-                val anySpirit = allTeammates.any { teammate ->
-                    val status = HypixelAPI.getSpiritStatus(teammate.name)
-                    status == true || HypixelAPI.hasAssumedSpirit(teammate.name)
-                }
-                
-                // Only apply spirit reduction if there are deaths AND someone has spirit
-                if (ScoreCalculation.deathCount > 0 && anySpirit) {
+                if (ScoreCalculation.deathCount > 0 && firstDeathHadSpirit) {
                     (ScoreCalculation.deathCount * 2) - 1
                 } else {
                     ScoreCalculation.deathCount * 2
                 }
             }
             else -> ScoreCalculation.deathCount * 2
-        }
-        
-        if (SoTerm.debugFlags.contains("spirit") && spiritTracking.value == 2) {
-            ChatUtils.modMessage("§eSpirit debug - Deaths: ${ScoreCalculation.deathCount}, Penalty: $deathPenalty, anySpirit: ${
-                DungeonListener.dungeonTeammatesNoSelf.any { HypixelAPI.getSpiritStatus(it.name) == true || HypixelAPI.hasAssumedSpirit(it.name) }
-            }")
         }
         
         val floorNum = LocationUtils.dungeonFloorNumber ?: 0
