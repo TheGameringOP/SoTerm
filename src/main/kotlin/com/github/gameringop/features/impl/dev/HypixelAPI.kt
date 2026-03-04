@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit
 
 object HypixelAPI : Feature("Hypixel API Integration") {
     
-    private val apiEnabledSetting by ToggleSetting("Enabled", false).section("API")
     private val apiKey by TextInputSetting("API Key", "")
         .withDescription("Get your API key from https://developer.hypixel.net/")
     
@@ -46,8 +45,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         ChatUtils.modMessage("§aSpirit pet cache cleared!")
     }
     
-    val apiEnabled: Boolean
-        get() = apiEnabledSetting.value
+    val hasValidKey: Boolean
+        get() = apiKey.value.isNotBlank()
     
     private val gson = Gson()
     private val client = OkHttpClient.Builder()
@@ -187,8 +186,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     private fun checkSpecificPlayer(username: String) {
-        if (!apiEnabled || apiKey.value.isBlank()) {
-            ChatUtils.modMessage("§cAPI is disabled or no key set!")
+        if (apiKey.value.isBlank()) {
+            ChatUtils.modMessage("§cPlease enter an API key first!")
             return
         }
         
@@ -314,7 +313,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun checkSpiritPet(username: String): Boolean {
-        if (!apiEnabled || apiKey.value.isBlank()) {
+        if (apiKey.value.isBlank()) {
             return true
         }
         
@@ -420,6 +419,14 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     fun hasAssumedSpirit(username: String): Boolean = assumedSpirit[username] == true
     
     fun preloadTeammates() {
-        if (!apiEnabled || apiKey.value.isBlank()) return
+        if (apiKey.value.isBlank()) return
         
-        val allPlayers = DungeonListener.dungeonTeammatesNoSelf + (DungeonListener.thePlayer?.let { listOf(it) } ?: empty
+        val allPlayers = DungeonListener.dungeonTeammatesNoSelf + (DungeonListener.thePlayer?.let { listOf(it) } ?: emptyList())
+        
+        allPlayers.forEach { teammate ->
+            if (!isSpiritLoaded(teammate.name)) {
+                checkSpiritPet(teammate.name)
+            }
+        }
+    }
+}
