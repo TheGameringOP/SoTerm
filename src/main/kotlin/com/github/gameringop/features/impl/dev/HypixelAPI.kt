@@ -12,8 +12,8 @@ import com.github.gameringop.utils.ThreadUtils
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 object HypixelAPI : Feature("Hypixel API Integration") {
     
@@ -31,9 +31,27 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     private val gson = Gson()
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .build()
+        
     private val spiritCache = ConcurrentHashMap<String, Boolean>()
     private val pendingRequests = ConcurrentHashMap<String, Long>()
+    
+    data class HypixelKeyResponse(
+        val success: Boolean,
+        val cause: String? = null,
+        val record: KeyRecord? = null
+    )
+    
+    data class KeyRecord(
+        val key: String,
+        val owner: String,
+        val limit: Int,
+        val queriesInPastMin: Int,
+        val totalQueries: Int
+    )
     
     data class HypixelProfile(
         val success: Boolean,
@@ -93,10 +111,16 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 
                 client.newCall(request).execute().use { response ->
                     val responseBody = response.body?.string() ?: ""
-                    if (response.isSuccessful) {
+                    val keyResponse = gson.fromJson(responseBody, HypixelKeyResponse::class.java)
+                    
+                    if (response.isSuccessful && keyResponse.success) {
+                        val record = keyResponse.record
                         ChatUtils.modMessage("§aAPI key is valid!")
+                        ChatUtils.modMessage("§7Owner: §f${record?.owner}")
+                        ChatUtils.modMessage("§7Queries: §f${record?.queriesInPastMin}/${record?.limit} per minute")
                     } else {
-                        ChatUtils.modMessage("§cAPI key is invalid! Response: $responseBody")
+                        val error = keyResponse.cause ?: "Unknown error"
+                        ChatUtils.modMessage("§cAPI key is invalid! $error")
                     }
                 }
             } catch (e: Exception) {
@@ -143,6 +167,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 // Get UUID
                 val uuid = getUUIDFromUsername(username) ?: run {
                     spiritCache[username] = false
+                    if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§cFailed to get UUID for $username")
+                    }
                     return@startThread
                 }
                 
@@ -155,6 +182,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 client.newCall(profilesRequest).execute().use { response ->
                     if (!response.isSuccessful) {
                         spiritCache[username] = false
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§cAPI request failed for $username: ${response.code}")
+                        }
                         return@use
                     }
                     
@@ -163,6 +193,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     
                     if (!profiles.success) {
                         spiritCache[username] = false
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§cAPI returned error for $username: ${profiles.cause}")
+                        }
                         return@use
                     }
                     
@@ -186,10 +219,20 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             }
         }
         
-        return false // Return false while loading
+        return false
     }
     
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
     
     fun isSpiritLoaded(username: String): Boolean = username in spiritCache
+    
+    fun preloadTeammates() {
+        if (!enabled.value || apiKey.value.isBlank()) return
+        
+        DungeonListener.dungeonTeammatesNoSelf.forEach { teammate ->
+            if (!isSpiritLoaded(teammate.name)) {
+                checkSpiritPet(teammate.name)
+            }
+        }
+    }
 }
