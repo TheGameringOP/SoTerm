@@ -114,14 +114,43 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url("https://api.hypixel.net/v2/player?name=Hypixel")
                     .header("API-Key", apiKey.value)
+                    .header("User-Agent", "SoTerm-Mod/1.0") // Add user agent
                     .build()
                 
                 client.newCall(request).execute().use { response ->
                     val responseBody = response.body?.string() ?: ""
-                    val jsonResponse = gson.fromJson(responseBody, Map::class.java)
+                    
+                    // Log response info for debugging
+                    ChatUtils.modMessage("§7Response code: ${response.code}")
+                    ChatUtils.modMessage("§7Content-Type: ${response.header("Content-Type")}")
+                    
+                    // Check if it's HTML (common error response)
+                    if (responseBody.trimStart().startsWith("<")) {
+                        ChatUtils.modMessage("§cReceived HTML instead of JSON - possible rate limit or API issue")
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§7First 200 chars: ${responseBody.take(200)}")
+                        }
+                        return@use
+                    }
+                    
+                    // Try to parse as Map
+                    val jsonResponse = try {
+                        gson.fromJson(responseBody, Map::class.java)
+                    } catch (e: Exception) {
+                        ChatUtils.modMessage("§cFailed to parse JSON response")
+                        ChatUtils.modMessage("§7Raw response: ${responseBody.take(100)}")
+                        return@use
+                    }
                     
                     if (response.isSuccessful && jsonResponse["success"] == true) {
                         ChatUtils.modMessage("§aAPI key is valid!")
+                        
+                        // Show rate limit info if available
+                        val rateLimit = response.header("RateLimit-Limit")
+                        val rateRemaining = response.header("RateLimit-Remaining")
+                        if (rateLimit != null && rateRemaining != null) {
+                            ChatUtils.modMessage("§7Rate limit: $rateRemaining/$rateLimit remaining")
+                        }
                     } else {
                         val cause = jsonResponse["cause"] as? String ?: "Unknown error"
                         ChatUtils.modMessage("§cAPI key is invalid! $cause")
@@ -129,6 +158,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 }
             } catch (e: Exception) {
                 ChatUtils.modMessage("§cFailed to test API key: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
