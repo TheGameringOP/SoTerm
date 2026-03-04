@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit
 
 object HypixelAPI : Feature("Hypixel API Integration") {
     
-    // Renamed from 'enabled' to avoid conflict with Feature.enabled
     private val apiEnabled by ToggleSetting("Enabled", false).section("Main")
     private val apiKey by TextInputSetting("API Key", "")
         .withDescription("Get your API key from https://developer.hypixel.net/")
@@ -98,7 +97,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     private fun testApiKey() {
-        if (apiKey.get().isBlank()) {
+        if (apiKey.value.isBlank()) {
             ChatUtils.modMessage("§cPlease enter an API key first!")
             return
         }
@@ -107,7 +106,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             try {
                 val request = Request.Builder()
                     .url("https://api.hypixel.net/key")
-                    .header("API-Key", apiKey.get())
+                    .header("API-Key", apiKey.value)
                     .build()
                 
                 client.newCall(request).execute().use { response ->
@@ -150,7 +149,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun checkSpiritPet(username: String): Boolean {
-        if (!apiEnabled.get() || apiKey.get().isBlank()) return false
+        if (!apiEnabled.value || apiKey.value.isBlank()) return false
         
         // Check cache first
         spiritCache[username]?.let { return it }
@@ -179,7 +178,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 // Get selected Skyblock profile
                 val profilesRequest = Request.Builder()
                     .url("https://api.hypixel.net/skyblock/profiles?uuid=$uuid")
-                    .header("API-Key", apiKey.get())
+                    .header("API-Key", apiKey.value)
                     .build()
                 
                 client.newCall(profilesRequest).execute().use { response ->
@@ -230,7 +229,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     fun isSpiritLoaded(username: String): Boolean = spiritCache.containsKey(username)
     
     fun preloadTeammates() {
-        if (!apiEnabled.get() || apiKey.get().isBlank()) return
+        if (!apiEnabled.value || apiKey.value.isBlank()) return
         
         DungeonListener.dungeonTeammatesNoSelf.forEach { teammate ->
             if (!isSpiritLoaded(teammate.name)) {
