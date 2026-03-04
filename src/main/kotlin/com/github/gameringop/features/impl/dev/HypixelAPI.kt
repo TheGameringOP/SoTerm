@@ -350,11 +350,12 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "SoTerm-Mod/1.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
+                        // ANY failure - assume Spirit
                         spiritCache[username] = true
                         assumedSpirit[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
