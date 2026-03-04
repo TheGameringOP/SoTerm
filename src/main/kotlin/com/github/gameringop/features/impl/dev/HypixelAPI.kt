@@ -1,7 +1,6 @@
 package com.github.gameringop.features.impl.dev
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
@@ -9,6 +8,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.dungeons.DungeonListener
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -17,7 +17,8 @@ import java.util.concurrent.TimeUnit
 
 object HypixelAPI : Feature("Hypixel API Integration") {
     
-    private val enabled by ToggleSetting("Enabled", false).section("Main")
+    // Renamed from 'enabled' to avoid conflict with Feature.enabled
+    private val apiEnabled by ToggleSetting("Enabled", false).section("Main")
     private val apiKey by TextInputSetting("API Key", "")
         .withDescription("Get your API key from https://developer.hypixel.net/")
     
@@ -97,7 +98,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     private fun testApiKey() {
-        if (apiKey.value.isBlank()) {
+        if (apiKey.get().isBlank()) {
             ChatUtils.modMessage("§cPlease enter an API key first!")
             return
         }
@@ -106,7 +107,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             try {
                 val request = Request.Builder()
                     .url("https://api.hypixel.net/key")
-                    .header("API-Key", apiKey.value)
+                    .header("API-Key", apiKey.get())
                     .build()
                 
                 client.newCall(request).execute().use { response ->
@@ -116,8 +117,10 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     if (response.isSuccessful && keyResponse.success) {
                         val record = keyResponse.record
                         ChatUtils.modMessage("§aAPI key is valid!")
-                        ChatUtils.modMessage("§7Owner: §f${record?.owner}")
-                        ChatUtils.modMessage("§7Queries: §f${record?.queriesInPastMin}/${record?.limit} per minute")
+                        if (record != null) {
+                            ChatUtils.modMessage("§7Owner: §f${record.owner}")
+                            ChatUtils.modMessage("§7Queries: §f${record.queriesInPastMin}/${record.limit} per minute")
+                        }
                     } else {
                         val error = keyResponse.cause ?: "Unknown error"
                         ChatUtils.modMessage("§cAPI key is invalid! $error")
@@ -136,8 +139,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 .build()
             
             client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return null
-                val json = response.body?.string() ?: return null
+                if (!response.isSuccessful) return@use null
+                val json = response.body?.string() ?: return@use null
                 val data = gson.fromJson(json, Map::class.java)
                 data["id"] as? String
             }
@@ -147,7 +150,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun checkSpiritPet(username: String): Boolean {
-        if (!enabled.value || apiKey.value.isBlank()) return false
+        if (!apiEnabled.get() || apiKey.get().isBlank()) return false
         
         // Check cache first
         spiritCache[username]?.let { return it }
@@ -176,7 +179,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 // Get selected Skyblock profile
                 val profilesRequest = Request.Builder()
                     .url("https://api.hypixel.net/skyblock/profiles?uuid=$uuid")
-                    .header("API-Key", apiKey.value)
+                    .header("API-Key", apiKey.get())
                     .build()
                 
                 client.newCall(profilesRequest).execute().use { response ->
@@ -219,15 +222,15 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             }
         }
         
-        return false
+        return false // Return false while loading
     }
     
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
     
-    fun isSpiritLoaded(username: String): Boolean = username in spiritCache
+    fun isSpiritLoaded(username: String): Boolean = spiritCache.containsKey(username)
     
     fun preloadTeammates() {
-        if (!enabled.value || apiKey.value.isBlank()) return
+        if (!apiEnabled.get() || apiKey.get().isBlank()) return
         
         DungeonListener.dungeonTeammatesNoSelf.forEach { teammate ->
             if (!isSpiritLoaded(teammate.name)) {
