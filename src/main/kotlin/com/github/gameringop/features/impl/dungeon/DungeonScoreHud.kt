@@ -45,7 +45,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     private val showMimic by ToggleSetting("Show Mimic", true).showIf { showDungeonStatus.value }
     private val showPrince by ToggleSetting("Show Prince", true).showIf { showDungeonStatus.value }
     
-    private val showSkillScore by ToggleSetting("Show Skill Score", true).showIf { showScoreSection.value }
+    private val showSkillScore by ToggleSetting("Show Skill Score", true).section("Toggles").showIf { showScoreSection.value }
     private val showExploreScore by ToggleSetting("Show Explore Score", true).showIf { showScoreSection.value }
     private val showSpeedScore by ToggleSetting("Show Speed Score", true).showIf { showScoreSection.value }
     private val showBonusScore by ToggleSetting("Show Bonus Score", true).showIf { showScoreSection.value }
