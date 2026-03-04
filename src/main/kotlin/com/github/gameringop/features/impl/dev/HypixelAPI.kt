@@ -5,9 +5,7 @@ import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
-import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ThreadUtils
@@ -43,6 +41,24 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         uuidCache.clear()
         assumedSpirit.clear()
         ChatUtils.modMessage("§aSpirit pet cache cleared!")
+    }
+    
+    private val showCache by ButtonSetting("Show Spirit Cache", false) {
+        if (spiritCache.isEmpty()) {
+            ChatUtils.modMessage("§eSpirit cache is empty")
+            return@ButtonSetting
+        }
+        
+        ChatUtils.modMessage("§6=== Spirit Cache ===")
+        spiritCache.forEach { (username, hasSpirit) ->
+            val status = when {
+                hasSpirit && assumedSpirit[username] == true -> "§e⚠ (Assumed - Spirit)"
+                hasSpirit -> "§a✓ (Spirit)"
+                else -> "§c✗ (No Spirit)"
+            }
+            ChatUtils.modMessage("§f$username: $status")
+        }
+        ChatUtils.modMessage("§6==================")
     }
     
     val hasValidKey: Boolean
@@ -136,7 +152,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "SoTerm-Mod/1.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
@@ -209,7 +225,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "SoTerm-Mod/1.0")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
@@ -278,7 +294,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             
             val request = Request.Builder()
                 .url(url)
-                .header("User-Agent", "SoTerm-Mod/1.0")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .build()
             
             client.newCall(request).execute().use { response ->
@@ -350,12 +366,11 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
-                        // ANY failure - assume Spirit
                         spiritCache[username] = true
                         assumedSpirit[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
@@ -425,6 +440,10 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         val allPlayers = buildList {
             addAll(DungeonListener.dungeonTeammatesNoSelf)
             DungeonListener.thePlayer?.let { add(it) }
+        }
+        
+        if (SoTerm.debugFlags.contains("spirit")) {
+            ChatUtils.modMessage("§ePreloading Spirit cache for ${allPlayers.size} players")
         }
         
         allPlayers.forEach { teammate ->
