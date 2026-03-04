@@ -234,15 +234,18 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             2 -> {
                 val anySpirit = DungeonListener.dungeonTeammatesNoSelf.any { teammate ->
                     val status = HypixelAPI.getSpiritStatus(teammate.name)
-                    when {
-                        status == true -> true
-                        status == null -> {
-                            HypixelAPI.checkSpiritPet(teammate.name)
-                            true
-                        }
-                        HypixelAPI.hasAssumedSpirit(teammate.name) -> true
-                        else -> false
+                    val hasSpirit = status == true || status == null || HypixelAPI.hasAssumedSpirit(teammate.name)
+                    
+                    if (SoTerm.debugFlags.contains("spirit") && hasSpirit) {
+                        ChatUtils.modMessage("§eSpirit debug - ${teammate.name}: status=$status, assumed=${HypixelAPI.hasAssumedSpirit(teammate.name)}")
                     }
+                    
+                    // Trigger check if still loading
+                    if (status == null) {
+                        HypixelAPI.checkSpiritPet(teammate.name)
+                    }
+                    
+                    hasSpirit
                 }
                 
                 if (anySpirit) {
@@ -304,9 +307,12 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         val floorNum = LocationUtils.dungeonFloorNumber ?: 0
         val rawScore = (baseSkill - puzzlePenalty - deathPenalty).toInt()
         
+        if (SoTerm.debugFlags.contains("spirit") && spiritTracking.value == 2) {
+            ChatUtils.modMessage("§eSpirit debug - Deaths: ${ScoreCalculation.deathCount}, Penalty: $deathPenalty, Raw: $rawScore")
+        }
+        
         return if (floorNum == 0) rawScore.coerceIn(14, 70) else rawScore.coerceIn(20, 100)
     }
-    
     private fun calculateClearScore(): Int {
         val totalRooms = if (ScoreCalculation.completedRooms > 0 && ScoreCalculation.clearedPercentage > 0) {
             (ScoreCalculation.completedRooms / (ScoreCalculation.clearedPercentage / 100.0)).toInt()
