@@ -235,11 +235,20 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
                     " §7(§6Spirit§7)"
                 } else if (!checkedSpiritForFirstDeath && ScoreCalculation.deathCount > 0) {
                     checkedSpiritForFirstDeath = true
+                    
                     val hasSpirit = DungeonListener.dungeonTeammatesNoSelf.any { 
                         HypixelAPI.getSpiritStatus(it.name) == true 
                     }
-                    if (hasSpirit) {
+                    
+                    val hadAssumptions = DungeonListener.dungeonTeammatesNoSelf.any {
+                        HypixelAPI.hasAssumedSpirit(it.name)
+                    }
+                    
+                    if (hasSpirit || hadAssumptions) {
                         firstDeathHadSpirit = true
+                        if (hadAssumptions && SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§eSpirit status assumed for some players due to API errors")
+                        }
                         " §7(§6Spirit§7)"
                     } else ""
                 } else ""
@@ -275,7 +284,19 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         val baseSkill = 20 + (clearPercent * 80)
         
         val puzzlePenalty = (missingPuzzles + failedPuzzles) * 10
-        val deathPenalty = (ScoreCalculation.deathCount * 2) - (if (firstDeathHadSpirit) 1 else 0)
+        
+        val deathPenalty = when (spiritTracking.value) {
+            0 -> ScoreCalculation.deathCount * 2
+            1 -> (ScoreCalculation.deathCount * 2) - 1
+            2 -> {
+                if (firstDeathHadSpirit) {
+                    (ScoreCalculation.deathCount * 2) - 1
+                } else {
+                    ScoreCalculation.deathCount * 2
+                }
+            }
+            else -> ScoreCalculation.deathCount * 2
+        }
         
         val floorNum = LocationUtils.dungeonFloorNumber ?: 0
         val rawScore = (baseSkill - puzzlePenalty - deathPenalty).toInt()
