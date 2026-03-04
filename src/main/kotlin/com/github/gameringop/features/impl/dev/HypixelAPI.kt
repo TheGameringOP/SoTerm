@@ -42,6 +42,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     private val clearCache by ButtonSetting("Clear Spirit Cache", false) {
         spiritCache.clear()
         uuidCache.clear()
+        assumedSpirit.clear()
         ChatUtils.modMessage("§aSpirit pet cache cleared!")
     }
     
@@ -51,13 +52,12 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
     
-    // Cache for UUID lookups (username -> uuid)
     private val uuidCache = ConcurrentHashMap<String, String>()
     private val uuidPendingRequests = ConcurrentHashMap<String, Long>()
     
-    // Cache for spirit pet checks (username -> hasSpirit)
     private val spiritCache = ConcurrentHashMap<String, Boolean>()
     private val spiritPendingRequests = ConcurrentHashMap<String, Long>()
+    private val assumedSpirit = ConcurrentHashMap<String, Boolean>()
     
     data class HypixelKeyResponse(
         val success: Boolean,
@@ -144,7 +144,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         ChatUtils.modMessage("§7Response code: ${response.code}")
                     }
                     
-                    // Check if it's HTML
                     if (responseBody.trimStart().startsWith("<")) {
                         if (SoTerm.debugFlags.contains("link")) {
                             ChatUtils.modMessage("§cReceived HTML instead of JSON")
@@ -153,7 +152,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         return@use
                     }
                     
-                    // Try to parse as Map
                     val jsonResponse = try {
                         gson.fromJson(responseBody, Map::class.java)
                     } catch (e: Exception) {
@@ -164,7 +162,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         return@use
                     }
                     
-                    // Check for the rate limit message - this means key is valid!
                     val cause = jsonResponse["cause"] as? String ?: ""
                     if (cause.contains("You have already looked up this name recently")) {
                         ChatUtils.modMessage("§aAPI key is valid! (Rate limited - key works)")
@@ -247,7 +244,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         ChatUtils.modMessage("§c$username does NOT have a Legendary Spirit pet")
                     }
                     
-                    // Cache the result
                     spiritCache[username] = hasSpirit
                 }
             } catch (e: Exception) {
@@ -260,14 +256,12 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun getUUIDFromUsername(username: String): String? {
-        // Check cache first
         uuidCache[username]?.let { return it }
         
-        // Check if request is pending
         if (uuidPendingRequests.containsKey(username)) {
             val lastRequest = uuidPendingRequests[username] ?: 0
             if (System.currentTimeMillis() - lastRequest < 60000) {
-                return null // Still loading
+                return null
             }
         }
         
@@ -334,13 +328,13 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         
         ThreadUtils.scheduledTask(0) {
             try {
-                // This is now synchronous and will wait for the UUID
                 val uuid = getUUIDFromUsername(username)
                 
                 if (uuid == null) {
                     spiritCache[username] = true
+                    assumedSpirit[username] = true
                     if (SoTerm.debugFlags.contains("spirit")) {
-                        ChatUtils.modMessage("§cFailed to get UUID for $username, assuming Spirit")
+                        ChatUtils.modMessage("§eAssuming Spirit for $username due to UUID fetch failure")
                     }
                     return@scheduledTask
                 }
@@ -360,8 +354,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         spiritCache[username] = true
+                        assumedSpirit[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cAPI request failed for $username (${response.code}), assuming Spirit")
+                            ChatUtils.modMessage("§eAssuming Spirit for $username due to API request failure (${response.code})")
                         }
                         return@use
                     }
@@ -371,8 +366,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     
                     if (!profilesResponse.success) {
                         spiritCache[username] = true
+                        assumedSpirit[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cAPI error for $username: ${profilesResponse.cause}, assuming Spirit")
+                            ChatUtils.modMessage("§eAssuming Spirit for $username due to API error: ${profilesResponse.cause}")
                         }
                         return@use
                     }
@@ -381,8 +377,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     
                     if (selectedProfile == null) {
                         spiritCache[username] = true
+                        assumedSpirit[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cNo selected profile for $username, assuming Spirit")
+                            ChatUtils.modMessage("§eAssuming Spirit for $username due to no selected profile")
                         }
                         return@use
                     }
@@ -391,6 +388,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     val hasSpirit = member?.pets_data?.pets?.any { it.isSpirit } ?: false
                     
                     spiritCache[username] = hasSpirit
+                    if (!hasSpirit) {
+                        assumedSpirit.remove(username)
+                    }
                     
                     if (SoTerm.debugFlags.contains("spirit")) {
                         ChatUtils.modMessage("§aSpirit pet check for $username: $hasSpirit")
@@ -398,9 +398,10 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 }
             } catch (e: Exception) {
                 if (SoTerm.debugFlags.contains("spirit")) {
-                    ChatUtils.modMessage("§cSpirit check failed for $username: ${e.message}, assuming Spirit")
+                    ChatUtils.modMessage("§eAssuming Spirit for $username due to exception: ${e.message}")
                 }
                 spiritCache[username] = true
+                assumedSpirit[username] = true
             } finally {
                 spiritPendingRequests.remove(username)
             }
@@ -412,6 +413,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
     
     fun isSpiritLoaded(username: String): Boolean = spiritCache.containsKey(username)
+    
+    fun hasAssumedSpirit(username: String): Boolean = assumedSpirit[username] == true
     
     fun preloadTeammates() {
         if (!apiEnabled.value || apiKey.value.isBlank()) return
