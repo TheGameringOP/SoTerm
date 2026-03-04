@@ -404,4 +404,26 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             }
         }
         
-        register<Tick
+        register<TickEvent.Server> {
+            if (LocationUtils.inDungeon && !LocationUtils.inBoss) {
+                updateData()
+            }
+        }
+    }
+    
+    override fun onEnable() {
+        super.onEnable()
+        reset()
+    }
+    
+    override fun onDisable() {
+        super.onDisable()
+        reset()
+    }
+    
+    private fun reset() {
+        firstDeathHadSpirit = false
+        checkedSpiritForFirstDeath = false
+        spiritDebugLogged.clear()
+    }
+}
