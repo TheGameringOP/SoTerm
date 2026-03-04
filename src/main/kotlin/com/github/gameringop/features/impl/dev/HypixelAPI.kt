@@ -260,46 +260,57 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun getUUIDFromUsername(username: String): String? {
+        // Check cache first
         uuidCache[username]?.let { return it }
         
+        // Check if request is pending
         if (uuidPendingRequests.containsKey(username)) {
             val lastRequest = uuidPendingRequests[username] ?: 0
             if (System.currentTimeMillis() - lastRequest < 60000) {
-                return null
+                return null // Still loading
             }
         }
         
         uuidPendingRequests[username] = System.currentTimeMillis()
         
-        ThreadUtils.scheduledTask(0) {
-            try {
-                val request = Request.Builder()
-                    .url("https://api.mojang.com/users/profiles/minecraft/$username")
-                    .build()
-                
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        uuidPendingRequests.remove(username)
-                        return@use
-                    }
-                    val json = response.body?.string() ?: return@use
-                    val data = gson.fromJson(json, Map::class.java)
-                    val uuid = data["id"] as? String
-                    
-                    if (uuid != null) {
-                        uuidCache[username] = uuid
-                        if (SoTerm.debugFlags.contains("link")) {
-                            ChatUtils.modMessage("§7Cached UUID for $username: $uuid")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                if (SoTerm.debugFlags.contains("link")) {
-                    e.printStackTrace()
-                }
-            } finally {
-                uuidPendingRequests.remove(username)
+        try {
+            val url = "https://api.mojang.com/users/profiles/minecraft/$username"
+            
+            if (SoTerm.debugFlags.contains("link")) {
+                ChatUtils.modMessage("§7[Mojang API] GET $url")
             }
+            
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "SoTerm-Mod/1.0")
+                .build()
+            
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    if (SoTerm.debugFlags.contains("link")) {
+                        ChatUtils.modMessage("§7[Mojang API] Response code: ${response.code}")
+                    }
+                    return null
+                }
+                
+                val json = response.body?.string() ?: return null
+                val data = gson.fromJson(json, Map::class.java)
+                val uuid = data["id"] as? String
+                
+                if (uuid != null) {
+                    uuidCache[username] = uuid
+                    if (SoTerm.debugFlags.contains("link")) {
+                        ChatUtils.modMessage("§7[Mojang API] Success - UUID: $uuid")
+                    }
+                    return uuid
+                }
+            }
+        } catch (e: Exception) {
+            if (SoTerm.debugFlags.contains("link")) {
+                ChatUtils.modMessage("§7[Mojang API] Error: ${e.message}")
+            }
+        } finally {
+            uuidPendingRequests.remove(username)
         }
         
         return null
@@ -323,7 +334,10 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         
         ThreadUtils.scheduledTask(0) {
             try {
-                val uuid = getUUIDFromUsername(username) ?: run {
+                // This is now synchronous and will wait for the UUID
+                val uuid = getUUIDFromUsername(username)
+                
+                if (uuid == null) {
                     spiritCache[username] = true
                     if (SoTerm.debugFlags.contains("spirit")) {
                         ChatUtils.modMessage("§cFailed to get UUID for $username, assuming Spirit")
@@ -331,17 +345,23 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     return@scheduledTask
                 }
                 
-                val profilesRequest = Request.Builder()
-                    .url("https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid")
+                val url = "https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid"
+                
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7[Hypixel API] GET $url")
+                }
+                
+                val request = Request.Builder()
+                    .url(url)
                     .header("API-Key", apiKey.value)
                     .header("User-Agent", "SoTerm-Mod/1.0")
                     .build()
                 
-                client.newCall(profilesRequest).execute().use { response ->
+                client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         spiritCache[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cAPI request failed for $username, assuming Spirit")
+                            ChatUtils.modMessage("§cAPI request failed for $username (${response.code}), assuming Spirit")
                         }
                         return@use
                     }
@@ -352,7 +372,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     if (!profilesResponse.success) {
                         spiritCache[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cAPI returned error for $username: ${profilesResponse.cause}, assuming Spirit")
+                            ChatUtils.modMessage("§cAPI error for $username: ${profilesResponse.cause}, assuming Spirit")
                         }
                         return@use
                     }
@@ -362,7 +382,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     if (selectedProfile == null) {
                         spiritCache[username] = true
                         if (SoTerm.debugFlags.contains("spirit")) {
-                            ChatUtils.modMessage("§cNo selected profile found for $username, assuming Spirit")
+                            ChatUtils.modMessage("§cNo selected profile for $username, assuming Spirit")
                         }
                         return@use
                     }
@@ -378,7 +398,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 }
             } catch (e: Exception) {
                 if (SoTerm.debugFlags.contains("spirit")) {
-                    ChatUtils.modMessage("§cSpirit pet check failed for $username: ${e.message}, assuming Spirit")
+                    ChatUtils.modMessage("§cSpirit check failed for $username: ${e.message}, assuming Spirit")
                 }
                 spiritCache[username] = true
             } finally {
