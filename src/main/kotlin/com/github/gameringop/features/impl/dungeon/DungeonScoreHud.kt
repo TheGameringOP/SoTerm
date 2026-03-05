@@ -235,8 +235,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     private fun getSpiritText(): String {
         return when (spiritTracking.value) {
             0 -> ""
-            1 -> " §7(§6Spirit§7)"
-            2 -> if (firstDeathHadSpirit) " §7(§6Spirit§7)" else ""
+            1, 2 -> if (firstDeathHadSpirit) " §7(§6Spirit§7)" else ""
             else -> ""
         }
     }
@@ -380,20 +379,24 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         }
         
         register<DungeonEvent.PlayerDeathEvent> {
-            if (spiritTracking.value == 2 && !checkedSpiritForFirstDeath) {
-                checkedSpiritForFirstDeath = true
-                
-                val hasSpirit = HypixelAPI.checkSpiritPet(event.name)
-                
-                if (hasSpirit) {
-                    firstDeathHadSpirit = true
-                    if (SoTerm.debugFlags.contains("spirit")) {
-                        ChatUtils.modMessage("§aFirst death: ${event.name} had Spirit - reducing penalty")
-                    }
-                } else {
-                    firstDeathHadSpirit = false
-                    if (SoTerm.debugFlags.contains("spirit")) {
-                        ChatUtils.modMessage("§cFirst death: ${event.name} did NOT have Spirit - full penalty")
+            if (spiritTracking.value == 1 && !checkedSpiritForFirstDeath) {
+                firstDeathHadSpirit = true
+            } else {
+                if (spiritTracking.value == 2 && !checkedSpiritForFirstDeath) {
+                    checkedSpiritForFirstDeath = true
+                    
+                    val hasSpirit = HypixelAPI.checkSpiritPet(event.name)
+                    
+                    if (hasSpirit) {
+                        firstDeathHadSpirit = true
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§aFirst death: ${event.name} had Spirit - reducing penalty")
+                        }
+                    } else {
+                        firstDeathHadSpirit = false
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§cFirst death: ${event.name} did NOT have Spirit - full penalty")
+                        }
                     }
                 }
             }
