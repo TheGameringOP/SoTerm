@@ -322,164 +322,39 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         return null
     }
     
-    fun checkSpiritPet(username: String, callback: ((Boolean) -> Unit)? = null) {
-        if (SoTerm.debugFlags.contains("link")) {
-            ChatUtils.modMessage("§7[Spirit] checkSpiritPet called for $username")
-        }
-        
+    fun checkSpiritPet(username: String): Boolean {
         if (apiKey.value.isBlank()) {
-            if (SoTerm.debugFlags.contains("link")) {
-                ChatUtils.modMessage("§7[Spirit] No API key, assuming true")
-            }
-            callback?.invoke(true)
-            return
+            return true
         }
         
-        spiritCache[username]?.let {
-            if (SoTerm.debugFlags.contains("link")) {
-                ChatUtils.modMessage("§7[Spirit] Cache hit for $username: $it")
+        spiritCache[username]?.let { return it }
+        
+        try {
+            val uuid = getUUIDFromUsername(username) ?: return true
+            
+            val request = Request.Builder()
+                .url("https://api.hypixel.net/skyblock/profiles?uuid=$uuid")
+                .header("API-Key", apiKey.value)
+                .build()
+            
+            val response = client.newCall(request).execute()
+            val json = response.body?.string() ?: return true
+            val profilesResponse = gson.fromJson(json, SkyblockProfiles::class.java)
+            
+            if (!profilesResponse.success) {
+                return true
             }
-            callback?.invoke(it)
-            return
+            
+            val selectedProfile = profilesResponse.profiles?.find { it.selected } ?: return true
+            val member = selectedProfile.members[uuid]
+            val hasSpirit = member?.pets_data?.pets?.any { it.isSpirit } ?: false
+            
+            spiritCache[username] = hasSpirit
+            return hasSpirit
+            
+        } catch (e: Exception) {
+            return true
         }
-        
-        if (spiritPendingRequests.containsKey(username)) {
-            val lastRequest = spiritPendingRequests[username] ?: 0
-            if (System.currentTimeMillis() - lastRequest < 60000) {
-                if (SoTerm.debugFlags.contains("link")) {
-                    ChatUtils.modMessage("§7[Spirit] Request pending for $username (cooldown)")
-                }
-                return
-            }
-        }
-        
-        spiritPendingRequests[username] = System.currentTimeMillis()
-        
-        if (SoTerm.debugFlags.contains("link")) {
-            ChatUtils.modMessage("§7[Spirit] Starting new request for $username")
-        }
-        
-        Thread {
-            try {
-                if (SoTerm.debugFlags.contains("link")) {
-                    ChatUtils.modMessage("§7[Spirit] Getting UUID for $username")
-                }
-                
-                val uuid = getUUIDFromUsername(username)
-                
-                if (uuid == null) {
-                    if (SoTerm.debugFlags.contains("link")) {
-                        ChatUtils.modMessage("§7[Spirit] UUID fetch failed for $username, assuming true")
-                    }
-                    spiritCache[username] = true
-                    assumedSpirit[username] = true
-                    callback?.invoke(true)
-                    return@Thread
-                }
-                
-                val url = "https://api.hypixel.net/skyblock/profiles?uuid=$uuid"
-                
-                if (SoTerm.debugFlags.contains("link")) {
-                    ChatUtils.modMessage("§7[Spirit] UUID for $username: $uuid")
-                    ChatUtils.modMessage("§7[Spirit] Request URL: $url")
-                    ChatUtils.modMessage("§7[Spirit] API Key: ${apiKey.value.take(8)}...${apiKey.value.takeLast(4)}")
-                }
-                
-                val request = Request.Builder()
-                    .url(url)
-                    .header("API-Key", apiKey.value)
-                    .build()
-                
-                client.newCall(request).enqueue(object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        if (SoTerm.debugFlags.contains("link")) {
-                            ChatUtils.modMessage("§7[Spirit] API request failed for URL: $url")
-                            ChatUtils.modMessage("§7[Spirit] Error: ${e.message}")
-                        }
-                        spiritCache[username] = true
-                        assumedSpirit[username] = true
-                        
-                        mc.execute {
-                            callback?.invoke(true)
-                        }
-                    }
-                    
-                    override fun onResponse(call: Call, response: Response) {
-                        response.use {
-                            val json = response.body?.string() ?: return
-                            
-                            if (SoTerm.debugFlags.contains("link")) {
-                                ChatUtils.modMessage("§7[Spirit] Response from URL: $url")
-                                ChatUtils.modMessage("§7[Spirit] Response code: ${response.code}")
-                            }
-                            
-                            val profilesResponse = try {
-                                gson.fromJson(json, SkyblockProfiles::class.java)
-                            } catch (e: Exception) {
-                                if (SoTerm.debugFlags.contains("link")) {
-                                    ChatUtils.modMessage("§7[Spirit] JSON parse failed for URL: $url")
-                                    ChatUtils.modMessage("§7[Spirit] Error: ${e.message}")
-                                    ChatUtils.modMessage("§7[Spirit] Raw response: ${json.take(500)}")
-                                }
-                                spiritCache[username] = true
-                                assumedSpirit[username] = true
-                                mc.execute { callback?.invoke(true) }
-                                return
-                            }
-                            
-                            if (!profilesResponse.success) {
-                                if (SoTerm.debugFlags.contains("link")) {
-                                    ChatUtils.modMessage("§7[Spirit] API error for URL: $url")
-                                    ChatUtils.modMessage("§7[Spirit] Cause: ${profilesResponse.cause}")
-                                }
-                                spiritCache[username] = true
-                                assumedSpirit[username] = true
-                                mc.execute { callback?.invoke(true) }
-                                return
-                            }
-                            
-                            val selectedProfile = profilesResponse.profiles?.find { it.selected }
-                            
-                            if (selectedProfile == null) {
-                                if (SoTerm.debugFlags.contains("link")) {
-                                    ChatUtils.modMessage("§7[Spirit] No selected profile found for URL: $url")
-                                }
-                                spiritCache[username] = true
-                                assumedSpirit[username] = true
-                                mc.execute { callback?.invoke(true) }
-                                return
-                            }
-                            
-                            val member = selectedProfile.members[uuid]
-                            val hasSpirit = member?.pets_data?.pets?.any { it.isSpirit } ?: false
-                            
-                            if (SoTerm.debugFlags.contains("link")) {
-                                ChatUtils.modMessage("§7[Spirit] Result for $username from URL: $url")
-                                ChatUtils.modMessage("§7[Spirit] Has Spirit: $hasSpirit")
-                            }
-                            
-                            spiritCache[username] = hasSpirit
-                            if (!hasSpirit) {
-                                assumedSpirit.remove(username)
-                            }
-                            
-                            mc.execute {
-                                callback?.invoke(hasSpirit)
-                            }
-                        }
-                    }
-                })
-            } catch (e: Exception) {
-                if (SoTerm.debugFlags.contains("link")) {
-                    ChatUtils.modMessage("§7[Spirit] Exception in thread: ${e.message}")
-                }
-                spiritCache[username] = true
-                assumedSpirit[username] = true
-                callback?.invoke(true)
-            } finally {
-                spiritPendingRequests.remove(username)
-            }
-        }.start()
     }
         
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
