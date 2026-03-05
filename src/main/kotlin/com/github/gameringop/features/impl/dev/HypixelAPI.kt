@@ -292,10 +292,13 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 ChatUtils.modMessage("§7[Mojang API] GET $url")
             }
             
-            val request = Request.Builder()
-                .url(url)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .build()
+        val request = Request.Builder()
+            .url(url)
+            .header("API-Key", apiKey.value)
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .header("Accept", "application/json")
+            .header("Accept-Language", "en-US,en;q=0.9")
+            .build()
             
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -366,7 +369,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val request = Request.Builder()
                     .url(url)
                     .header("API-Key", apiKey.value)
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "application/json")
+                    .header("Accept-Language", "en-US,en;q=0.9")
                     .build()
                 
                 client.newCall(request).execute().use { response ->
