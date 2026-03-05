@@ -429,23 +429,4 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     fun isSpiritLoaded(username: String): Boolean = spiritCache.containsKey(username)
     
     fun hasAssumedSpirit(username: String): Boolean = assumedSpirit[username] == true
-    
-    fun preloadTeammates() {
-        if (apiKey.value.isBlank()) return
-        
-        val allPlayers = buildList {
-            addAll(DungeonListener.dungeonTeammatesNoSelf)
-            DungeonListener.thePlayer?.let { add(it) }
-        }
-        
-        if (SoTerm.debugFlags.contains("spirit")) {
-            ChatUtils.modMessage("§ePreloading Spirit cache for ${allPlayers.size} players")
-        }
-        
-        allPlayers.forEach { teammate ->
-            if (!isSpiritLoaded(teammate.name)) {
-                checkSpiritPet(teammate.name)
-            }
-        }
-    }
 }
