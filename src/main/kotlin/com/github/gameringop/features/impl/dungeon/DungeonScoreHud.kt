@@ -370,12 +370,10 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     
     override fun init() {
         register<WorldChangeEvent> {
-            if (LocationUtils.inDungeon) {
                 reset()
-                if (SoTerm.debugFlags.contains("spirit")) {
+                if (SoTerm.debugFlags.contains("spirit") && LocationUtils.inDungeon) {
                     ChatUtils.modMessage("§eAfter reset - firstDeathHadSpirit = $firstDeathHadSpirit")
                 }
-            }
         }
         
         register<DungeonEvent.PlayerDeathEvent> {
