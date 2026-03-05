@@ -144,7 +144,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             return
         }
         
-        ThreadUtils.scheduledTask(0) {
+        Thread {
             try {
                 val url = "https://api.hypixel.net/v2/player?name=Hypixel"
                 
@@ -201,7 +201,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     e.printStackTrace()
                 }
             }
-        }
+        }.start()
     }
     
     private fun checkSpecificPlayer(username: String) {
@@ -212,11 +212,11 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         
         ChatUtils.modMessage("§eChecking Spirit pet for §f$username§e...")
         
-        ThreadUtils.scheduledTask(0) {
+        Thread {
             try {
                 val uuid = getUUIDFromUsername(username) ?: run {
                     ChatUtils.modMessage("§cFailed to get UUID for $username")
-                    return@scheduledTask
+                    return@Thread
                 }
                 
                 val url = "https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid"
@@ -280,7 +280,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     e.printStackTrace()
                 }
             }
-        }
+        }.start()
     }
     
     fun getUUIDFromUsername(username: String): String? {
