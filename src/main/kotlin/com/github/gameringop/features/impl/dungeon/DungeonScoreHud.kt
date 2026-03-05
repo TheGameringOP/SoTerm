@@ -352,6 +352,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
     private fun calculateBonusScore(): Int {
         var bonus = ScoreCalculation.cryptsCount.coerceAtMost(5)
         if (ScoreCalculation.mimicKilled && (LocationUtils.dungeonFloorNumber ?: 0) > 5) bonus += 2
+        if (ScoreCalculation.princeKilled) bonus += 1
         if (DungeonUtils.isPaul()) bonus += 10
         return bonus
     }
