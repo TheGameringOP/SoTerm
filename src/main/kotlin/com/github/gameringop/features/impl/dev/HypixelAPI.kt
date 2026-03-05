@@ -323,12 +323,22 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
     
     fun checkSpiritPet(username: String, callback: ((Boolean) -> Unit)? = null) {
+        if (SoTerm.debugFlags.contains("link")) {
+            ChatUtils.modMessage("§7[Spirit] checkSpiritPet called for $username")
+        }
+        
         if (apiKey.value.isBlank()) {
+            if (SoTerm.debugFlags.contains("link")) {
+                ChatUtils.modMessage("§7[Spirit] No API key, assuming true")
+            }
             callback?.invoke(true)
             return
         }
         
         spiritCache[username]?.let {
+            if (SoTerm.debugFlags.contains("link")) {
+                ChatUtils.modMessage("§7[Spirit] Cache hit for $username: $it")
+            }
             callback?.invoke(it)
             return
         }
@@ -336,21 +346,40 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         if (spiritPendingRequests.containsKey(username)) {
             val lastRequest = spiritPendingRequests[username] ?: 0
             if (System.currentTimeMillis() - lastRequest < 60000) {
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7[Spirit] Request pending for $username (cooldown)")
+                }
                 return
             }
         }
         
         spiritPendingRequests[username] = System.currentTimeMillis()
         
+        if (SoTerm.debugFlags.contains("link")) {
+            ChatUtils.modMessage("§7[Spirit] Starting new request for $username")
+        }
+        
         Thread {
             try {
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7[Spirit] Getting UUID for $username")
+                }
+                
                 val uuid = getUUIDFromUsername(username)
                 
                 if (uuid == null) {
+                    if (SoTerm.debugFlags.contains("link")) {
+                        ChatUtils.modMessage("§7[Spirit] UUID fetch failed for $username, assuming true")
+                    }
                     spiritCache[username] = true
                     assumedSpirit[username] = true
                     callback?.invoke(true)
                     return@Thread
+                }
+                
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7[Spirit] UUID for $username: $uuid")
+                    ChatUtils.modMessage("§7[Spirit] Making API request to Hypixel")
                 }
                 
                 val request = Request.Builder()
@@ -360,6 +389,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 
                 client.newCall(request).enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
+                        if (SoTerm.debugFlags.contains("link")) {
+                            ChatUtils.modMessage("§7[Spirit] API request failed: ${e.message}")
+                        }
                         spiritCache[username] = true
                         assumedSpirit[username] = true
                         
@@ -372,9 +404,16 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         response.use {
                             val json = response.body?.string() ?: return
                             
+                            if (SoTerm.debugFlags.contains("link")) {
+                                ChatUtils.modMessage("§7[Spirit] API response received, parsing JSON")
+                            }
+                            
                             val profilesResponse = try {
                                 gson.fromJson(json, SkyblockProfiles::class.java)
                             } catch (e: Exception) {
+                                if (SoTerm.debugFlags.contains("link")) {
+                                    ChatUtils.modMessage("§7[Spirit] JSON parse failed: ${e.message}")
+                                }
                                 spiritCache[username] = true
                                 assumedSpirit[username] = true
                                 mc.execute { callback?.invoke(true) }
@@ -382,6 +421,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                             }
                             
                             if (!profilesResponse.success) {
+                                if (SoTerm.debugFlags.contains("link")) {
+                                    ChatUtils.modMessage("§7[Spirit] API error: ${profilesResponse.cause}")
+                                }
                                 spiritCache[username] = true
                                 assumedSpirit[username] = true
                                 mc.execute { callback?.invoke(true) }
@@ -391,6 +433,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                             val selectedProfile = profilesResponse.profiles?.find { it.selected }
                             
                             if (selectedProfile == null) {
+                                if (SoTerm.debugFlags.contains("link")) {
+                                    ChatUtils.modMessage("§7[Spirit] No selected profile found")
+                                }
                                 spiritCache[username] = true
                                 assumedSpirit[username] = true
                                 mc.execute { callback?.invoke(true) }
@@ -399,6 +444,10 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                             
                             val member = selectedProfile.members[uuid]
                             val hasSpirit = member?.pets_data?.pets?.any { it.isSpirit } ?: false
+                            
+                            if (SoTerm.debugFlags.contains("link")) {
+                                ChatUtils.modMessage("§7[Spirit] Result for $username: $hasSpirit")
+                            }
                             
                             spiritCache[username] = hasSpirit
                             if (!hasSpirit) {
@@ -412,6 +461,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     }
                 })
             } catch (e: Exception) {
+                if (SoTerm.debugFlags.contains("link")) {
+                    ChatUtils.modMessage("§7[Spirit] Exception: ${e.message}")
+                }
                 spiritCache[username] = true
                 assumedSpirit[username] = true
                 callback?.invoke(true)
@@ -420,7 +472,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             }
         }.start()
     }
-    
+        
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
     
     fun isSpiritLoaded(username: String): Boolean = spiritCache.containsKey(username)
