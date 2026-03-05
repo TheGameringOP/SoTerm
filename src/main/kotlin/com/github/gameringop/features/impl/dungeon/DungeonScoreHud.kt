@@ -388,9 +388,24 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             if (spiritTracking.value == 2 && !checkedSpiritForFirstDeath) {
                 checkedSpiritForFirstDeath = true
                 
-                val deadPlayerHadSpirit = HypixelAPI.getSpiritStatus(event.name) == true
+                var deadPlayerHadSpirit = HypixelAPI.getSpiritStatus(event.name)
                 
-                if (deadPlayerHadSpirit) {
+                if (deadPlayerHadSpirit == null) {
+                    if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§e${event.name} not in cache, checking now...")
+                    }
+                    
+                    HypixelAPI.checkSpiritPet(event.name)
+                    deadPlayerHadSpirit = HypixelAPI.getSpiritStatus(event.name)
+                    
+                    if (deadPlayerHadSpirit == null) {
+                        deadPlayerHadSpirit = true
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§eAssuming Spirit for ${event.name} while loading")
+                        }
+                    }
+                }
+                if (deadPlayerHadSpirit == true) {
                     firstDeathHadSpirit = true
                     if (SoTerm.debugFlags.contains("spirit")) {
                         ChatUtils.modMessage("§aFirst death: ${event.name} had Spirit - reducing penalty")
@@ -403,13 +418,6 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
                 }
             }
         }
-        
-        register<TickEvent.Server> {
-            if (LocationUtils.inDungeon && !LocationUtils.inBoss) {
-                updateData()
-            }
-        }
-    }
     
     override fun onEnable() {
         super.onEnable()
