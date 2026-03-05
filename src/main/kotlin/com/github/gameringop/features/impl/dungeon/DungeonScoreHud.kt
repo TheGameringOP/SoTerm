@@ -418,6 +418,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
                 }
             }
         }
+    }
     
     override fun onEnable() {
         super.onEnable()
