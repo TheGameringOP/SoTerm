@@ -314,11 +314,8 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
         val floor = LocationUtils.dungeonFloor ?: "F7"
         
         val timeLimit = when (floor) {
-            "E", "F1", "F2" -> 600
-            "F3" -> 600
-            "F4" -> 720
-            "F5" -> 600
-            "F6" -> 720
+            "E", "F1", "F2", "F3", "F5" -> 600
+            "F4", "F6" -> 720
             "F7" -> 840
             "M1", "M2", "M3", "M4", "M5" -> 480
             "M6" -> 600
@@ -339,7 +336,7 @@ object DungeonScoreHud : Feature("Dungeon Score HUD") {
             }
         } else {
             when {
-                totalElapsed < 492 -> 100
+                totalElapsed < 480 -> 100
                 totalElapsed < 600 -> (140 - totalElapsed / 12.0).toInt()
                 totalElapsed < 840 -> (115 - totalElapsed / 24.0).toInt()
                 totalElapsed < 1140 -> (108 - totalElapsed / 30.0).toInt()
