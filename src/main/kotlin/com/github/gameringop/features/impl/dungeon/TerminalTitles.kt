@@ -32,6 +32,18 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
     private val titleMode by DropdownSetting("Title Mode", 0, listOf("Draw", "Titles"))
         .withDescription("Draw: Original Terminal Titles, Titles: Room Alerts style")
 
+    private var completedTerminals = 0
+    private var gateDestroyed = false
+    private val totalTerminals = 7
+
+    private fun checkPhaseComplete() {
+        if (completedTerminals >= totalTerminals && gateDestroyed) {
+            showTitle("&a&lPhase Complete!")
+            completedTerminals = 0
+            gateDestroyed = false
+        }
+    }
+
     private val hud = object: HudElement() {
         override val name = "Terminal Titles"
         override val toggle get() = TerminalTitles.enabled
@@ -73,11 +85,14 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
 
             if (gateTitles.value) when (title) {
                 "The gate has been destroyed!" -> {
-                    showTitle("&cGate Destroyed!")
+                    gateDestroyed = true
+                    checkPhaseComplete()
+                    if (!(completedTerminals >= totalTerminals && gateDestroyed)) {
+                        showTitle("&cGate Destroyed!")
+                    }
                     event.isCanceled = true
                     return@register
                 }
-
                 "The gate will open in 5 seconds!" -> {
                     showTitle("&c&lGATE!")
                     event.isCanceled = true
@@ -86,6 +101,8 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             }
 
             val (name, type, min, max) = mainRegex.find(title)?.destructured ?: return@register
+            completedTerminals++
+            checkPhaseComplete()
             showTitle(handleTitle(name, type, min.toInt(), max.toInt()))
             event.isCanceled = true
         }
