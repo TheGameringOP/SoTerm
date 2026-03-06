@@ -30,7 +30,7 @@ object SpringBoots : Feature("Spring Boots Display") {
     private val show3DBox by ToggleSetting("Show 3D Box", true)
         .withDescription("Shows a 3D box above your head at jump height")
     
-    private val boxColor by ColorSetting("Box Color", Color.CYAN, false)
+    private val boxColor by ColorSetting("Box Color", Color.GREEN, false)
         .withDescription("Color of the 3D box")
         .showIf { show3DBox.value }
     private val boxOutline by ToggleSetting("Box Outline", true)
