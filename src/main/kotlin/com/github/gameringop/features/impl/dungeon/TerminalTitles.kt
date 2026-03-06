@@ -1,6 +1,8 @@
 package com.github.gameringop.features.impl.dungeon
 
+import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
+import com.github.gameringop.event.impl.RenderOverlayEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.Style
@@ -11,6 +13,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.hud.HudElement
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils
 import com.github.gameringop.utils.dungeons.DungeonPlayer
@@ -27,11 +30,14 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
     private val bracket by DropdownSetting("Bracket Type", 0, listOf("()", "[]", "<>", "{}"))
     private val phaseDone by ToggleSetting("Phase Done").withDescription("Renders Phase Done instead of 7/7 or 8/8")
     private val gateTitles by ToggleSetting("Gate Titles").withDescription("Reformats Gate related Titles.")
+    
+    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
+        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen")
 
     private val hud = object: HudElement() {
         override val name = "Terminal Titles"
         override val toggle get() = TerminalTitles.enabled
-        override val shouldDraw get() = titleStr.isNotBlank()
+        override val shouldDraw get() = titleStr.isNotBlank() && titleMode.value == 1
 
         override fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float> {
             val str = if (example) handleTitle(mc.user.name, "terminal", 6, 7) else titleStr
@@ -58,53 +64,81 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             Render2D.drawRect(ctx, drawX, drawY + scaledH - 1, scaledW.toDouble(), 1.0, borderColor)
         }
     }
+    
+    private data class ActiveTitle(val text: String, val endTime: Long)
+    private var activeTitle: ActiveTitle? = null
+    private var timer = 0
+    private var titleStr = ""
 
     override fun init() {
         hudElements.add(hud)
 
         register<MainThreadPacketReceivedEvent.Pre> {
-            if (! LocationUtils.inDungeon || LocationUtils.F7Phase != 3) return@register
+            if (!LocationUtils.inDungeon || LocationUtils.F7Phase != 3) return@register
             if (event.packet !is ClientboundSetSubtitleTextPacket) return@register
             val title = event.packet.text.unformattedText
 
             if (gateTitles.value) when (title) {
                 "The gate has been destroyed!" -> {
-                    titleStr = "&cGate Destroyed!"
-                    timer = duration.value.toInt() * 1000
-                    tickListener.register()
+                    showTitle("&cGate Destroyed!")
                     event.isCanceled = true
                     return@register
                 }
 
                 "The gate will open in 5 seconds!" -> {
-                    titleStr = "&c&lGATE!"
-                    timer = duration.value.toInt() * 1000
-                    tickListener.register()
+                    showTitle("&c&lGATE!")
                     event.isCanceled = true
                     return@register
                 }
             }
 
-            val (name, type, min, max) = mainRegex.find(event.packet.text().unformattedText)?.destructured ?: return@register
-            titleStr = handleTitle(name, type, min.toInt(), max.toInt())
-            timer = duration.value.toInt() * 1000
-            tickListener.register()
+            val (name, type, min, max) = mainRegex.find(title)?.destructured ?: return@register
+            showTitle(handleTitle(name, type, min.toInt(), max.toInt()))
             event.isCanceled = true
+        }
+        
+        register<TickEvent.Start> {
+            if (titleMode.value != 1) return@register
+            if (timer <= 0) {
+                titleStr = ""
+                activeTitle = null
+                this.listener.unregister()
+            }
+            timer -= 50
+        }
+        
+        EventBus.register<RenderOverlayEvent> {
+            if (!enabled) return@register
+            if (titleMode.value != 1) return@register
+            
+            val title = activeTitle ?: return@register
+            val width = mc.window.guiScaledWidth
+            val height = mc.window.guiScaledHeight
+            
+            Render2D.drawCenteredString(
+                it.context,
+                title.text,
+                width / 2f,
+                height / 3f,
+                scale = 3f
+            )
         }
     }
 
     private val mainRegex = Regex("(.+) (?:activated|completed) a (terminal|device|lever)! \\((\\d)/(\\d)\\)")
 
-    private var titleStr = ""
-    private var timer = 0
-
-    private val tickListener = register<TickEvent.Start> {
-        if (timer <= 0) {
-            this.listener.unregister()
-            titleStr = ""
+    private fun showTitle(text: String) {
+        when (titleMode.value) {
+            0 -> {
+                ChatUtils.showTitle(subtitle = text)
+            }
+            1 -> {
+                titleStr = text
+                activeTitle = ActiveTitle(text, System.currentTimeMillis() + (duration.value * 1000).toLong())
+                timer = (duration.value * 1000).toInt()
+                tickListener.register()
+            }
         }
-
-        timer -= 50
     }
 
     private fun handleTitle(name: String, type: String, min: Int, max: Int): String {
@@ -133,5 +167,13 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             2 -> "&f${brackets[0]}$color$min&f/&a$max&f${brackets[1]}"
             else -> ""
         }
+    }
+    
+    private val tickListener = register<TickEvent.Start> {
+        if (timer <= 0) {
+            this.listener.unregister()
+            titleStr = ""
+        }
+        timer -= 50
     }
 }
