@@ -7,6 +7,7 @@ import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
+import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.NumbersUtils.toFixed
@@ -53,7 +54,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<ChatMessageEvent> {
-            if (dungeonFloorNumber != 7 || ! inBoss || ! witherTitles.value) return@register
+            if (dungeonFloorNumber != 7 || !inBoss || !witherTitles.value) return@register
             when (event.unformattedText) {
                 "[BOSS] Maxor: YOU TRICKED ME!", "[BOSS] Maxor: THAT BEAM! IT HURTS! IT HURTS!!" -> showTitle("&dMaxor Stunned!")
                 "[BOSS] Storm: Oof", "[BOSS] Storm: Ouch, that hurt!" -> showTitle("&bStorm Crushed!")
@@ -64,7 +65,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<MainThreadPacketReceivedEvent.Pre> {
-            if (dungeonFloorNumber != 7 || ! inBoss) return@register
+            if (dungeonFloorNumber != 7 || !inBoss) return@register
 
             when (val packet = event.packet) {
                 is ClientboundSetSubtitleTextPacket -> {
@@ -100,14 +101,14 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
                 }
 
                 is ClientboundSetTitleTextPacket -> {
-                    if (! lightningTimer.value) return@register
+                    if (!lightningTimer.value) return@register
 
                     val text = packet.text.unformattedText
                     if (text.isBlank()) return@register
                     val number = text.toIntOrNull() ?: return@register
                     event.isCanceled = true
 
-                    if (! timerRenderer.isRegistered() && (number == 4 || number == 6)) {
+                    if (!timerRenderer.isRegistered() && (number == 4 || number == 6)) {
                         timerTime = DungeonListener.currentTime + (number * 1.35 * 20.0).toLong()
                         timerRenderer.register()
                     }
@@ -116,21 +117,21 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<BossBarUpdateEvent> {
-            if (! witherTitles.value) return@register
-            if (dungeonFloorNumber != 7 || ! inBoss) return@register
+            if (!witherTitles.value) return@register
+            if (dungeonFloorNumber != 7 || !inBoss) return@register
             if (event.progress > 0f) return@register
             val name = event.name.unformattedText
             val entry = DungeonListener.bossEntryTime ?: return@register
 
-            if (name.contains("Maxor") && ! maxorDead && DungeonListener.currentTime - entry > 120) {
+            if (name.contains("Maxor") && !maxorDead && DungeonListener.currentTime - entry > 120) {
                 maxorDead = true
                 showTitle("&dMaxor Dead!")
             }
-            else if (name.contains("Goldor") && ! goldorDead && goldorStart) {
+            else if (name.contains("Goldor") && !goldorDead && goldorStart) {
                 goldorDead = true
                 showTitle("&7Goldor Dead!")
             }
-            else if (name.contains("Necron") && ! necronDead && necronStart) {
+            else if (name.contains("Necron") && !necronDead && necronStart) {
                 necronDead = true
                 showTitle("&cNecron Dead!!")
             }
@@ -138,7 +139,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
     }
 
     private val timerRenderer = EventBus.register<RenderOverlayEvent> {
-        if (! enabled) return@register
+        if (!enabled) return@register
         val timeLeft = (timerTime - DungeonListener.currentTime) / 20.0
 
         if (timeLeft <= 0) {
