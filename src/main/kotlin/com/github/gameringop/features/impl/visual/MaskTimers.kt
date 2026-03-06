@@ -3,12 +3,13 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.RenderOverlayEvent
 import com.github.gameringop.event.impl.TickEvent
-import com.github.gameringop.event.impl.WorldChangeEvent
+import com.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
+import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
@@ -20,8 +21,8 @@ import net.minecraft.world.entity.EquipmentSlot
 object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and more") {
     private val onlyInDungeon by ToggleSetting("Dungeons Only")
     private val showTimers by ToggleSetting("Show Timers")
-    private val maskTimerStyle by DropdownSetting("Style", 0, listOf("SoTerm", "Zyryon")).showIf { showTimers.value }
-
+    private val maskTimerStyle by DropdownSetting("Style", 0, listOf("SoTerm", "Zyron")).showIf { showTimers.value }
+    
     private val invulnerabilityTimers by ToggleSetting("Invulnerability Timers")
     private val procNotification by ToggleSetting("Proc Notification")
     private val readyNotification by ToggleSetting("Ready Notification")
