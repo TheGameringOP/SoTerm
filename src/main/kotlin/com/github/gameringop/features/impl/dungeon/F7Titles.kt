@@ -4,10 +4,8 @@ import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.NumbersUtils.toFixed
@@ -24,9 +22,6 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
     private val crystalTitles by ToggleSetting("Crystal Titles")
     private val witherTitles by ToggleSetting("Wither Titles")
     private val lightningTimer by ToggleSetting("Lightning Timer")
-    
-    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Draw", "Titles"))
-        .withDescription("Draw: Original F7 Titles (with lightning timer), Titles: Simple text popup")
 
     private val crystalRegex = Regex("^(\\d)/(\\d) Energy Crystals are now active!$")
     private val enragedRegex = Regex("^⚠ (\\w+) is enraged! ⚠$")
@@ -50,7 +45,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<ChatMessageEvent> {
-            if (dungeonFloorNumber != 7 || !inBoss || !witherTitles.value) return@register
+            if (dungeonFloorNumber != 7 || ! inBoss || ! witherTitles.value) return@register
             when (event.unformattedText) {
                 "[BOSS] Maxor: YOU TRICKED ME!", "[BOSS] Maxor: THAT BEAM! IT HURTS! IT HURTS!!" -> showTitle("&dMaxor Stunned!")
                 "[BOSS] Storm: Oof", "[BOSS] Storm: Ouch, that hurt!" -> showTitle("&bStorm Crushed!")
@@ -61,7 +56,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<MainThreadPacketReceivedEvent.Pre> {
-            if (dungeonFloorNumber != 7 || !inBoss) return@register
+            if (dungeonFloorNumber != 7 || ! inBoss) return@register
 
             when (val packet = event.packet) {
                 is ClientboundSetSubtitleTextPacket -> {
@@ -76,7 +71,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
 
                         crystalRegex.find(text)?.destructured?.let { (min, max) ->
                             val progress = formatProgress(min.toInt(), max.toInt())
-                            showTitle("&3Crystal&r($progress)")
+                            ChatUtils.showTitle(subtitle = "&3Crystal&r($progress)")
                             event.isCanceled = true
                             return@register
                         }
@@ -88,6 +83,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
                                 mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1f))
                                 "&b"
                             }
+
                             "Maxor" -> "&5"
                             else -> ""
                         }
@@ -97,14 +93,14 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
                 }
 
                 is ClientboundSetTitleTextPacket -> {
-                    if (!lightningTimer.value) return@register
+                    if (! lightningTimer.value) return@register
 
                     val text = packet.text.unformattedText
                     if (text.isBlank()) return@register
                     val number = text.toIntOrNull() ?: return@register
                     event.isCanceled = true
 
-                    if (!timerRenderer.isRegistered() && (number == 4 || number == 6)) {
+                    if (! timerRenderer.isRegistered() && (number == 4 || number == 6)) {
                         timerTime = DungeonListener.currentTime + (number * 1.35 * 20.0).toLong()
                         timerRenderer.register()
                     }
@@ -113,57 +109,52 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
 
         register<BossBarUpdateEvent> {
-            if (!witherTitles.value) return@register
-            if (dungeonFloorNumber != 7 || !inBoss) return@register
+            if (! witherTitles.value) return@register
+            if (dungeonFloorNumber != 7 || ! inBoss) return@register
             if (event.progress > 0f) return@register
             val name = event.name.unformattedText
             val entry = DungeonListener.bossEntryTime ?: return@register
 
-            if (name.contains("Maxor") && !maxorDead && DungeonListener.currentTime - entry > 120) {
+            if (name.contains("Maxor") && ! maxorDead && DungeonListener.currentTime - entry > 120) {
                 maxorDead = true
                 showTitle("&dMaxor Dead!")
             }
-            else if (name.contains("Goldor") && !goldorDead && goldorStart) {
+            else if (name.contains("Goldor") && ! goldorDead && goldorStart) {
                 goldorDead = true
                 showTitle("&7Goldor Dead!")
             }
-            else if (name.contains("Necron") && !necronDead && necronStart) {
+            else if (name.contains("Necron") && ! necronDead && necronStart) {
                 necronDead = true
                 showTitle("&cNecron Dead!!")
             }
         }
     }
-    
+
     private val timerRenderer = EventBus.register<RenderOverlayEvent> {
-        if (!enabled) return@register
+        if (! enabled) return@register
         val timeLeft = (timerTime - DungeonListener.currentTime) / 20.0
-    
+
         if (timeLeft <= 0) {
             this.listener.unregister()
             showTitle("&aStorm's Lightning Ended!")
             return@register
         }
-    
-        when (titleMode.value) {
-            0 -> {
-                val width = mc.window.guiScaledWidth
-                val height = mc.window.guiScaledHeight
-                Render2D.drawCenteredString(
-                    event.context,
-                    "&l&c${timeLeft.toFixed(1)}",
-                    width / 2f,
-                    height / 2f - height / 13f,
-                    scale = 3f
-                )
-            }
-            1 -> {
-                ChatUtils.showTitle("&l&c${timeLeft.toFixed(1)}")
-            }
-        }
-    }
 
-    private fun showTitle(text: String) {
-        ChatUtils.showTitle(text)
+        val width = mc.window.guiScaledWidth
+        val height = mc.window.guiScaledHeight
+
+        Render2D.drawCenteredString(
+            event.context,
+            "&l&c${timeLeft.toFixed(1)}",
+            width / 2f,
+            height / 2f - height / 13f,
+            scale = 3f
+        )
+    }.unregister()
+
+
+    private fun showTitle(subtitle: String) {
+        ChatUtils.showTitle(subtitle = subtitle)
         mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f))
     }
 
