@@ -129,12 +129,10 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
 
     private fun showTitle(text: String) {
         when (titleMode.value) {
-            0 -> {
-                ChatUtils.showTitle(subtitle = text)
-            }
+            0 -> ChatUtils.showTitle(subtitle = text)
             1 -> {
                 titleStr = text
-                activeTitle = ActiveTitle(text, System.currentTimeMillis() + (duration.value * 1000).toLong())
+                activeTitle = ActiveTitle(text, DungeonListener.currentTime + (duration.value * 20).toLong())
                 timer = (duration.value * 1000).toInt()
                 tickListener.register()
             }
