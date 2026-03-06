@@ -40,7 +40,7 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
 
     private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
     
-    private val esp by ToggleSetting("See Through Walls")
+    private val boxPhase by ToggleSetting("See Through Walls")
 
     private val starMobColor by ColorSetting("Star Mob Color", Color.GREEN, false).section("General Colors").withDescription("Default color for all Starred mobs.")
     private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.")
@@ -105,7 +105,7 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
                     fillColor = color.withAlpha(50),
                     outline = mode.value.equalsOneOf(1, 2),
                     fill = mode.value.equalsOneOf(0, 2),
-                    phase = esp.value
+                    phase = boxPhase.value
                 )
             }
         }
