@@ -71,7 +71,7 @@ object SpringBoots : Feature("Spring Boots Display") {
         val displayAmount = if (demo) 33.0f else blockAmount
         if (displayAmount <= 0f && !demo) return@hudElement 0f to 0f
         
-        val text = "§4§lHeight: §a$l{String.format("%.1f", displayAmount)}"
+        val text = "§4§lHeight: §a§l${String.format("%.1f", displayAmount)}"
         Render2D.drawString(context, text, 0, 0, textColor.value)
         
         return@hudElement text.width().toFloat() to 9f
