@@ -12,6 +12,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
+import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils
