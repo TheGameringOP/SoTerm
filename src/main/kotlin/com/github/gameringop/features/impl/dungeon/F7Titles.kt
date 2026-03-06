@@ -4,6 +4,7 @@ import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
@@ -22,6 +23,9 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
     private val crystalTitles by ToggleSetting("Crystal Titles")
     private val witherTitles by ToggleSetting("Wither Titles")
     private val lightningTimer by ToggleSetting("Lightning Timer")
+    
+    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
+        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen")
 
     private val crystalRegex = Regex("^(\\d)/(\\d) Energy Crystals are now active!$")
     private val enragedRegex = Regex("^⚠ (\\w+) is enraged! ⚠$")
@@ -32,6 +36,9 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
     private var necronDead = false
     private var goldorStart = false
     private var necronStart = false
+    
+    private data class ActiveTitle(val text: String, val endTime: Long)
+    private var activeTitle: ActiveTitle? = null
 
     override fun init() {
         register<WorldChangeEvent> {
@@ -41,6 +48,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
             goldorStart = false
             necronStart = false
             timerTime = 0L
+            activeTitle = null
             timerRenderer.unregister()
         }
 
@@ -71,7 +79,7 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
 
                         crystalRegex.find(text)?.destructured?.let { (min, max) ->
                             val progress = formatProgress(min.toInt(), max.toInt())
-                            ChatUtils.showTitle(subtitle = "&3Crystal&r($progress)")
+                            showTitle("&3Crystal&r($progress)")
                             event.isCanceled = true
                             return@register
                         }
@@ -83,7 +91,6 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
                                 mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1f))
                                 "&b"
                             }
-
                             "Maxor" -> "&5"
                             else -> ""
                         }
@@ -152,10 +159,41 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         )
     }.unregister()
 
-
     private fun showTitle(subtitle: String) {
-        ChatUtils.showTitle(subtitle = subtitle)
-        mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f))
+        when (titleMode.value) {
+            0 -> {
+                ChatUtils.showTitle(subtitle = subtitle)
+                mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f))
+            }
+            1 -> {
+                activeTitle = ActiveTitle(subtitle, DungeonListener.currentTime + 40)
+                mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f))
+            }
+        }
+    }
+    
+    init {
+        EventBus.register<RenderOverlayEvent> {
+            if (!enabled) return@register
+            if (titleMode.value != 1) return@register
+            
+            val title = activeTitle ?: return@register
+            if (DungeonListener.currentTime > title.endTime) {
+                activeTitle = null
+                return@register
+            }
+            
+            val width = mc.window.guiScaledWidth
+            val height = mc.window.guiScaledHeight
+            
+            Render2D.drawCenteredString(
+                it.context,
+                title.text,
+                width / 2f,
+                height / 3f,
+                scale = 3f
+            )
+        }
     }
 
     private fun formatProgress(current: Int, max: Int): String {
