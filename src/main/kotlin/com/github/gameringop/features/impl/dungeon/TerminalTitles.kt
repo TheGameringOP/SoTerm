@@ -104,7 +104,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             }
             1 -> {
                 titleStr = text
-                timer = (duration.value * 1000.0).toInt()
+                timer = (duration.value.toDouble() * 1000.0).toInt()
                 tickListener.register()
                 ChatUtils.showTitle(text)
             }
