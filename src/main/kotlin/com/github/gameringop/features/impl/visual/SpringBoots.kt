@@ -126,7 +126,7 @@ object SpringBoots : Feature("Spring Boots Display") {
             Render3D.renderBox(
                 ctx = event.ctx,
                 x = pos.x,
-                y = pos.y,
+                y = pos.y + blockAmount,
                 z = pox.z,
                 width = 1.0,
                 height = 1.0,
