@@ -127,7 +127,7 @@ object SpringBoots : Feature("Spring Boots Display") {
             val pos = player.renderVec
             
             Render3D.renderBox(
-                ctx = it.ctx,
+                ctx = event.ctx,
                 x = pos.x,
                 y = pos.y,
                 z = pos.z,
