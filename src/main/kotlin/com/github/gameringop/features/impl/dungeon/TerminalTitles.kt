@@ -138,9 +138,9 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
         }
 
         val formattedType = when (type) {
-            "terminal" -> "&5Terminal"
-            "device" -> "&bDevice"
-            "lever" -> "&cLever"
+            "terminal" -> "&aTerminal"
+            "device" -> "&aDevice"
+            "lever" -> "&aLever"
             else -> ""
         }
 
