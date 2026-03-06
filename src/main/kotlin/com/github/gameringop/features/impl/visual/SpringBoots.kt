@@ -123,6 +123,14 @@ object SpringBoots : Feature("Spring Boots Display") {
             
             val player = mc.player ?: return@register
             val pos = player.renderVec
+
+            val fillColor = Color(
+                boxColor.value.red,
+                boxColor.value.green,
+                boxColor.value.blue,
+                50 
+            )
+            
             
             Render3D.renderBox(
                 ctx = event.ctx,
@@ -132,7 +140,7 @@ object SpringBoots : Feature("Spring Boots Display") {
                 width = 1.0,
                 height = 1.0,
                 outlineColor = boxColor.value,
-                fillColor = boxColor.withAlpha(50),
+                fillColor = fillColor,
                 outline = mode.value.equalsOneOf(1, 2),
                 fill = mode.value.equalsOneOf(0, 2),
                 phase = boxPhase.value
