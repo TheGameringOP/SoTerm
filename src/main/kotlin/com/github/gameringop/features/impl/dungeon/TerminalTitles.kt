@@ -19,18 +19,19 @@ import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
 import java.awt.Color
 
 object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
-    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
-        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen")
-    
     private val duration by SliderSetting("Duration", 2.5, 0.5, 6, 0.5).withDescription("Duration of the title in seconds")
     private val mode by DropdownSetting("Mode", 0, listOf("Name + Term + Progress", "Term + Progress", "Progress"))
     private val bracket by DropdownSetting("Bracket Type", 0, listOf("()", "[]", "<>", "{}"))
     private val phaseDone by ToggleSetting("Phase Done").withDescription("Renders Phase Done instead of 7/7 or 8/8")
     private val gateTitles by ToggleSetting("Gate Titles").withDescription("Reformats Gate related Titles.")
+    
+    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
+        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen (like Room Alerts)")
 
     private val hud = object: HudElement() {
         override val name = "Terminal Titles"
@@ -63,9 +64,6 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
         }
     }
 
-    private var titleStr = ""
-    private var timer = 0
-
     override fun init() {
         hudElements.add(hud)
 
@@ -88,7 +86,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
                 }
             }
 
-            val (name, type, min, max) = mainRegex.find(title)?.destructured ?: return@register
+            val (name, type, min, max) = mainRegex.find(event.packet.text().unformattedText)?.destructured ?: return@register
             showTitle(handleTitle(name, type, min.toInt(), max.toInt()))
             event.isCanceled = true
         }
@@ -96,14 +94,20 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
 
     private val mainRegex = Regex("(.+) (?:activated|completed) a (terminal|device|lever)! \\((\\d)/(\\d)\\)")
 
+    private var titleStr = ""
+    private var timer = 0
+
     private fun showTitle(text: String) {
-        titleStr = text
-        timer = (duration.value * 1000).toInt()
-        tickListener.register()
-        
         when (titleMode.value) {
-            0 -> ChatUtils.showTitle(text)
-            1 -> ChatUtils.showTitle(text)
+            0 -> {
+                mc.player?.connection?.sendChat("")
+            }
+            1 -> {
+                titleStr = text
+                timer = (duration.value * 1000).toInt()
+                tickListener.register()
+                ChatUtils.showTitle(text)
+            }
         }
     }
 
@@ -140,6 +144,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             this.listener.unregister()
             titleStr = ""
         }
+
         timer -= 50
     }
 }
