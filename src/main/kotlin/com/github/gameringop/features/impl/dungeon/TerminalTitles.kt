@@ -1,8 +1,6 @@
 package com.github.gameringop.features.impl.dungeon
 
-import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
-import com.github.gameringop.event.impl.RenderOverlayEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.Style
@@ -16,7 +14,6 @@ import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils
-import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
@@ -26,14 +23,14 @@ import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
 import java.awt.Color
 
 object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
+    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
+        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen")
+    
     private val duration by SliderSetting("Duration", 2.5, 0.5, 6, 0.5).withDescription("Duration of the title in seconds")
     private val mode by DropdownSetting("Mode", 0, listOf("Name + Term + Progress", "Term + Progress", "Progress"))
     private val bracket by DropdownSetting("Bracket Type", 0, listOf("()", "[]", "<>", "{}"))
     private val phaseDone by ToggleSetting("Phase Done").withDescription("Renders Phase Done instead of 7/7 or 8/8")
     private val gateTitles by ToggleSetting("Gate Titles").withDescription("Reformats Gate related Titles.")
-    
-    private val titleMode by DropdownSetting("Title Mode", 0, listOf("Titles", "Draw"))
-        .withDescription("Titles: Minecraft titles, Draw: Rendered text on screen")
 
     private val hud = object: HudElement() {
         override val name = "Terminal Titles"
@@ -65,11 +62,9 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             Render2D.drawRect(ctx, drawX, drawY + scaledH - 1, scaledW.toDouble(), 1.0, borderColor)
         }
     }
-    
-    private data class ActiveTitle(val text: String, val endTime: Long)
-    private var activeTitle: ActiveTitle? = null
-    private var timer = 0
+
     private var titleStr = ""
+    private var timer = 0
 
     override fun init() {
         hudElements.add(hud)
@@ -97,46 +92,18 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             showTitle(handleTitle(name, type, min.toInt(), max.toInt()))
             event.isCanceled = true
         }
-        
-        register<TickEvent.Start> {
-            if (titleMode.value != 1) return@register
-            if (timer <= 0) {
-                titleStr = ""
-                activeTitle = null
-                this.listener.unregister()
-            }
-            timer -= 50
-        }
-        
-        EventBus.register<RenderOverlayEvent> {
-            if (!enabled) return@register
-            if (titleMode.value != 1) return@register
-            
-            val title = activeTitle ?: return@register
-            val width = mc.window.guiScaledWidth
-            val height = mc.window.guiScaledHeight
-            
-            Render2D.drawCenteredString(
-                it.context,
-                title.text,
-                width / 2f,
-                height / 3f,
-                scale = 3f
-            )
-        }
     }
 
     private val mainRegex = Regex("(.+) (?:activated|completed) a (terminal|device|lever)! \\((\\d)/(\\d)\\)")
 
     private fun showTitle(text: String) {
+        titleStr = text
+        timer = (duration.value * 1000).toInt()
+        tickListener.register()
+        
         when (titleMode.value) {
-            0 -> ChatUtils.showTitle(subtitle = text)
-            1 -> {
-                titleStr = text
-                activeTitle = ActiveTitle(text, DungeonListener.currentTime + (duration.value * 20.0).toLong())
-                timer = (duration.value * 1000).toInt()
-                tickListener.register()
-            }
+            0 -> ChatUtils.showTitle(text)
+            1 -> ChatUtils.showTitle(text)
         }
     }
 
@@ -167,7 +134,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             else -> ""
         }
     }
-    
+
     private val tickListener = register<TickEvent.Start> {
         if (timer <= 0) {
             this.listener.unregister()
