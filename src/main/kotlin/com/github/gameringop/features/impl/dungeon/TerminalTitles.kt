@@ -152,11 +152,9 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             "lever" -> "&aLever"
             else -> ""
         }
-
-        val formattedName = (DungeonPlayer.get(name)?.clazz?.code ?: "&b") + name
         
         return when (mode.value) {
-            0 -> "$formattedName &aactivated a $formattedType &a${brackets[0]}&c$min&a/&a$max&a${brackets[1]}"
+            0 -> "&b$name &aactivated a $formattedType &a${brackets[0]}&c$min&a/&a$max&a${brackets[1]}"
             1 -> "$formattedType &a${brackets[0]}&c$min&a/&a$max&a${brackets[1]}"
             2 -> "&a${brackets[0]}&c$min&a/&a$max&a${brackets[1]}"
             else -> ""
