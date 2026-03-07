@@ -43,7 +43,7 @@ dependencies {
 //    modImplementation "com.github.gameringop:SoTerm:master-SNAPSHOT"
     modRuntimeOnly "me.djtheredstoner:DevAuth-fabric:1.2.2"
 
-    modCompileOnly("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
     implementation "io.github.classgraph:classgraph:4.8.174"
     include "io.github.classgraph:classgraph:4.8.174"
