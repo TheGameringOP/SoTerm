@@ -82,7 +82,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
                     event.isCanceled = true
                     
                     if (terminalsDone && phaseDone.value) {
-                        showTitle("&a&lPhase Complete!")
+                        showTitle("&aPhase Complete!")
                         terminalsDone = false
                         gateDestroyed = false
                     } else {
@@ -107,7 +107,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
                 if (min == max) {
                     terminalsDone = true
                     if (gateDestroyed && phaseDone.value) {
-                        showTitle("&a&lPhase Complete!")
+                        showTitle("&aPhase Complete!")
                         terminalsDone = false // Reset
                         gateDestroyed = false
                     } else {
