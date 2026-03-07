@@ -7,7 +7,8 @@ import net.minecraft.client.gui.screens.Screen
 class ModMenuIntegration : ModMenuApi {
     override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {
         return ConfigScreenFactory { parent: Screen -> 
-            ClickGuiScreen.also { it.parent = parent } 
+            ClickGuiScreen.parent = parent
+            ClickGuiScreen 
         }
     }
 }
