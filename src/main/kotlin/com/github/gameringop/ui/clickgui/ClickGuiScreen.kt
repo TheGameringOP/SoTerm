@@ -18,8 +18,9 @@ import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
+object ClickGuiScreen : Screen(Component.literal("ClickGUI")) {
+    var parent: Screen? = null 
 
-object ClickGuiScreen: Screen(Component.literal("ClickGUI")) {
     private val panels = mutableListOf<Panel>()
     var searchQuery = ""
 
@@ -259,7 +260,13 @@ object ClickGuiScreen: Screen(Component.literal("ClickGUI")) {
         selectFeature(null)
         searchHandler.listening = false
         Config.save()
-        super.onClose()
+        
+        if (parent != null) {
+            minecraft?.setScreen(parent)
+            parent = null
+        } else {
+            super.onClose()
+        }
     }
 
     override fun isPauseScreen(): Boolean = false
