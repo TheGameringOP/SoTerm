@@ -32,10 +32,16 @@ object ClickGuiScreen: Screen(Component.literal("ClickGUI")) {
     private var scrollTarget = 0f
     private val scrollAnim = Animation(200L)
 
-    init {
+    private fun ensurePanelsInitialized() {
+        if (panels.isNotEmpty()) return
         CategoryType.entries.forEachIndexed { index, category ->
             panels.add(Panel(category, 20 + (index * 120), 20))
         }
+    }
+
+    override fun init() {
+        super.init()
+        ensurePanelsInitialized()
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
