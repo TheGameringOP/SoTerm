@@ -71,12 +71,8 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
             .split(",")
-            .map { it.trim().lowercase() }
+            .map { it.trim() }
             .filter { it.isNotEmpty() }
-        
-        if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
-        }
     }
 
     override fun init() {
@@ -88,23 +84,14 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            val cleaned = name.removeFormatting().lowercase()
+            val cleaned = name.removeFormatting()
             val mobName = extractMobName(cleaned)
-            
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7Raw: $name")
-                ChatUtils.modMessage("§7Cleaned: $cleaned")
-                ChatUtils.modMessage("§7Extracted: $mobName")
-            }
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
-            if (cachedMobNames.any { it == mobName }) {
-                if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aExact match found: $mobName")
-                }
+            if (cachedMobNames.any { it.equals(mobName, ignoreCase = true) }) {
                 checkMob(entity, name)
             }
         }
