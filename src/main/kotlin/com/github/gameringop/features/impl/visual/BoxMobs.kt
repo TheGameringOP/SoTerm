@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.visual
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
@@ -11,6 +12,7 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ColorUtils.withAlpha
@@ -49,6 +51,10 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
+        
+        if (SoTerm.debugFlags.contains("boxmobs")) {
+            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
+        }
     }
 
     override fun init() {
@@ -59,14 +65,23 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
             if (entity is ArmorStand || entity is Player) return@register
             
-            val customName = entity.customName?.formattedText ?: return@register
+            val customName = entity.customName?.formattedText
+            if (customName == null) return@register
+            
             val cleanName = customName.removeFormatting().lowercase()
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§7Entity ${entity.id}: '$cleanName'")
+            }
+            
             if (cachedMobNames.any { targetName -> cleanName.contains(targetName) }) {
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§aMatched: $cleanName")
+                }
                 trackedMobs.add(entity.id)
             }
         }
