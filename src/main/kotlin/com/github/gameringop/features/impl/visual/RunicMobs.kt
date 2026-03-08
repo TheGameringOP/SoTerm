@@ -24,7 +24,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.text.Regex
 
 object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
     
@@ -39,18 +38,6 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
 
     private val runicMobs = CopyOnWriteArraySet<Int>()
     private val checked = CopyOnWriteArraySet<Int>()
-    
-    private val healthRegex = Regex("\\[Lv\\d+\\]|❤|/|\\d+%|\\d+\\.?\\d*[kKmM]?")
-    private val bracketRegex = Regex("\\[.*?\\]|\\(.*?\\)")
-
-    private fun cleanMobName(rawName: String): String {
-        return rawName
-            .removeFormatting()
-            .replace(healthRegex, "")
-            .replace(bracketRegex, "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
-    }
 
     override fun init() {
         register<MainThreadPacketReceivedEvent.Post> {
@@ -61,8 +48,9 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
+            val cleanName = name.removeFormatting()
             
-            if (name.contains("⚡")) {
+            if (cleanName.contains("runic", ignoreCase = true)) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
