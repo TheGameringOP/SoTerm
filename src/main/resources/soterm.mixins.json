@@ -59,7 +59,6 @@
     "MixinMinecraft",
     "MixinMouseHandler",
     "MixinMultiPlayerGameMode",
-    "MixinNameTag",
     "MixinOptions",
     "MixinScreenEffectRenderer",
     "MixinSoundManager",
