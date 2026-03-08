@@ -12,7 +12,7 @@ public abstract class MixinNameTag {
 
     @Inject(method = "shouldShowName", at = @At("HEAD"), cancellable = true)
     private void onShouldShowName(CallbackInfoReturnable<Boolean> cir) {
-        if (AlwaysNameTags.INSTANCE.getEnabled()) {
+        if (AlwaysNameTags.INSTANCE.getEnabled()) { 
             Entity entity = (Entity) (Object) this;
             if (entity.hasCustomName()) {
                 cir.setReturnValue(true);
