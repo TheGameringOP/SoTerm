@@ -1,17 +1,20 @@
 package com.github.gameringop.features.impl.visual
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.EntityDeathEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ColorUtils.withAlpha
@@ -42,6 +45,13 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     
     private val mobListInput by TextInputSetting("Mob Names", "")
         .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
+    
+    private val refreshBtn by ButtonSetting("Refresh Cache", false) {
+        trackedMobs.clear()
+        checked.clear()
+        cachedMobNames = emptyList()
+        ChatUtils.modMessage("§aBoxMobs cache cleared!")
+    }.withDescription("Clears the tracked mobs cache and refreshes detection.")
 
     private val trackedMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
@@ -69,7 +79,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                 updateMobList()
             }
             
-            if (cachedMobNames.any { cleanName.contains(it) }) {
+            if (cachedMobNames.any { cleanName == it }) {
                 checkMob(entity, name)
             }
         }
