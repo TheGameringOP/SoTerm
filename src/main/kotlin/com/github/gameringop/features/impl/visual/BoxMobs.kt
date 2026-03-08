@@ -58,7 +58,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
 
-    private fun extractMobName(cleanedName: String): String {
+    private fun extractOutsideMobName(cleanedName: String): String {
         return cleanedName
             .replace(Regex("\\[L?v?\\d+\\]"), "")
             .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤]"), "")
@@ -68,11 +68,30 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .trim()
     }
 
+    private fun extractDungeonMobName(rawName: String): String {
+        var result = rawName
+            .replace(Regex("\\[L?v?\\d+\\]"), "")
+            .replace(Regex("\\d+(?:\\.\\d+)?[kKmM]?/?\\d*[kKmM]?❤?"), "")
+            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕]"), "")
+            .trim()
+        
+        if (result.startsWith("§")) {
+            val words = result.split(" ").filter { it.isNotEmpty() }
+            return words.drop(1).joinToString(" ").removeFormatting().trim()
+        }
+        
+        return result.removeFormatting().trim()
+    }
+
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
             .split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+        
+        if (SoTerm.debugFlags.contains("boxmobs")) {
+            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
+        }
     }
 
     override fun init() {
@@ -84,14 +103,25 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            val cleaned = name.removeFormatting()
-            val mobName = extractMobName(cleaned)
+            val mobName = if (LocationUtils.inDungeon) {
+                extractDungeonMobName(name)
+            } else {
+                extractOutsideMobName(name.removeFormatting())
+            }
+            
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§7Raw: $name")
+                ChatUtils.modMessage("§7Extracted: $mobName")
+            }
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
             if (cachedMobNames.any { it.equals(mobName, ignoreCase = true) }) {
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§aExact match found: $mobName")
+                }
                 checkMob(entity, name)
             }
         }
