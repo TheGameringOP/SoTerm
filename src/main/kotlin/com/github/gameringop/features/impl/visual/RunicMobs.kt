@@ -23,19 +23,33 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
+import kotlin.text.Regex
 
 object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
-    private val runicColor by ColorSetting("Runic Color", Color(170, 0, 170), false)
-        .withDescription("Color used for runic mob highlighting (default: purple).")
-  
+    
     private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
         .withDescription("Choose how to render the box around runic mobs.")
     
     private val esp by ToggleSetting("See Through Walls", true)
         .withDescription("Box visible through walls.")
+    
+    private val runicColor by ColorSetting("Runic Color", Color(170, 0, 170), false)
+        .withDescription("Color used for runic mob highlighting (default: purple).")
 
     private val runicMobs = CopyOnWriteArraySet<Int>()
     private val checked = CopyOnWriteArraySet<Int>()
+    
+    private val healthRegex = Regex("\\[Lv\\d+\\]|❤|/|\\d+%|\\d+\\.?\\d*[kKmM]?")
+    private val bracketRegex = Regex("\\[.*?\\]|\\(.*?\\)")
+
+    private fun cleanMobName(rawName: String): String {
+        return rawName
+            .removeFormatting()
+            .replace(healthRegex, "")
+            .replace(bracketRegex, "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
 
     override fun init() {
         register<MainThreadPacketReceivedEvent.Post> {
@@ -46,8 +60,8 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-          
-            if (name.startsWith("§5")) {
+            
+            if (name.contains("⚡")) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
@@ -93,7 +107,7 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
 
     private fun findRunicMob(armorStand: Entity) {
         if (!checked.add(armorStand.id)) return
-      
+        
         val possibleEntities = armorStand.level().getEntities(
             armorStand, 
             armorStand.boundingBox.inflate(2.0, 2.0, 2.0)
