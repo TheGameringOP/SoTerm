@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.visual
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
@@ -11,7 +12,6 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils.formattedText
-import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
@@ -21,7 +21,9 @@ import com.github.gameringop.utils.render.RenderHelper.renderY
 import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -48,9 +50,8 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            val cleanName = name.removeFormatting()
             
-            if (cleanName.contains("runic", ignoreCase = true)) {
+            if (name.startsWith("[") && name.contains("§5")) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
@@ -98,12 +99,16 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
         if (!checked.add(armorStand.id)) return
         
         val possibleEntities = armorStand.level().getEntities(
-            armorStand, 
+            armorStand,
             armorStand.boundingBox.inflate(2.0, 2.0, 2.0)
         ) { it !is ArmorStand }
         
         possibleEntities.find { mob ->
-            !runicMobs.contains(mob.id) && mob.isAlive
+            !runicMobs.contains(mob.id) && when (mob) {
+                is Player -> false
+                is WitherBoss -> false
+                else -> true
+            }
         }?.let { mob ->
             runicMobs.add(mob.id)
         }
