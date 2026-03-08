@@ -41,7 +41,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         .withDescription("Color used for mob highlighting (default: green).")
     
     private val mobListInput by TextInputSetting("Mob Names", "")
-        .withDescription("Enter mob names separated by commas (e.g., Zombie, Tank Zombie, Sadan)")
+        .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
 
     private val trackedMobs = CopyOnWriteArraySet<Int>()
     private var cachedMobNames = emptyList<String>()
@@ -51,10 +51,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
-        
-        if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
-        }
     }
 
     override fun init() {
@@ -65,23 +61,14 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
             if (entity is ArmorStand || entity is Player) return@register
             
-            val customName = entity.customName?.formattedText
-            if (customName == null) return@register
-            
+            val customName = entity.customName?.formattedText ?: return@register
             val cleanName = customName.removeFormatting().lowercase()
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7Entity ${entity.id}: '$cleanName'")
-            }
-            
             if (cachedMobNames.any { targetName -> cleanName.contains(targetName) }) {
-                if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aMatched: $cleanName")
-                }
                 trackedMobs.add(entity.id)
             }
         }
