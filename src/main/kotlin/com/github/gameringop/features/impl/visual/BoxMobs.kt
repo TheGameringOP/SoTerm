@@ -74,6 +74,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .replace(Regex("\\d+(?:[,\\.]?\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
             .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕☠🦴♃✰]"), "")
             .replace(Regex("[,]"), "")
+            .replace(Regex("§(?![0-9a-fklmnor])"), "")
             .trim()
         
         val words = result.split(" ").filter { it.isNotEmpty() }
