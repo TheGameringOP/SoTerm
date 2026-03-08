@@ -57,16 +57,14 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val trackedMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
-    
-    private val mobNameRegex = Regex("[⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔]|[❤♡]|\\d+❤|\\d+/\\d+|\\d+%|\\[Lv\\d+\\]|\\d+\\.?\\d*[kKmM]?")
 
     private fun extractMobName(cleanedName: String): String {
-        val withoutSymbols = cleanedName
-            .replace(mobNameRegex, "")
-            .trim()
-        
-        return withoutSymbols
-            .replace(Regex("\\s+\\d+[\\d,]*/?\\d*$"), "")
+        return cleanedName
+            .replace(Regex("\\[L?v?\\d+\\]"), "")
+            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤]"), "")
+            .replace(Regex("\\d+(?:,\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
+            .replace(Regex("[,/]"), "")
+            .replace(Regex("\\s+"), " ")
             .trim()
     }
 
