@@ -31,6 +31,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
+import kotlin.text.Regex
 
 object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock.") {
     
@@ -44,7 +45,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         .withDescription("Color used for mob highlighting (default: green).")
     
     private val mobListInput by TextInputSetting("Mob Names", "")
-        .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
+        .withDescription("Enter mob names separated by commas (e.g., Zealot, Zealot Bruiser, Sadan)")
     
     private val refreshBtn by ButtonSetting("Refresh Cache", false) {
         trackedMobs.clear()
@@ -56,6 +57,18 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val trackedMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
+    
+    private val mobNameRegex = Regex("[⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔]|[❤♡]|\\d+❤|\\d+/\\d+|\\d+%|\\[Lv\\d+\\]|\\d+\\.?\\d*[kKmM]?")
+
+    private fun extractMobName(cleanedName: String): String {
+        val withoutSymbols = cleanedName
+            .replace(mobNameRegex, "")
+            .trim()
+        
+        return withoutSymbols
+            .replace(Regex("\\s+\\d+[\\d,]*/?\\d*$"), "")
+            .trim()
+    }
 
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
@@ -77,25 +90,22 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            val cleanName = name.removeFormatting().lowercase()
+            val cleaned = name.removeFormatting().lowercase()
+            val mobName = extractMobName(cleaned)
             
             if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7ArmorStand ${entity.id}: '$cleanName'")
+                ChatUtils.modMessage("§7Raw: $name")
+                ChatUtils.modMessage("§7Cleaned: $cleaned")
+                ChatUtils.modMessage("§7Extracted: $mobName")
             }
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
-            if (cachedMobNames.any { cleanName == it }) {
+            if (cachedMobNames.any { it == mobName }) {
                 if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aExact match found for: $cleanName")
-                }
-                checkMob(entity, name)
-            }
-            else if (cachedMobNames.any { cleanName.contains(it) }) {
-                if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aContains match found for: $cleanName")
+                    ChatUtils.modMessage("§aExact match found: $mobName")
                 }
                 checkMob(entity, name)
             }
@@ -104,36 +114,21 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         register<EntityDeathEvent> {
             trackedMobs.removeIf { it == event.entity.id }
             checked.removeIf { it == event.entity.id }
-            if (SoTerm.debugFlags.contains("boxmobs") && trackedMobs.contains(event.entity.id)) {
-                ChatUtils.modMessage("§cMob ${event.entity.id} died, removed from tracking")
-            }
         }
 
         register<WorldChangeEvent> {
             trackedMobs.clear()
             checked.clear()
             cachedMobNames = emptyList()
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§eWorld changed, cleared cache")
-            }
         }
 
         register<RenderWorldEvent> {
             if (!LocationUtils.inSkyblock) return@register
             if (trackedMobs.isEmpty()) return@register
 
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7Rendering ${trackedMobs.size} tracked mobs")
-            }
-
             for (id in trackedMobs) {
                 val entity = mc.level?.getEntity(id) ?: continue
-                if (!entity.isAlive) {
-                    if (SoTerm.debugFlags.contains("boxmobs")) {
-                        ChatUtils.modMessage("§cMob $id is dead, skipping")
-                    }
-                    continue
-                }
+                if (!entity.isAlive) continue
 
                 val renderX = entity.renderX
                 val renderY = entity.renderY
@@ -163,29 +158,18 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private fun checkMob(armorStand: Entity, name: String) {
         if (!checked.add(armorStand.id)) return
         
-        if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§eChecking for mob below armorStand ${armorStand.id}")
-        }
-        
         val possibleEntities = armorStand.level().getEntities(
             armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0)
         ) { it !is ArmorStand }
 
-        val foundMob = possibleEntities.find {
+        possibleEntities.find {
             !trackedMobs.contains(it.id) && when (it) {
                 is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
                 is WitherBoss -> false
                 else -> true
             }
-        }
-        
-        if (foundMob != null) {
-            trackedMobs.add(foundMob.id)
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§aAdded mob ${foundMob.id} to tracking")
-            }
-        } else if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§cNo mob found below armorStand")
+        }?.let {
+            trackedMobs.add(it.id)
         }
     }
 }
