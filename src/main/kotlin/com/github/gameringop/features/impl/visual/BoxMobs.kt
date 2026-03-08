@@ -51,6 +51,10 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
+        
+        if (SoTerm.debugFlags.contains("boxmobs")) {
+            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
+        }
     }
 
     override fun init() {
@@ -64,11 +68,18 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             val customName = entity.customName?.formattedText ?: return@register
             val cleanName = customName.removeFormatting().lowercase()
             
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§7Entity ${entity.id}: '$cleanName'")
+            }
+            
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
             if (cachedMobNames.any { targetName -> cleanName.contains(targetName) }) {
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§aMATCH: $cleanName contains ${cachedMobNames.find { cleanName.contains(it) }}")
+                }
                 trackedMobs.add(entity.id)
             }
         }
