@@ -71,12 +71,14 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private fun extractDungeonMobName(rawName: String): String {
         var result = rawName
             .replace(Regex("\\[L?v?\\d+\\]"), "")
-            .replace(Regex("\\d+(?:\\.\\d+)?[kKmM]?/?\\d*[kKmM]?❤?"), "")
-            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕]"), "")
+            .replace(Regex("\\d+(?:[,\\.]?\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
+            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕☠🦴♃✰]"), "")
+            .replace(Regex("[,]"), "")
             .trim()
         
-        if (result.startsWith("§")) {
-            val words = result.split(" ").filter { it.isNotEmpty() }
+        val words = result.split(" ").filter { it.isNotEmpty() }
+        
+        if (words.isNotEmpty() && words[0].startsWith("§") && !words[0].startsWith("§c")) {
             return words.drop(1).joinToString(" ").removeFormatting().trim()
         }
         
