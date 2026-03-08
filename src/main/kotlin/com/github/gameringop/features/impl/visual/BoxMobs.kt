@@ -1,6 +1,6 @@
 package com.github.gameringop.features.impl.visual
 
-import com.github.gameringop.SoTerm
+import com.github.gameringop.event.impl.EntityDeathEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
@@ -12,7 +12,6 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
-import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ColorUtils.withAlpha
@@ -24,6 +23,7 @@ import com.github.gameringop.utils.render.RenderHelper.renderY
 import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
@@ -43,7 +43,8 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val mobListInput by TextInputSetting("Mob Names", "")
         .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
 
-    private val trackedMobs = CopyOnWriteArraySet<Int>()
+    private val trackedMobs = HashSet<Int>()
+    private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
 
     private fun updateMobList() {
@@ -51,10 +52,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
-        
-        if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§7Loaded mob names: ${cachedMobNames.joinToString()}")
-        }
     }
 
     override fun init() {
@@ -63,29 +60,28 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (event.packet !is ClientboundSetEntityDataPacket) return@register
             
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
-            if (entity is ArmorStand || entity is Player) return@register
+            if (entity !is ArmorStand) return@register
             
-            val customName = entity.customName?.formattedText ?: return@register
-            val cleanName = customName.removeFormatting().lowercase()
-            
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7Entity ${entity.id}: '$cleanName'")
-            }
+            val name = entity.customName?.formattedText ?: return@register
+            val cleanName = name.removeFormatting().lowercase()
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
-            if (cachedMobNames.any { targetName -> cleanName.contains(targetName) }) {
-                if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aMATCH: $cleanName contains ${cachedMobNames.find { cleanName.contains(it) }}")
-                }
-                trackedMobs.add(entity.id)
+            if (cachedMobNames.any { cleanName.contains(it) }) {
+                checkMob(entity, name)
             }
+        }
+
+        register<EntityDeathEvent> {
+            trackedMobs.removeIf { it == event.entity.id }
+            checked.removeIf { it == event.entity.id }
         }
 
         register<WorldChangeEvent> {
             trackedMobs.clear()
+            checked.clear()
             cachedMobNames = emptyList()
         }
 
@@ -119,6 +115,24 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                     phase = esp.value
                 )
             }
+        }
+    }
+
+    private fun checkMob(armorStand: Entity, name: String) {
+        if (!checked.add(armorStand.id)) return
+        
+        val possibleEntities = armorStand.level().getEntities(
+            armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0)
+        ) { it !is ArmorStand }
+
+        possibleEntities.find {
+            !trackedMobs.contains(it.id) && when (it) {
+                is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
+                is WitherBoss -> false
+                else -> true
+            }
+        }?.let {
+            trackedMobs.add(it.id)
         }
     }
 }
