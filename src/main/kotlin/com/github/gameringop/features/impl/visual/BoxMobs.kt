@@ -26,7 +26,6 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.text.Regex
 
 object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock.") {
     
@@ -44,23 +43,11 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
 
     private val trackedMobs = CopyOnWriteArraySet<Int>()
     private var cachedMobNames = emptyList<String>()
-    
-    private val healthRegex = Regex("\\[Lv\\d+\\]|❤|/|\\d+%|\\d+\\.?\\d*[kKmM]?")
-    private val bracketRegex = Regex("\\[.*?\\]|\\(.*?\\)")
-
-    private fun cleanMobName(rawName: String): String {
-        return rawName
-            .removeFormatting()
-            .replace(healthRegex, "")
-            .replace(bracketRegex, "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
-    }
 
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
             .split(",")
-            .map { it.trim() }
+            .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
     }
 
@@ -73,16 +60,13 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (entity is ArmorStand || entity is Player) return@register
             
             val customName = entity.customName?.formattedText ?: return@register
-            val cleanName = cleanMobName(customName)
+            val cleanName = customName.removeFormatting().lowercase()
             
             if (cachedMobNames.isEmpty()) {
                 updateMobList()
             }
             
-            if (cachedMobNames.any { targetName ->
-                cleanName.equals(targetName, ignoreCase = true) || 
-                cleanName.contains(targetName, ignoreCase = true)
-            }) {
+            if (cachedMobNames.any { targetName -> cleanName.contains(targetName) }) {
                 trackedMobs.add(entity.id)
             }
         }
