@@ -45,7 +45,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         .withDescription("Color used for mob highlighting (default: green).")
     
     private val mobListInput by TextInputSetting("Mob Names", "")
-        .withDescription("Enter mob names separated by commas (e.g., Zealot, Zealot Bruiser, Sadan)")
+        .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
     
     private val refreshBtn by ButtonSetting("Refresh Cache", false) {
         trackedMobs.clear()
@@ -58,38 +58,22 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
 
-    private fun extractOutsideMobName(cleanedName: String): String {
-        return cleanedName
+    private fun extractMobName(rawName: String): String {
+        return rawName
             .replace(Regex("\\[L?v?\\d+\\]"), "")
-            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤]"), "")
-            .replace(Regex("\\d+(?:,\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
+            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕☠🦴♃✰]"), "")
+            .replace(Regex("\\d+(?:[,\\.]?\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
             .replace(Regex("[,/]"), "")
             .replace(Regex("\\s+"), " ")
             .trim()
-    }
-
-    private fun extractDungeonMobName(rawName: String): String {
-        var result = rawName
-            .replace(Regex("\\[L?v?\\d+\\]"), "")
-            .replace(Regex("\\d+(?:[,\\.]?\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
-            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕☠🦴♃✰]"), "")
-            .replace(Regex("[,]"), "")
-            .replace(Regex("§(?![0-9a-fklmnor])"), "")
-            .trim()
-        
-        val words = result.split(" ").filter { it.isNotEmpty() }
-        
-        if (words.isNotEmpty() && words[0].startsWith("§") && !words[0].startsWith("§c")) {
-            return words.drop(1).joinToString(" ").removeFormatting().trim()
-        }
-        
-        return result.removeFormatting().trim()
+            .removeFormatting()
+            .lowercase()
     }
 
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
             .split(",")
-            .map { it.trim() }
+            .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
         
         if (SoTerm.debugFlags.contains("boxmobs")) {
@@ -106,11 +90,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            val mobName = if (LocationUtils.inDungeon) {
-                extractDungeonMobName(name)
-            } else {
-                extractOutsideMobName(name.removeFormatting())
-            }
+            val mobName = extractMobName(name)
             
             if (SoTerm.debugFlags.contains("boxmobs")) {
                 ChatUtils.modMessage("§7Raw: $name")
@@ -121,9 +101,9 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                 updateMobList()
             }
             
-            if (cachedMobNames.any { it.equals(mobName, ignoreCase = true) }) {
+            if (cachedMobNames.any { mobName.contains(it) }) {
                 if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aExact match found: $mobName")
+                    ChatUtils.modMessage("§aMatch found: $mobName contains ${cachedMobNames.find { mobName.contains(it) }}")
                 }
                 checkMob(entity, name)
             }
