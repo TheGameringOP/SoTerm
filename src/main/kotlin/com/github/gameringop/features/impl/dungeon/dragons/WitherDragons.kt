@@ -3,6 +3,7 @@ package com.github.gameringop.features.impl.dungeon.dragons
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
@@ -34,6 +35,11 @@ object WitherDragons: Feature(
     private val showSymbol by ToggleSetting("Timer Symbol", true).showIf { dragonTimer.value }
 
     private val dragonBoxes by ToggleSetting("Dragon Skip Box ", true).section("Dragon Box")
+    
+    private val showDragonHitboxes by ToggleSetting("Show Dragon Hitboxes", false).section("Dragon Hitboxes")
+    private val hitboxColor by ColorSetting("Hitbox Color", Color(255, 255, 255, 100), false)
+        .withDescription("Color for dragon hitboxes (default: white with transparency)")
+        .showIf { showDragonHitboxes.value }
 
     private val dragonHealth by ToggleSetting("Dragon Health", true).section("Dragon Visuals")
     private val highlightDragons by ToggleSetting("Highlight Dragons")
@@ -109,6 +115,10 @@ object WitherDragons: Feature(
                 if (dragonBoxes.value && dragon.state != WitherDragonState.DEAD) drawDragonBox(
                     event.ctx, dragon.boxesDimensions, dragon.color.withAlpha(0.5f)
                 )
+                
+                if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
+                    drawDragonHitbox(event.ctx, dragon.entity!!.boundingBox, hitboxColor.value)
+                }
             }
 
             if (dragonTracers.value && priorityDragon != WitherDragonEnum.None && priorityDragon.state == WitherDragonState.SPAWNING) {
@@ -185,6 +195,24 @@ object WitherDragons: Feature(
             consumers.getBuffer(OPRenderLayers.getLines(2.0)),
             aabb,
             color.red / 255f, color.green / 255f, color.blue / 255f, 1f
+        )
+
+        mstack.popPose()
+    }
+    
+    private fun drawDragonHitbox(ctx: RenderContext, aabb: AABB, color: Color) {
+        val mstack = ctx.matrixStack ?: return
+        val consumers = ctx.consumers ?: return
+        val camPos = ctx.camera.position
+
+        mstack.pushPose()
+        mstack.translate(- camPos.x, - camPos.y, - camPos.z)
+
+        ShapeRenderer.renderLineBox(
+            mstack.last(),
+            consumers.getBuffer(OPRenderLayers.getLines(2.0)),
+            aabb,
+            color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f
         )
 
         mstack.popPose()
