@@ -10,6 +10,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.ui.clickgui.components.showIf
+import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.MathUtils.add
 import com.github.gameringop.utils.NumbersUtils.toFixed
