@@ -38,8 +38,8 @@ object WitherDragons: Feature(
     private val dragonBoxes by ToggleSetting("Dragon Skip Box ", true).section("Dragon Box")
     
     private val showDragonHitboxes by ToggleSetting("Show Dragon Hitboxes", false).section("Dragon Hitboxes")
-    private val hitboxColor by ColorSetting("Hitbox Color", Color(255, 255, 255, 100), false)
-        .withDescription("Color for dragon hitboxes (default: white with transparency)")
+    private val hitboxColor by ColorSetting("Hitbox Color", Color(255, 255, 255), false)
+        .withDescription("Color for dragon hitboxes")
         .showIf { showDragonHitboxes.value }
 
     private val dragonHealth by ToggleSetting("Dragon Health", true).section("Dragon Visuals")
