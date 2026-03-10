@@ -136,11 +136,11 @@ object WitherDragons: Feature(
                                 phase = true
                             )
                         }
-                        val isTinyHead = part.boundingBox.xsize < 1.5 && part.boundingBox.ysize < 1.5
                 
-                        if (hideHeadBox.value && isTinyHead) {
+                        if (hideHeadBox.value && (index == 0)) {
                             return@forEachIndexed 
                         }
+                
                         drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
                     }
                 }
