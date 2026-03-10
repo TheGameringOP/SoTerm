@@ -42,21 +42,25 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
         }
 
         register<RenderWorldEvent> {
-            if (! drawName.value) return@register
-            if (! LocationUtils.inDungeon) return@register
+            if (!drawName.value || !LocationUtils.inDungeon) return@register
+            
+            val player = mc.player ?: return@register
+            val playerVec = player.renderVec
+        
             for (teammate in DungeonListener.dungeonTeammatesNoSelf) {
                 val entity = teammate.entity ?: continue
-                val color = getClassColor(teammate.clazz).let { java.awt.Color(it.red, it.green, it.blue) }
-                val hexColor = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+                val color = getClassColor(teammate.clazz)
+                
                 val renderVec = entity.renderVec
-                val distance = MathUtils.distance3D(renderVec, mc.player !!.renderVec)
-                val scale = (distance * 0.12f).coerceAtLeast(1.0)
-
+                val distance = MathUtils.distance3D(renderVec, playerVec)
+                val scale = (distance * 0.12f).coerceAtLeast(1.0f)
+        
                 Render3D.renderString(
-                    "&e[${teammate.clazz.name[0]}&e] &$hexColor${teammate.name}",
-                    renderVec.x,
-                    renderVec.y + entity.bbHeight + 0.7 + distance * 0.015f,
-                    renderVec.z,
+                    text = "&e[${teammate.clazz.name[0]}&e] ${teammate.name}",
+                    x = renderVec.x,
+                    y = renderVec.y + entity.bbHeight + 0.7 + (distance * 0.015f),
+                    z = renderVec.z,
+                    color = color,
                     scale = scale,
                     phase = true
                 )
