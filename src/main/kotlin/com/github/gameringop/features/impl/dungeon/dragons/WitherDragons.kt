@@ -123,9 +123,11 @@ object WitherDragons: Feature(
                 )
                 
                 if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
-                    val dragonEntity = dragon.entity!!
+                    val dragonEntity = dragon.entity
+                
                     if (dragonEntity is EnderDragon) {
-                        for (part in dragonEntity.getBodyParts()) {
+                        val parts = dragonEntity.subEntities 
+                        for (part in parts) {
                             drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
                         }
                     }
