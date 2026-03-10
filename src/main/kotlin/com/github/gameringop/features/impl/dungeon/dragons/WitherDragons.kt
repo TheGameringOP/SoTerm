@@ -25,9 +25,7 @@ import com.github.gameringop.utils.render.RenderHelper.renderZ
 import com.github.gameringop.utils.render.RenderHelper.renderVec
 import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.network.protocol.game.*
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
-import net.minecraft.world.entity.boss.EnderDragonPart
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import java.awt.Color
@@ -100,7 +98,7 @@ object WitherDragons: Feature(
             WitherDragonEnum.entries.forEach {
                 if (it.state == WitherDragonState.SPAWNING) {
                     it.timeToSpawn --
-                    if (it.timeToSpawn <= - 20) it.setDead(true)
+                    if (it.timeToSpawn <= -20) it.setDead(true)
                 }
             }
         }
@@ -110,7 +108,7 @@ object WitherDragons: Feature(
 
             WitherDragonEnum.entries.forEach { dragon ->
                 if (dragonHealth.value && dragon.state == WitherDragonState.ALIVE) dragon.entity?.let {
-                    Render3D.renderString(formatHealth(dragon.health), it.renderVec.add(y = - 1), scale = 6f, phase = true)
+                    Render3D.renderString(formatHealth(dragon.health), it.renderVec.add(y = -1), scale = 6f, phase = true)
                 }
 
                 if (dragonTimer.value && dragon.state == WitherDragonState.SPAWNING && dragon.timeToSpawn > 0) Render3D.renderString(
@@ -124,10 +122,10 @@ object WitherDragons: Feature(
                 
                 if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
                     val dragonEntity = dragon.entity!!
-                    val parts = dragonEntity.getParts()
-                    for (i in parts.indices) {
-                        val part = parts[i] as Entity
-                        drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                    if (dragonEntity is EnderDragon) {
+                        for (part in dragonEntity.getBodyParts()) {
+                            drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                        }
                     }
                 }
             }
@@ -138,7 +136,7 @@ object WitherDragons: Feature(
         }
 
         register<RenderOverlayEvent> {
-            if (! dragonTimer.value) return@register
+            if (!dragonTimer.value) return@register
             priorityDragon.takeIf { it != WitherDragonEnum.None }?.let { dragon ->
                 if (dragon.state != WitherDragonState.SPAWNING || dragon.timeToSpawn <= 0) return@register
                 Render2D.drawCenteredString(
@@ -152,7 +150,7 @@ object WitherDragons: Feature(
         }
 
         register<CheckEntityGlowEvent> {
-            if (! highlightDragons.value) return@register
+            if (!highlightDragons.value) return@register
             if (LocationUtils.F7Phase != 5) return@register
 
             WitherDragonEnum.entries.forEach { dragon ->
@@ -183,7 +181,6 @@ object WitherDragons: Feature(
                 val b = health / 1_000_000_000
                 "${if (b > 1) b.toFixed(1) else b.toInt()}b"
             }
-
             health >= 1_000_000 -> "${(health / 1_000_000).toInt()}m"
             health >= 1_000 -> "${(health / 1_000).toInt()}k"
             else -> "${health.toInt()}"
@@ -198,7 +195,7 @@ object WitherDragons: Feature(
         val camPos = ctx.camera.position
 
         mstack.pushPose()
-        mstack.translate(- camPos.x, - camPos.y, - camPos.z)
+        mstack.translate(-camPos.x, -camPos.y, -camPos.z)
 
         ShapeRenderer.renderLineBox(
             mstack.last(),
