@@ -51,7 +51,7 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             
             val name = entity.customName?.formattedText ?: return@register
             
-            if (name.startsWith("§5[")) {
+            if (name.contains("§d")) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
