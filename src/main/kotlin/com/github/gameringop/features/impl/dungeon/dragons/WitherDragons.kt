@@ -22,8 +22,10 @@ import com.github.gameringop.utils.render.RenderContext
 import com.github.gameringop.utils.render.RenderHelper.renderX
 import com.github.gameringop.utils.render.RenderHelper.renderY
 import com.github.gameringop.utils.render.RenderHelper.renderZ
+import com.github.gameringop.utils.render.RenderHelper.renderVec
 import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.network.protocol.game.*
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
