@@ -19,7 +19,9 @@ import com.github.gameringop.utils.render.OPRenderLayers
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.render.RenderHelper.renderVec
+import com.github.gameringop.utils.render.RenderHelper.renderX
+import com.github.gameringop.utils.render.RenderHelper.renderY
+import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.network.protocol.game.*
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
@@ -118,7 +120,13 @@ object WitherDragons: Feature(
                 )
                 
                 if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
-                    drawDragonHitbox(event.ctx, dragon.entity!!.boundingBox, hitboxColor.value)
+                    val dragonEntity = dragon.entity!!
+                    val parts = dragonEntity.parts
+                    if (parts != null) {
+                        for (part in parts) {
+                            drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                        }
+                    }
                 }
             }
 
@@ -153,7 +161,6 @@ object WitherDragons: Feature(
             }
         }
     }
-
 
     private fun getDragonTimer(spawnTime: Int): String = when (dragonTimerStyle.value) {
         0 -> "${(spawnTime * 50)}${if (showSymbol.value) "ms" else ""}"
@@ -201,21 +208,27 @@ object WitherDragons: Feature(
         mstack.popPose()
     }
     
-    private fun drawDragonHitbox(ctx: RenderContext, aabb: AABB, color: Color) {
-        val mstack = ctx.matrixStack ?: return
-        val consumers = ctx.consumers ?: return
-        val camPos = ctx.camera.position
-
-        mstack.pushPose()
-        mstack.translate(- camPos.x, - camPos.y, - camPos.z)
-
-        ShapeRenderer.renderLineBox(
-            mstack.last(),
-            consumers.getBuffer(OPRenderLayers.getLines(2.0)),
-            aabb,
-            color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f
+    private fun drawDragonPartHitbox(ctx: RenderContext, part: Entity, color: Color) {
+        val renderX = part.renderX
+        val renderY = part.renderY
+        val renderZ = part.renderZ
+        
+        val bb = part.boundingBox
+        val width = bb.xsize
+        val height = bb.ysize
+        
+        Render3D.renderBox(
+            ctx = ctx,
+            x = renderX,
+            y = renderY,
+            z = renderZ,
+            width = width,
+            height = height,
+            outlineColor = color,
+            fillColor = color.withAlpha(50),
+            outline = true,
+            fill = false,
+            phase = true
         )
-
-        mstack.popPose()
     }
 }
