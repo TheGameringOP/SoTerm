@@ -3,7 +3,7 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
-import com.github.gameringop.event.impl.WorldChangeEvent
+import.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
@@ -26,6 +26,7 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
+import kotlin.text.Regex
 
 object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
     
@@ -51,7 +52,10 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             
             val name = entity.customName?.formattedText ?: return@register
             
-            if (name.contains("§d")) {
+            val words = name.split(" ").filter { it.isNotEmpty() }
+            val healthWord = words.find { it.contains(Regex("[0-9]")) && it.contains("/") }
+            
+            if (healthWord != null && healthWord.startsWith("§d")) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
