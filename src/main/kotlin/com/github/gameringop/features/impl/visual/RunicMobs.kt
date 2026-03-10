@@ -26,7 +26,6 @@ import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.text.Regex
 
 object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
     
@@ -51,9 +50,8 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             if (entity !is ArmorStand) return@register
             
             val name = entity.customName?.formattedText ?: return@register
-            
             val words = name.split(" ").filter { it.isNotEmpty() }
-            val healthWord = words.find { it.contains(Regex("[0-9]")) && it.contains("/") }
+            val healthWord = words.find { it.contains("❤") }
             
             if (healthWord != null && healthWord.startsWith("§d")) {
                 runicMobs.add(entity.id)
