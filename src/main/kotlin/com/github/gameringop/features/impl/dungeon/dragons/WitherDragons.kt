@@ -124,9 +124,22 @@ object WitherDragons: Feature(
                 
                 if (showDragonHitboxes.value && dragon.entity is EnderDragon && dragon.state == WitherDragonState.ALIVE) {
                     val dragonEntity = dragon.entity as EnderDragon
-                    
-                    dragonEntity.subEntities.forEachIndexed { index, part ->
-                        if (hideHeadBox.value && index == 7) return@forEachIndexed
+                    val parts = dragonEntity.subEntities
+                
+                    parts.forEachIndexed { index, part ->
+                        if ("parts" in debugFlags) {
+                            Render3D.renderString(
+                                text = index.toString(),
+                                pos = part.renderVec.add(0.0, 0.5, 0.0),
+                                scale = 8f,
+                                phase = true
+                            )
+                        }
+                        val isTinyHead = part.boundingBox.xsize < 1.5 && part.boundingBox.ysize < 1.5
+                
+                        if (hideHeadBox.value && isTinyHead) {
+                            return@forEachIndexed 
+                        }
                         drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
                     }
                 }
