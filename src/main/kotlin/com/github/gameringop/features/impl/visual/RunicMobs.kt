@@ -3,7 +3,7 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
-import.github.gameringop.event.impl.WorldChangeEvent
+import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
