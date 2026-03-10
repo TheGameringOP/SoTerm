@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.dungeon.dragons
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
