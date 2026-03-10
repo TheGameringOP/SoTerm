@@ -45,20 +45,20 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
             if (!drawName.value || !LocationUtils.inDungeon) return@register
             
             val player = mc.player ?: return@register
-            val playerVec = player.renderVec
-        
+            
             for (teammate in DungeonListener.dungeonTeammatesNoSelf) {
                 val entity = teammate.entity ?: continue
                 val color = getClassColor(teammate.clazz)
                 
                 val renderVec = entity.renderVec
-                val distance = MathUtils.distance3D(renderVec, playerVec)
-                val scale = (distance * 0.12f).coerceAtLeast(1.0f)
+                val distance = MathUtils.distance3D(renderVec, player.renderVec)
+                
+                val scale = (distance * 0.12).coerceAtLeast(1.0)
         
                 Render3D.renderString(
                     text = "&e[${teammate.clazz.name[0]}&e] ${teammate.name}",
                     x = renderVec.x,
-                    y = renderVec.y + entity.bbHeight + 0.7 + (distance * 0.015f),
+                    y = renderVec.y + entity.bbHeight + 0.7 + (distance * 0.015),
                     z = renderVec.z,
                     color = color,
                     scale = scale,
