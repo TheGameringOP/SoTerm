@@ -51,9 +51,19 @@ object RunicMobs : Feature("Highlights runic mobs everywhere in Skyblock.") {
             
             val name = entity.customName?.formattedText ?: return@register
             val words = name.split(" ").filter { it.isNotEmpty() }
-            val healthWord = words.find { it.contains("❤") }
             
-            if (healthWord != null && healthWord.startsWith("§d")) {
+            val healthWordIndex = words.indexOfFirst { it.contains("❤") }
+            if (healthWordIndex == -1) return@register
+            
+            val healthWord = words[healthWordIndex]
+            var isRunic = healthWord.startsWith("§d")
+            
+            if (!isRunic && healthWordIndex > 0) {
+                val previousWord = words[healthWordIndex - 1]
+                isRunic = previousWord.startsWith("§d")
+            }
+            
+            if (isRunic) {
                 runicMobs.add(entity.id)
                 findRunicMob(entity)
             }
