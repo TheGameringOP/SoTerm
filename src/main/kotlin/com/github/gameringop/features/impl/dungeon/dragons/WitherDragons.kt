@@ -45,7 +45,7 @@ object WitherDragons: Feature(
     private val hitboxColor by ColorSetting("Hitbox Color", Color(255, 255, 255), false)
         .withDescription("Color for dragon hitboxes")
         .showIf { showDragonHitboxes.value }
-    private val hideHeadBox by ToggleSetting("Show Dragon Head Hitbox", false).showIf { showDragonHitboxes.value }
+    private val hideHeadBox by ToggleSetting("Hide Dragon Head Hitbox", false).showIf { showDragonHitboxes.value }
 
     private val dragonHealth by ToggleSetting("Dragon Health", true).section("Dragon Visuals")
     private val highlightDragons by ToggleSetting("Highlight Dragons")
