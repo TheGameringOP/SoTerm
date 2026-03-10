@@ -127,7 +127,7 @@ object WitherDragons: Feature(
                     val parts = dragonEntity.subEntities
                 
                     parts.forEachIndexed { index, part ->
-                        if ("parts" in debugFlags) {
+                        if (SoTerm.debugFlags.contains("parts")) {
                             Render3D.renderString(
                                 text = index.toString(),
                                 pos = part.renderVec.add(0.0, 0.5, 0.0),
