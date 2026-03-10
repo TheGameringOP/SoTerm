@@ -269,8 +269,11 @@ class TextInputHandler(
 
     private fun deleteSelection() {
         if (caret == selection) return
-        textSetter(text.removeRangeSafe(caret, selection))
-        caret = if (selection > caret) caret else selection
+        val start = min(caret, selection)
+        val end = max(caret, selection)
+        textSetter(text.removeRangeSafe(start, end))
+        caret = start
+        clearSelection()
         saveState()
     }
 
@@ -402,8 +405,11 @@ class TextInputHandler(
         return substring(f, t)
     }
 
-    private fun String.removeRangeSafe(from: Int, to: Int): String =
-        removeRange(min(from, to), max(to, from))
+    private fun String.removeRangeSafe(from: Int, to: Int): String {
+        val start = min(from, to).coerceIn(0, length)
+        val end = max(from, to).coerceIn(start, length)
+        return removeRange(start, end)
+    }
 
     private fun String.dropAt(at: Int, amount: Int): String =
         removeRangeSafe(at, at + amount)
