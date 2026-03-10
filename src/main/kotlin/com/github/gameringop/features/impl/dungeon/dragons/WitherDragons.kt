@@ -122,18 +122,12 @@ object WitherDragons: Feature(
                     event.ctx, dragon.boxesDimensions, dragon.color.withAlpha(0.5f)
                 )
                 
-                if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
-                    val dragonEntity = dragon.entity
-                    if (dragonEntity is EnderDragon) {
-                        dragonEntity.subEntities.forEachIndexed { index, part ->
-                            if (hideHeadBox.value) {
-                                if (index != 7) {
-                                    drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
-                                }
-                            } else {
-                                drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
-                            }
-                        }
+                if (showDragonHitboxes.value && dragon.entity is EnderDragon && dragon.state == WitherDragonState.ALIVE) {
+                    val dragonEntity = dragon.entity as EnderDragon
+                    
+                    dragonEntity.subEntities.forEachIndexed { index, part ->
+                        if (hideHeadBox.value && index == 7) return@forEachIndexed
+                        drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
                     }
                 }
             }
