@@ -45,6 +45,7 @@ object WitherDragons: Feature(
     private val hitboxColor by ColorSetting("Hitbox Color", Color(255, 255, 255), false)
         .withDescription("Color for dragon hitboxes")
         .showIf { showDragonHitboxes.value }
+    private val hideHeadBox by ToggleSetting("Show Dragon Head Hitbox", false).showIf { showDragonHitboxes.value }
 
     private val dragonHealth by ToggleSetting("Dragon Health", true).section("Dragon Visuals")
     private val highlightDragons by ToggleSetting("Highlight Dragons")
@@ -124,8 +125,14 @@ object WitherDragons: Feature(
                 if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
                     val dragonEntity = dragon.entity
                     if (dragonEntity is EnderDragon) {
-                        for (part in dragonEntity.subEntities) {
-                            drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                        dragonEntity.subEntities.forEachIndexed { index, part ->
+                            if (hideHeadBox.value) {
+                                if (index != 7) {
+                                    drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                                }
+                            } else {
+                                drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
+                            }
                         }
                     }
                 }
