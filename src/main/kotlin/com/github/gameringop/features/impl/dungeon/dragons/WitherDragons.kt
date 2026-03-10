@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.network.protocol.game.*
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
+import net.minecraft.world.entity.boss.EnderDragonPart
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import java.awt.Color
@@ -123,11 +124,10 @@ object WitherDragons: Feature(
                 
                 if (showDragonHitboxes.value && dragon.entity != null && dragon.state == WitherDragonState.ALIVE) {
                     val dragonEntity = dragon.entity!!
-                    if (dragonEntity is EnderDragon) {
-                        val parts = dragonEntity.parts
-                        for (part in parts) {
-                            drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
-                        }
+                    val parts = dragonEntity.parts
+                    for (i in parts.indices) {
+                        val part = parts[i]
+                        drawDragonPartHitbox(event.ctx, part, hitboxColor.value)
                     }
                 }
             }
