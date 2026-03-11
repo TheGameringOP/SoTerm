@@ -40,7 +40,7 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
                 event.color = getClassColor(teammate.clazz)
             }
         }
-
+        
         register<RenderWorldEvent> {
             if (!drawName.value || !LocationUtils.inDungeon) return@register
             
@@ -50,17 +50,17 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
                 val entity = teammate.entity ?: continue
                 val color = getClassColor(teammate.clazz)
                 
+                val hex = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+                
                 val renderVec = entity.renderVec
                 val distance = MathUtils.distance3D(renderVec, player.renderVec)
-                
                 val scale = (distance * 0.12).coerceAtLeast(1.0)
         
                 Render3D.renderString(
-                    text = "&e[${teammate.clazz.name[0]}&e] ${teammate.name}",
+                    text = "&e[${teammate.clazz.name[0]}&e] &$hex${teammate.name}",
                     x = renderVec.x,
                     y = renderVec.y + entity.bbHeight + 0.7 + (distance * 0.015),
                     z = renderVec.z,
-                    color = color,
                     scale = scale,
                     phase = true
                 )
