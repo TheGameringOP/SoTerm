@@ -104,47 +104,37 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     
             val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
                 val hover = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
-                val action = hover.action()
-                if (action != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
                 
-                try {
-                    val method = HoverEvent::class.java.declaredMethods.find { m ->
-                        m.parameterCount == 1 && 
-                        m.parameterTypes[0] == HoverEvent.Action::class.java &&
-                        Component::class.java.isAssignableFrom(m.returnType)
-                    }
-                    method?.isAccessible = true
-                    
-                    val data = method?.invoke(hover, action) as? Component
-                    val text = data?.string ?: ""
-                    
-                    if (text.contains("Added") || text.contains("Removed")) text else null
-                } catch (e: Exception) {
-                    null
-                }
+                if (hover.action != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
+                
+                val data = hover.getValue(HoverEvent.Action.SHOW_TEXT) as? Component
+                val text = data?.string ?: ""
+                
+                if (text.contains("Added") || text.contains("Removed")) text else null
             } ?: return 0
     
             if (isDebug) {
-                ChatUtils.modMessage("§6[Debug] Detailed Hover Found!")
+                ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
             }
     
-            if (detailedHoverText.contains("Diamond")) {
-                detailedHoverText.split("\n").forEach { line ->
-                    val cleanLine = line.replace(Regex("§."), "").trim()
-                    val m = diamondRegex.find(cleanLine)
-                    
-                    if (m != null) {
-                        val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                        val type = m.groupValues[2]
-                        val converted = if (type.contains("Enchanted")) amt * 160 else amt
-                        total += converted
-                        
-                        if (isDebug) {
-                            ChatUtils.modMessage("§b[Debug] +$converted Diamonds ($type)")
-                        }
-                    }
+            val lines = detailedHoverText.split("\n")
+            for (line in lines) {
+                val cleanLine = line.replace(Regex("§."), "").trim()
+                val m = diamondRegex.find(cleanLine) ?: continue
+                
+                val sign = if (cleanLine.startsWith("-")) -1 else 1
+                val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
+                val type = m.groupValues[2]
+                
+                val baseValue = if (type.contains("Enchanted")) amt * 160 else amt
+                total += (baseValue * sign)
+                
+                if (isDebug) {
+                    val actionLabel = if (sign > 0) "Added" else "Removed"
+                    ChatUtils.modMessage("§b[Debug] $actionLabel $amt $type")
                 }
             }
+            
             return total
         }
 
