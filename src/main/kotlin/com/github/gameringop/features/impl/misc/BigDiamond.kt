@@ -1,7 +1,6 @@
 package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
@@ -50,7 +49,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private var isInDwarvenMines = false
 
     private val sackRegex = Regex("""\[Sacks\] \+([\d,]+) items.*\(Last (\d+)s\.\)""")
-    private val diamondRegex = Regex("""\+([\d,]+)\s+(Enchanted Diamond|Diamond)""")
+    private val diamondRegex = Regex("""\+([\d,]+)\s+.*?(Enchanted Diamond|Diamond)""")
 
     private val hud by hudElement(
         name = "Diamond Profit",
@@ -87,14 +86,12 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             totalSeconds += sec
 
             if (SoTerm.debugFlags.contains("diamonds")) {
-                ChatUtils.modMessage("§e[Debug] Sack message matched! Time: ${sec}s")
+                ChatUtils.modMessage("§e[Debug] Sack triggered! Parsing hover now...")
             }
             
             val diamondsFound = extractDiamonds(event)
             if (diamondsFound > 0) {
                 totalDiamonds += diamondsFound
-            } else if (SoTerm.debugFlags.contains("diamonds")) {
-                ChatUtils.modMessage("§c[Debug] Sack triggered, but no diamonds found in hover.")
             }
         }
 
@@ -107,24 +104,28 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
         event.component?.visit({ style: Style, _ ->
             val hover = style.hoverEvent ?: return@visit Optional.empty<String>()
+            val action = hover.action()
             
-            val currentAction = hover.action()
-            if (currentAction != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
+            if (action != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
 
             try {
-                val dataMethod = HoverEvent::class.java.declaredMethods.find { m ->
+                val method = HoverEvent::class.java.declaredMethods.find { m ->
                     m.parameterCount == 1 && 
                     m.parameterTypes[0] == HoverEvent.Action::class.java &&
                     Component::class.java.isAssignableFrom(m.returnType)
                 }
                 
-                dataMethod?.isAccessible = true
-                val data = dataMethod?.invoke(hover, currentAction) as? Component
-                val hoverStr = data?.string ?: return@visit Optional.empty<String>()
+                method?.isAccessible = true
+                val data = method?.invoke(hover, action) as? Component
+                val hoverStr = data?.string ?: ""
+
+                if (isDebug && hoverStr.isNotEmpty()) {
+                    ChatUtils.modMessage("§6[Debug] Hover Content: §f${hoverStr.replace("\n", " [NL] ")}")
+                }
 
                 if (hoverStr.contains("Diamond")) {
                     hoverStr.split("\n").forEach { line ->
-                        val cleanLine = line.replace(Regex("§."), "")
+                        val cleanLine = line.replace(Regex("§."), "").trim()
                         val m = diamondRegex.find(cleanLine)
                         
                         if (m != null) {
@@ -134,13 +135,13 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
                             total += converted
                             
                             if (isDebug) {
-                                ChatUtils.modMessage("§b[Debug] Found $amt x $type (+ $converted units)")
+                                ChatUtils.modMessage("§b[Debug] Matched: $amt x $type")
                             }
                         }
                     }
                 }
             } catch (e: Exception) {
-                if (isDebug) ChatUtils.modMessage("§4[Debug] Reflection Logic Error: ${e.message}")
+                if (isDebug) ChatUtils.modMessage("§4[Debug] Reflection Error: ${e.message}")
             }
             Optional.empty<String>()
         }, Style.EMPTY)
