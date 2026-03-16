@@ -110,8 +110,8 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
                 val hover = style.hoverEvent
                 
                 if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
-                    val content = hover.contents as? net.minecraft.network.chat.Component
-                    val hoverText = content?.string ?: return@visit Optional.empty<String>()
+                    val content = hover.getValue(HoverEvent.Action.SHOW_TEXT)
+                    val hoverText = (content as? net.minecraft.network.chat.Component)?.string ?: return@visit Optional.empty<String>()
                     
                     if (hoverText.contains("Diamond")) {
                         val lines = hoverText.split("\n")
