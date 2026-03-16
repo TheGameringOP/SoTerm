@@ -1,6 +1,5 @@
 package com.github.gameringop.features.impl.misc
 
-import com.github.gameringop.SoTerm
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.TickEvent
@@ -74,46 +73,54 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
     override fun init() {
         register<TickEvent.Server> {
-            val inMines = LocationUtils.world == WorldType.DwarvenMines
-            isInDwarvenMines = inMines
+            isInDwarvenMines = LocationUtils.world == WorldType.DwarvenMines
         }
 
         register<ChatMessageEvent> {
             if (!isInDwarvenMines) return@register
             val msg = event.unformattedText
             val match = sackRegex.find(msg) ?: return@register
-            val sec = match.groupValues[2].toIntOrNull() ?: return@register
             
-            totalSeconds += sec
-            totalDiamonds += getDiamondsFromHover(event, diamondRegex)
+            totalSeconds += match.groupValues[2].toIntOrNull() ?: 0
+            
+            val diamondsFound = extractDiamonds(event)
+            if (diamondsFound > 0) {
+                totalDiamonds += diamondsFound
+            }
         }
 
         register<WorldChangeEvent> { isInDwarvenMines = false }
     }
 
-    private fun numFormat(num: Long): String = 
-        num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
-}
+    private fun extractDiamonds(event: ChatMessageEvent): Int {
+        var total = 0
+        event.component?.visit({ style: Style, text: String ->
+            val hover = style.hoverEvent
+            
+            if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
+                try {
+                    val method = HoverEvent::class.java.getMethod("getValue", HoverEvent.Action::class.java)
+                    val data = method.invoke(hover, HoverEvent.Action.SHOW_TEXT)
+                    
+                    val hoverStr = (data as? Component)?.string ?: return@visit Optional.empty<String>()
 
-private fun getDiamondsFromHover(event: ChatMessageEvent, regex: Regex): Int {
-    var total = 0
-    event.component?.visit({ style, text ->
-        val hover = style.hoverEvent
-        if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
-            val data = hover.getValue(HoverEvent.Action.SHOW_TEXT)
-            val hoverStr = (data as? Component)?.string ?: return@visit Optional.empty<String>()
-
-            if (hoverStr.contains("Diamond")) {
-                hoverStr.split("\n").forEach { line ->
-                    val m = regex.find(line)
-                    if (m != null) {
-                        val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                        total += if (line.contains("Enchanted")) amt * 160 else amt
+                    if (hoverStr.contains("Diamond")) {
+                        hoverStr.split("\n").forEach { line ->
+                            val m = diamondRegex.find(line)
+                            if (m != null) {
+                                val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
+                                total += if (line.contains("Enchanted")) amt * 160 else amt
+                            }
+                        }
                     }
+                } catch (e: Exception) {
                 }
             }
-        }
-        Optional.empty<String>()
-    }, Style.EMPTY)
-    return total
+            Optional.empty<String>()
+        }, Style.EMPTY)
+        return total
+    }
+
+    private fun numFormat(num: Long): String = 
+        num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
 }
