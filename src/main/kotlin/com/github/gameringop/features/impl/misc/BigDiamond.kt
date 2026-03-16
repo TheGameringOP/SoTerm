@@ -69,7 +69,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 0, textColor.value)
             Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 10, textColor.value)
         }
-        150f to 20f
+        200f to 30f
     }
 
     override fun init() {
@@ -87,14 +87,14 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             totalSeconds += sec
 
             if (SoTerm.debugFlags.contains("diamonds")) {
-                ChatUtils.modMessage("§e[Debug] Sack message found! Time: ${sec}s")
+                ChatUtils.modMessage("§e[Debug] Sack message matched! Time: ${sec}s")
             }
             
             val diamondsFound = extractDiamonds(event)
             if (diamondsFound > 0) {
                 totalDiamonds += diamondsFound
             } else if (SoTerm.debugFlags.contains("diamonds")) {
-                ChatUtils.modMessage("§c[Debug] Sack triggered, but no diamonds found in hover text.")
+                ChatUtils.modMessage("§c[Debug] Sack triggered, but no diamonds found in hover.")
             }
         }
 
@@ -103,39 +103,40 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
     private fun extractDiamonds(event: ChatMessageEvent): Int {
         var total = 0
-        event.component?.visit({ style: Style, text: String ->
-            val hover = style.hoverEvent
-            if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
-                try {
-                    val method = HoverEvent::class.java.getMethod("getValue", HoverEvent.Action::class.java)
-                    val data = method.invoke(hover, HoverEvent.Action.SHOW_TEXT)
-                    
-                    val hoverStr = (data as? Component)?.string ?: return@visit Optional.empty<String>()
+        val isDebug = SoTerm.debugFlags.contains("diamonds")
 
-                    if (hoverStr.contains("Diamond")) {
-                        hoverStr.split("\n").forEach { line ->
-                            val cleanLine = line.replace(Regex("§."), "")
-                            val m = diamondRegex.find(cleanLine)
+        event.component?.visit({ style: Style, _ ->
+            val hover = style.hoverEvent ?: return@visit Optional.empty<String>()
+            
+            if (hover.action != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
+
+            try {
+                val method = HoverEvent::class.java.methods.find { 
+                    it.parameterCount == 1 && it.parameterTypes[0] == HoverEvent.Action::class.java 
+                }
+                
+                val data = method?.invoke(hover, HoverEvent.Action.SHOW_TEXT) as? Component
+                val hoverStr = data?.string ?: return@visit Optional.empty<String>()
+
+                if (hoverStr.contains("Diamond")) {
+                    hoverStr.split("\n").forEach { line ->
+                        val cleanLine = line.replace(Regex("§."), "")
+                        val m = diamondRegex.find(cleanLine)
+                        
+                        if (m != null) {
+                            val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
+                            val type = m.groupValues[2]
+                            val converted = if (type.contains("Enchanted")) amt * 160 else amt
+                            total += converted
                             
-                            if (m != null) {
-                                val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                                val type = m.groupValues[2]
-                                val isEnchanted = type.contains("Enchanted")
-                                
-                                val valueInRegularDiamonds = if (isEnchanted) amt * 160 else amt
-                                total += valueInRegularDiamonds
-                                
-                                if (SoTerm.debugFlags.contains("diamonds")) {
-                                    ChatUtils.modMessage("§b[Debug] Found $amt x $type (+ $valueInRegularDiamonds total units)")
-                                }
+                            if (isDebug) {
+                                ChatUtils.modMessage("§b[Debug] Found $amt x $type (Total Units: $converted)")
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    if (SoTerm.debugFlags.contains("diamonds")) {
-                        ChatUtils.modMessage("§4[Debug] Reflection Error in Hover: ${e.message}")
-                    }
                 }
+            } catch (e: Exception) {
+                if (isDebug) ChatUtils.modMessage("§4[Debug] Reflection Logic Error: ${e.message}")
             }
             Optional.empty<String>()
         }, Style.EMPTY)
