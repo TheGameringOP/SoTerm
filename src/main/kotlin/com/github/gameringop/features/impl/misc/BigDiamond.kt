@@ -7,6 +7,7 @@ import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
@@ -31,13 +32,18 @@ import java.util.*
 object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     
     private val showProfit by ToggleSetting("Show Profit", true).section("Display")
-    private val totalText by TextInputSetting("Total Text", "$total >")
+    private val totalText by TextInputSetting("Total Text", "\$total >")
         .withDescription("Text before total diamonds count")
         .showIf { showProfit.value }
-    private val hourlyText by TextInputSetting("Hourly Text", "$hr >")
+    private val hourlyText by TextInputSetting("Hourly Text", "\$hr >")
         .withDescription("Text before hourly rate")
         .showIf { showProfit.value }
     private val textColor by ColorSetting("Text Color", Color.WHITE).showIf { showProfit.value }
+    
+    private val resetButton by ButtonSetting("Reset Stats", false) {
+        resetStats()
+        ChatUtils.modMessage("§aDiamond stats reset!")
+    }.withDescription("Resets the total diamonds and time tracked").showIf { showProfit.value }
     
     private var totalDiamonds = 0L
     private var totalSeconds = 0
@@ -70,7 +76,6 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         register<TickEvent.Server> {
             val inMines = LocationUtils.world == WorldType.DwarvenMines
             if (inMines && !isInDwarvenMines) {
-                resetStats()
                 isInDwarvenMines = true
             } else if (!inMines && isInDwarvenMines) {
                 isInDwarvenMines = false
