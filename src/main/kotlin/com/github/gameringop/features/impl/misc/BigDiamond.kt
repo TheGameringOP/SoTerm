@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.misc
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.TickEvent
@@ -49,7 +50,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private var isInDwarvenMines = false
 
     private val sackRegex = Regex("""\[Sacks\] \+([\d,]+) items.*\(Last (\d+)s\.\)""")
-    private val diamondRegex = Regex("""\+([\d,]+) (Enchanted Diamond|Diamond) \(""")
+    private val diamondRegex = Regex("""\+([\d,]+)\s+(Enchanted Diamond|Diamond)""")
 
     private val hud by hudElement(
         name = "Diamond Profit",
@@ -84,10 +85,16 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             
             val sec = match.groupValues[2].toIntOrNull() ?: 0
             totalSeconds += sec
+
+            if (SoTerm.debugFlags.contains("diamonds")) {
+                ChatUtils.modMessage("§e[Debug] Sack message found! Time: ${sec}s")
+            }
             
             val diamondsFound = extractDiamonds(event)
             if (diamondsFound > 0) {
                 totalDiamonds += diamondsFound
+            } else if (SoTerm.debugFlags.contains("diamonds")) {
+                ChatUtils.modMessage("§c[Debug] Sack triggered, but no diamonds found in hover text.")
             }
         }
 
@@ -98,7 +105,6 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         var total = 0
         event.component?.visit({ style: Style, text: String ->
             val hover = style.hoverEvent
-            
             if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
                 try {
                     val method = HoverEvent::class.java.getMethod("getValue", HoverEvent.Action::class.java)
@@ -108,14 +114,27 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
                     if (hoverStr.contains("Diamond")) {
                         hoverStr.split("\n").forEach { line ->
-                            val m = diamondRegex.find(line)
+                            val cleanLine = line.replace(Regex("§."), "")
+                            val m = diamondRegex.find(cleanLine)
+                            
                             if (m != null) {
                                 val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                                total += if (line.contains("Enchanted")) amt * 160 else amt
+                                val type = m.groupValues[2]
+                                val isEnchanted = type.contains("Enchanted")
+                                
+                                val valueInRegularDiamonds = if (isEnchanted) amt * 160 else amt
+                                total += valueInRegularDiamonds
+                                
+                                if (SoTerm.debugFlags.contains("diamonds")) {
+                                    ChatUtils.modMessage("§b[Debug] Found $amt x $type (+ $valueInRegularDiamonds total units)")
+                                }
                             }
                         }
                     }
                 } catch (e: Exception) {
+                    if (SoTerm.debugFlags.contains("diamonds")) {
+                        ChatUtils.modMessage("§4[Debug] Reflection Error in Hover: ${e.message}")
+                    }
                 }
             }
             Optional.empty<String>()
