@@ -48,8 +48,8 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private var totalSeconds = 0
     private var isInDwarvenMines = false
 
-    private val sackRegex = Regex("\\[Sacks] \\+(\\d+) items. \\(Last (\\d+)s.\\)")
-    private val diamondRegex = Regex("\\+([\\d,]+) (Enchanted Diamond|Diamond) \\(")
+    private val sackRegex = Regex("""\[Sacks\] \+([\d,]+) items.*\(Last (\d+)s\.\)""")
+    private val diamondRegex = Regex("""\+([\d,]+) (Enchanted Diamond|Diamond) \(""")
 
     private val hud by hudElement(
         name = "Diamond Profit",
@@ -68,7 +68,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 0, textColor.value)
             Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 10, textColor.value)
         }
-        0f to 20f
+        150f to 20f
     }
 
     override fun init() {
@@ -78,10 +78,12 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
         register<ChatMessageEvent> {
             if (!isInDwarvenMines) return@register
+            
             val msg = event.unformattedText
             val match = sackRegex.find(msg) ?: return@register
             
-            totalSeconds += match.groupValues[2].toIntOrNull() ?: 0
+            val sec = match.groupValues[2].toIntOrNull() ?: 0
+            totalSeconds += sec
             
             val diamondsFound = extractDiamonds(event)
             if (diamondsFound > 0) {
@@ -122,5 +124,5 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     }
 
     private fun numFormat(num: Long): String = 
-        num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
+        num.toString().replace(Regex("""\B(?=(\d{3})+(?!\d))"""), ",")
 }
