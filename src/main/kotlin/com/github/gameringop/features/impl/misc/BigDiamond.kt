@@ -40,7 +40,8 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private val textColor by ColorSetting("Text Color", Color.WHITE).showIf { showProfit.value }
 
     private val resetButton by ButtonSetting("Reset Stats", false) {
-        resetStats()
+        totalDiamonds = 0L
+        totalSeconds = 0
         ChatUtils.modMessage("§aDiamond stats reset!")
     }.showIf { showProfit.value }
 
@@ -56,19 +57,17 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         enabled = { LocationUtils.inSkyblock },
         shouldDraw = { showProfit.value && isInDwarvenMines }
     ) { ctx, demo ->
-        val coinMultiplier = 8
+        val multiplier = 8
         if (demo) {
             Render2D.drawString(ctx, "§a${totalText.value} §f128,000", 0, 0, textColor.value)
             Render2D.drawString(ctx, "§a${hourlyText.value} §f6,400", 0, 10, textColor.value)
         } else {
-            val totalCoins = totalDiamonds * coinMultiplier
-            val totalValue = formatNumber(totalCoins)
-            val hourlyRate = if (totalSeconds > 0) {
-                formatNumber(((totalCoins) / totalSeconds) * 3600)
-            } else "0"
+            val coins = totalDiamonds * multiplier
+            val totalVal = numFormat(coins)
+            val hrRate = if (totalSeconds > 0) numFormat((coins / totalSeconds) * 3600) else "0"
 
-            Render2D.drawString(ctx, "§a${totalText.value} §f$totalValue", 0, 0, textColor.value)
-            Render2D.drawString(ctx, "§a${hourlyText.value} §f$hourlyRate", 0, 10, textColor.value)
+            Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 0, textColor.value)
+            Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 10, textColor.value)
         }
         0f to 20f
     }
@@ -76,65 +75,45 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     override fun init() {
         register<TickEvent.Server> {
             val inMines = LocationUtils.world == WorldType.DwarvenMines
-            if (inMines && !isInDwarvenMines) {
-                isInDwarvenMines = true
-            } else if (!inMines && isInDwarvenMines) {
-                isInDwarvenMines = false
-            }
+            isInDwarvenMines = inMines
         }
 
         register<ChatMessageEvent> {
             if (!isInDwarvenMines) return@register
-            val message = event.unformattedText
-            val match = sackRegex.find(message) ?: return@register
-            val seconds = match.groupValues[2].toIntOrNull() ?: return@register
-            totalSeconds += seconds
-
-            val diamonds = extractDiamondsFromHover(event)
-            if (diamonds > 0) {
-                totalDiamonds += diamonds
-            }
+            val msg = event.unformattedText
+            val match = sackRegex.find(msg) ?: return@register
+            val sec = match.groupValues[2].toIntOrNull() ?: return@register
+            
+            totalSeconds += sec
+            totalDiamonds += getDiamondsFromHover(event, diamondRegex)
         }
 
-        register<WorldChangeEvent> {
-            isInDwarvenMines = false
-        }
+        register<WorldChangeEvent> { isInDwarvenMines = false }
     }
 
-    private fun extractDiamondsFromHover(event: ChatMessageEvent): Int {
-        var total = 0
-        event.component?.let { component ->
-            component.visit({ style: Style, text: String ->
-                val hover = style.hoverEvent
-                if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
-                    val hoverData = hover.getValue(HoverEvent.Action.SHOW_TEXT)
-                    val hoverText = (hoverData as? Component)?.string
-                        ?: return@visit Optional.empty<String>()
+    private fun numFormat(num: Long): String = 
+        num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
+}
 
-                    if (hoverText.contains("Diamond")) {
-                        val lines = hoverText.split("\n")
-                        lines.forEach { line ->
-                            val match = diamondRegex.find(line)
-                            if (match != null) {
-                                val amount = match.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                                val isEnchanted = line.contains("Enchanted Diamond")
-                                total += if (isEnchanted) amount * 160 else amount
-                            }
-                        }
+private fun getDiamondsFromHover(event: ChatMessageEvent, regex: Regex): Int {
+    var total = 0
+    event.component?.visit({ style, text ->
+        val hover = style.hoverEvent
+        if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
+            val data = hover.getValue(HoverEvent.Action.SHOW_TEXT)
+            val hoverStr = (data as? Component)?.string ?: return@visit Optional.empty<String>()
+
+            if (hoverStr.contains("Diamond")) {
+                hoverStr.split("\n").forEach { line ->
+                    val m = regex.find(line)
+                    if (m != null) {
+                        val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
+                        total += if (line.contains("Enchanted")) amt * 160 else amt
                     }
                 }
-                Optional.empty<String>()
-            }, Style.EMPTY)
+            }
         }
-        return total
-    }
-
-    private fun resetStats() {
-        totalDiamonds = 0
-        totalSeconds = 0
-    }
-
-    private fun formatNumber(num: Long): String {
-        return num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
-    }
+        Optional.empty<String>()
+    }, Style.EMPTY)
+    return total
 }
