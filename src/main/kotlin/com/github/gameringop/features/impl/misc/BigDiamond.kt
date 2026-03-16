@@ -12,6 +12,7 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
+import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.hud.getValue
@@ -41,6 +42,9 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private var totalDiamonds = 0L
     private var totalSeconds = 0
     private var isInDwarvenMines = false
+    
+    private val sackRegex = Regex("\\[Sacks] \\+(\\d+) items. \\(Last (\\d+)s.\\)")
+    private val diamondRegex = Regex("\\+([\\d,]+) (Enchanted Diamond|Diamond) \\(")
     
     private val hud by hudElement(
         name = "Diamond Profit",
@@ -78,7 +82,6 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             
             val message = event.unformattedText
             val match = sackRegex.find(message) ?: return@register
-            val items = match.groupValues[1].toIntOrNull() ?: return@register
             val seconds = match.groupValues[2].toIntOrNull() ?: return@register
             
             totalSeconds += seconds
@@ -134,10 +137,5 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     
     private fun formatNumber(num: Long): String {
         return num.toString().replace(Regex("\\B(?=(\\d{3})+(?!\\d))"), ",")
-    }
-    
-    companion object {
-        val sackRegex = Regex("\\[Sacks] \\+(\\d+) items. \\(Last (\\d+)s.\\)")
-        val diamondRegex = Regex("\\+([\\d,]+) (Enchanted Diamond|Diamond) \\(")
     }
 }
