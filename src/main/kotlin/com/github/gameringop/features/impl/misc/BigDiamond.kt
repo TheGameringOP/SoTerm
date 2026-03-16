@@ -104,13 +104,24 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     
             val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
                 val hover = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
-                
                 val action = hover.action()
                 if (action != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
                 
-                val text = (hover.getValue(HoverEvent.Action.SHOW_TEXT) as? Component)?.string ?: ""
-                
-                if (text.contains("Added") || text.contains("Removed")) text else null
+                try {
+                    val method = HoverEvent::class.java.declaredMethods.find { m ->
+                        m.parameterCount == 1 && 
+                        m.parameterTypes[0] == HoverEvent.Action::class.java &&
+                        Component::class.java.isAssignableFrom(m.returnType)
+                    }
+                    method?.isAccessible = true
+                    
+                    val data = method?.invoke(hover, action) as? Component
+                    val text = data?.string ?: ""
+                    
+                    if (text.contains("Added") || text.contains("Removed")) text else null
+                } catch (e: Exception) {
+                    null
+                }
             } ?: return 0
     
             if (isDebug) {
