@@ -25,7 +25,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import java.awt.Color
-import java.util.*
 
 object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
@@ -83,13 +82,8 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             val msg = event.unformattedText
             val match = sackRegex.find(msg) ?: return@register
             
-            val sec = match.groupValues[2].toIntOrNull() ?: 0
-            totalSeconds += sec
+            totalSeconds += match.groupValues[2].toIntOrNull() ?: 0
 
-            if (SoTerm.debugFlags.contains("diamonds")) {
-                ChatUtils.modMessage("§e[Debug] Sack triggered! Parsing hover now...")
-            }
-            
             val diamondsFound = extractDiamonds(event)
             totalDiamonds += diamondsFound
             if (totalDiamonds < 0) totalDiamonds = 0
@@ -103,38 +97,32 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         val isDebug = SoTerm.debugFlags.contains("diamonds")
 
         val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
-            val hover = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
+            val hoverEvent = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
             
-            if (hover.action() != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
+            val hoverComponent = when (hoverEvent.action()) {
+                HoverEvent.Action.SHOW_TEXT -> (hoverEvent as HoverEvent.ShowText).value
+                else -> null
+            } ?: return@firstNotNullOfOrNull null
             
-            val data = hover.value(HoverEvent.Action.SHOW_TEXT) as? Component
-            val text = data?.string ?: ""
-            
+            val text = hoverComponent.string
             if (text.contains("Added") || text.contains("Removed")) text else null
         } ?: return 0
 
-        if (isDebug) {
-            ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
-        }
-
-        val lines = detailedHoverText.split("\n")
-        for (line in lines) {
+        if (isDebug) ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
+        
+        detailedHoverText.split("\n").forEach { line ->
             val cleanLine = line.replace(Regex("§."), "").trim()
-            val m = diamondRegex.find(cleanLine) ?: continue
+            val m = diamondRegex.find(cleanLine) ?: return@forEach
             
-            val signStr = m.groupValues[1]
-            val sign = if (signStr == "-") -1 else 1
-            
+            val sign = if (m.groupValues[1] == "-") -1 else 1
             val amt = m.groupValues[2].replace(",", "").toIntOrNull() ?: 0
             val type = m.groupValues[3]
             
             val baseValue = if (type == "Enchanted Diamond") amt * 160 else amt
-            
             total += (baseValue * sign)
             
             if (isDebug) {
-                val actionLabel = if (sign > 0) "Added" else "Removed"
-                ChatUtils.modMessage("§b[Debug] $actionLabel $amt $type (Net: ${baseValue * sign})")
+                ChatUtils.modMessage("§b[Debug] ${if(sign > 0) "+" else "-"}$baseValue Diamonds ($type)")
             }
         }
         
