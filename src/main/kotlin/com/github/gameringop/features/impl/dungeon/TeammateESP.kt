@@ -57,10 +57,11 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
                 val scale = (distance * 0.12).coerceAtLeast(1.0)
         
                 Render3D.renderString(
-                    text = "&e[${teammate.clazz.name[0]}&e] &$hex${teammate.name}",
+                    text = "&e[${teammate.clazz.name[0]}&e] ${teammate.name}",
                     x = renderVec.x,
                     y = renderVec.y + entity.bbHeight + 0.7 + (distance * 0.015),
                     z = renderVec.z,
+                    color = color, 
                     scale = scale,
                     phase = true
                 )
