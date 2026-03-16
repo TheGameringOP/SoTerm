@@ -108,14 +108,18 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         event.component?.visit({ style: Style, _ ->
             val hover = style.hoverEvent ?: return@visit Optional.empty<String>()
             
-            if (hover.action != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
+            val currentAction = hover.action()
+            if (currentAction != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
 
             try {
-                val method = HoverEvent::class.java.methods.find { 
-                    it.parameterCount == 1 && it.parameterTypes[0] == HoverEvent.Action::class.java 
+                val dataMethod = HoverEvent::class.java.declaredMethods.find { m ->
+                    m.parameterCount == 1 && 
+                    m.parameterTypes[0] == HoverEvent.Action::class.java &&
+                    Component::class.java.isAssignableFrom(m.returnType)
                 }
                 
-                val data = method?.invoke(hover, HoverEvent.Action.SHOW_TEXT) as? Component
+                dataMethod?.isAccessible = true
+                val data = dataMethod?.invoke(hover, currentAction) as? Component
                 val hoverStr = data?.string ?: return@visit Optional.empty<String>()
 
                 if (hoverStr.contains("Diamond")) {
@@ -130,7 +134,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
                             total += converted
                             
                             if (isDebug) {
-                                ChatUtils.modMessage("§b[Debug] Found $amt x $type (Total Units: $converted)")
+                                ChatUtils.modMessage("§b[Debug] Found $amt x $type (+ $converted units)")
                             }
                         }
                     }
