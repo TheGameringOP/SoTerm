@@ -97,32 +97,22 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
         register<WorldChangeEvent> { isInDwarvenMines = false }
     }
-
     private fun extractDiamonds(event: ChatMessageEvent): Int {
-        var total = 0
-        val isDebug = SoTerm.debugFlags.contains("diamonds")
-
-        event.component?.visit({ style: Style, _ ->
-            val hover = style.hoverEvent ?: return@visit Optional.empty<String>()
-            val action = hover.action()
-            
-            if (action != HoverEvent.Action.SHOW_TEXT) return@visit Optional.empty<String>()
-
-            try {
-                val method = HoverEvent::class.java.declaredMethods.find { m ->
-                    m.parameterCount == 1 && 
-                    m.parameterTypes[0] == HoverEvent.Action::class.java &&
-                    Component::class.java.isAssignableFrom(m.returnType)
-                }
+            var total = 0
+            val isDebug = SoTerm.debugFlags.contains("diamonds")
+    
+            event.component?.siblings?.forEach { sibling ->
+                val hover = sibling.style.hoverEvent ?: return@forEach
                 
-                method?.isAccessible = true
-                val data = method?.invoke(hover, action) as? Component
-                val hoverStr = data?.string ?: ""
-
+                if (hover.action() != HoverEvent.Action.SHOW_TEXT) return@forEach
+    
+                val hoverComponent = hover.getValue(HoverEvent.Action.SHOW_TEXT) as? Component
+                val hoverStr = hoverComponent?.string ?: ""
+    
                 if (isDebug && hoverStr.isNotEmpty()) {
-                    ChatUtils.modMessage("§6[Debug] Hover Content: §f${hoverStr.replace("\n", " [NL] ")}")
+                    ChatUtils.modMessage("§6[Debug] Found Hover Text: §f${hoverStr.take(40)}...")
                 }
-
+    
                 if (hoverStr.contains("Diamond")) {
                     hoverStr.split("\n").forEach { line ->
                         val cleanLine = line.replace(Regex("§."), "").trim()
@@ -135,18 +125,14 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
                             total += converted
                             
                             if (isDebug) {
-                                ChatUtils.modMessage("§b[Debug] Matched: $amt x $type")
+                                ChatUtils.modMessage("§b[Debug] Matched: $amt x $type (+ $converted)")
                             }
                         }
                     }
                 }
-            } catch (e: Exception) {
-                if (isDebug) ChatUtils.modMessage("§4[Debug] Reflection Error: ${e.message}")
             }
-            Optional.empty<String>()
-        }, Style.EMPTY)
-        return total
-    }
+            return total
+        }
 
     private fun numFormat(num: Long): String = 
         num.toString().replace(Regex("""\B(?=(\d{3})+(?!\d))"""), ",")
