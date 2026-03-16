@@ -109,9 +109,10 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             component.visit({ style: Style, text: String ->
                 val hover = style.hoverEvent
                 if (hover != null && hover.action == HoverEvent.Action.SHOW_TEXT) {
-                    val hoverText = hover.value(HoverEvent.Action.SHOW_TEXT)?.string ?: return@visit Optional.empty()
+                    val content = hover.getValue(HoverEvent.Action.SHOW_TEXT)
+                    val hoverText = content?.string ?: return@visit Optional.empty<String>()
                     
-                    if (hoverText.contains("Diamond") || hoverText.contains("Enchanted Diamond")) {
+                    if (hoverText.contains("Diamond")) {
                         val lines = hoverText.split("\n")
                         lines.forEach { line ->
                             val match = diamondRegex.find(line)
