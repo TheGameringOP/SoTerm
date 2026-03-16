@@ -93,41 +93,48 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     }
     
     private fun extractDiamonds(event: ChatMessageEvent): Int {
-        var total = 0
-        val isDebug = SoTerm.debugFlags.contains("diamonds")
-
-        val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
-            val hoverEvent = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
-            
-            val hoverComponent = when (hoverEvent.action()) {
-                HoverEvent.Action.SHOW_TEXT -> (hoverEvent as HoverEvent.ShowText).value
-                else -> null
-            } ?: return@firstNotNullOfOrNull null
-            
-            val text = hoverComponent.string
-            if (text.contains("Added") || text.contains("Removed")) text else null
-        } ?: return 0
-
-        if (isDebug) ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
-        
-        detailedHoverText.split("\n").forEach { line ->
-            val cleanLine = line.replace(Regex("§."), "").trim()
-            val m = diamondRegex.find(cleanLine) ?: return@forEach
-            
-            val sign = if (m.groupValues[1] == "-") -1 else 1
-            val amt = m.groupValues[2].replace(",", "").toIntOrNull() ?: 0
-            val type = m.groupValues[3]
-            
-            val baseValue = if (type == "Enchanted Diamond") amt * 160 else amt
-            total += (baseValue * sign)
-            
-            if (isDebug) {
-                ChatUtils.modMessage("§b[Debug] ${if(sign > 0) "+" else "-"}$baseValue Diamonds ($type)")
+            var netChange = 0
+            val isDebug = SoTerm.debugFlags.contains("diamonds")
+    
+            val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
+                val hoverEvent = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
+                
+                val hoverComponent = when (hoverEvent.action()) {
+                    HoverEvent.Action.SHOW_TEXT -> (hoverEvent as HoverEvent.ShowText).value
+                    else -> null
+                } ?: return@firstNotNullOfOrNull null
+                
+                val text = hoverComponent.string
+                if (text.contains("Added") || text.contains("Removed")) text else null
+            } ?: return 0
+    
+            val lines = detailedHoverText.split("\n")
+            for (line in lines) {
+                val cleanLine = line.replace(Regex("§."), "").trim()
+                
+                val match = diamondRegex.find(cleanLine) ?: continue
+                
+                val sign = if (match.groupValues[1] == "-") -1 else 1
+                val amt = match.groupValues[2].replace(",", "").toIntOrNull() ?: 0
+                val type = match.groupValues[3]
+                
+                val baseValue = if (type == "Enchanted Diamond") amt * 160 else amt
+                val calculatedChange = baseValue * sign
+                
+                netChange += calculatedChange
+                
+                if (isDebug) {
+                    val color = if (sign > 0) "§a" else "§c"
+                    ChatUtils.modMessage("§7[Debug] $color${if(sign > 0) "+" else ""}$calculatedChange §bDiamonds ($type)")
+                }
             }
+            
+            if (isDebug && netChange != 0) {
+                ChatUtils.modMessage("§e[Debug] Net Transaction: $netChange Diamonds")
+            }
+    
+            return netChange
         }
-        
-        return total
-    }
 
     private fun numFormat(num: Long): String = 
         num.toString().replace(Regex("""\B(?=(\d{3})+(?!\d))"""), ",")
