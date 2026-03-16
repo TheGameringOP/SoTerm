@@ -108,10 +108,12 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
         event.component?.let { component ->
             component.visit({ style: Style, text: String ->
                 val hover = style.hoverEvent
-                
+
                 if (hover != null && hover.action() == HoverEvent.Action.SHOW_TEXT) {
-                    val content = hover.getValue(HoverEvent.Action.SHOW_TEXT)
-                    val hoverText = (content as? net.minecraft.network.chat.Component)?.string ?: return@visit Optional.empty<String>()
+                    val content = hover.contents 
+                    
+                    val hoverText = (content as? net.minecraft.network.chat.Component)?.string 
+                        ?: return@visit Optional.empty<String>()
                     
                     if (hoverText.contains("Diamond")) {
                         val lines = hoverText.split("\n")
@@ -120,7 +122,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
                             if (match != null) {
                                 val amount = match.groupValues[1].replace(",", "").toIntOrNull() ?: 0
                                 val isEnchanted = line.contains("Enchanted Diamond")
-                                
+
                                 total += if (isEnchanted) amount * 160 else amount
                             }
                         }
