@@ -43,7 +43,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private val resetButton by ButtonSetting("Reset Stats", false) {
         resetStats()
         ChatUtils.modMessage("§aDiamond stats reset!")
-    }.withDescription("Resets the total diamonds and time tracked").showIf { showProfit.value }
+    }.showIf { showProfit.value }
     
     private var totalDiamonds = 0L
     private var totalSeconds = 0
