@@ -49,7 +49,8 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private var isInDwarvenMines = false
 
     private val sackRegex = Regex("""\[Sacks\] \+([\d,]+) items.*\(Last (\d+)s\.\)""")
-    private val diamondRegex = Regex("""\+([\d,]+)\s+.*?(Enchanted Diamond|Diamond)""")
+    
+    private val diamondRegex = Regex("""([+-])\s*([\d,]+)\s+.*?(Enchanted Diamond|Diamond)""")
 
     private val hud by hudElement(
         name = "Diamond Profit",
@@ -90,53 +91,55 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             }
             
             val diamondsFound = extractDiamonds(event)
-            if (diamondsFound > 0) {
-                totalDiamonds += diamondsFound
-            }
+            totalDiamonds += diamondsFound
+            if (totalDiamonds < 0) totalDiamonds = 0
         }
 
         register<WorldChangeEvent> { isInDwarvenMines = false }
     }
     
     private fun extractDiamonds(event: ChatMessageEvent): Int {
-            var total = 0
-            val isDebug = SoTerm.debugFlags.contains("diamonds")
-    
-            val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
-                val hover = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
-                
-                if (hover.action != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
-                
-                val data = hover.getValue(HoverEvent.Action.SHOW_TEXT) as? Component
-                val text = data?.string ?: ""
-                
-                if (text.contains("Added") || text.contains("Removed")) text else null
-            } ?: return 0
-    
-            if (isDebug) {
-                ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
-            }
-    
-            val lines = detailedHoverText.split("\n")
-            for (line in lines) {
-                val cleanLine = line.replace(Regex("§."), "").trim()
-                val m = diamondRegex.find(cleanLine) ?: continue
-                
-                val sign = if (cleanLine.startsWith("-")) -1 else 1
-                val amt = m.groupValues[1].replace(",", "").toIntOrNull() ?: 0
-                val type = m.groupValues[2]
-                
-                val baseValue = if (type.contains("Enchanted")) amt * 160 else amt
-                total += (baseValue * sign)
-                
-                if (isDebug) {
-                    val actionLabel = if (sign > 0) "Added" else "Removed"
-                    ChatUtils.modMessage("§b[Debug] $actionLabel $amt $type")
-                }
-            }
+        var total = 0
+        val isDebug = SoTerm.debugFlags.contains("diamonds")
+
+        val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
+            val hover = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
             
-            return total
+            if (hover.action() != HoverEvent.Action.SHOW_TEXT) return@firstNotNullOfOrNull null
+            
+            val data = hover.value(HoverEvent.Action.SHOW_TEXT) as? Component
+            val text = data?.string ?: ""
+            
+            if (text.contains("Added") || text.contains("Removed")) text else null
+        } ?: return 0
+
+        if (isDebug) {
+            ChatUtils.modMessage("§6[Debug] Found Sack Hover Data")
         }
+
+        val lines = detailedHoverText.split("\n")
+        for (line in lines) {
+            val cleanLine = line.replace(Regex("§."), "").trim()
+            val m = diamondRegex.find(cleanLine) ?: continue
+            
+            val signStr = m.groupValues[1]
+            val sign = if (signStr == "-") -1 else 1
+            
+            val amt = m.groupValues[2].replace(",", "").toIntOrNull() ?: 0
+            val type = m.groupValues[3]
+            
+            val baseValue = if (type == "Enchanted Diamond") amt * 160 else amt
+            
+            total += (baseValue * sign)
+            
+            if (isDebug) {
+                val actionLabel = if (sign > 0) "Added" else "Removed"
+                ChatUtils.modMessage("§b[Debug] $actionLabel $amt $type (Net: ${baseValue * sign})")
+            }
+        }
+        
+        return total
+    }
 
     private fun numFormat(num: Long): String = 
         num.toString().replace(Regex("""\B(?=(\d{3})+(?!\d))"""), ",")
