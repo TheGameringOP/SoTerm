@@ -68,7 +68,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 0, textColor.value)
             Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 10, textColor.value)
         }
-        200f to 30f
+        200f to 20f
     }
 
     override fun init() {
