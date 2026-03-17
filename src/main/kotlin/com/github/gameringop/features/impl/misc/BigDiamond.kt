@@ -29,11 +29,11 @@ import java.awt.Color
 object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
 
     private val showProfit by ToggleSetting("Show Profit", true).section("Display")
-    private val totalText by TextInputSetting("Total Text", "\$total >")
-        .withDescription("Text before total diamonds count")
-        .showIf { showProfit.value }
     private val hourlyText by TextInputSetting("Hourly Text", "\$hr >")
         .withDescription("Text before hourly rate")
+        .showIf { showProfit.value }
+    private val totalText by TextInputSetting("Total Text", "\$total >")
+        .withDescription("Text before total diamonds count")
         .showIf { showProfit.value }
     private val textColor by ColorSetting("Text Color", Color.WHITE).showIf { showProfit.value }
 
@@ -52,24 +52,24 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     private val diamondRegex = Regex("""([+-])\s*([\d,]+)\s+.*?(Enchanted Diamond|Diamond)""")
 
     private val hud by hudElement(
-        name = "Diamond Profit",
-        enabled = { LocationUtils.inSkyblock },
-        shouldDraw = { showProfit.value && isInDwarvenMines }
-    ) { ctx, demo ->
-        val multiplier = 8
-        if (demo) {
-            Render2D.drawString(ctx, "§a${totalText.value} §f128,000", 0, 0, textColor.value)
-            Render2D.drawString(ctx, "§a${hourlyText.value} §f6,400", 0, 10, textColor.value)
-        } else {
-            val coins = totalDiamonds * multiplier
-            val totalVal = numFormat(coins)
-            val hrRate = if (totalSeconds > 0) numFormat((coins / totalSeconds) * 3600) else "0"
-
-            Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 0, textColor.value)
-            Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 10, textColor.value)
+            name = "Diamond Profit",
+            enabled = { LocationUtils.inSkyblock },
+            shouldDraw = { showProfit.value && isInDwarvenMines }
+        ) { ctx, demo ->
+            val multiplier = 8
+            if (demo) {
+                Render2D.drawString(ctx, "§a${hourlyText.value} §f6,400", 0, 0, textColor.value)
+                Render2D.drawString(ctx, "§a${totalText.value} §f128,000", 0, 10, textColor.value)
+            } else {
+                val coins = totalDiamonds * multiplier
+                val totalVal = numFormat(coins)
+                val hrRate = if (totalSeconds > 0) numFormat((coins / totalSeconds) * 3600) else "0"
+                
+                Render2D.drawString(ctx, "§a${hourlyText.value} §f$hrRate", 0, 0, textColor.value)
+                Render2D.drawString(ctx, "§a${totalText.value} §f$totalVal", 0, 10, textColor.value)
+            }
+            100f to 20f
         }
-        200f to 20f
-    }
 
     override fun init() {
         register<TickEvent.Server> {
