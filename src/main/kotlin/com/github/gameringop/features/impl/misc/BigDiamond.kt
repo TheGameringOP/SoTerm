@@ -93,7 +93,7 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
     }
     
     private fun extractDiamonds(event: ChatMessageEvent): Int {
-            var netChange = 0
+            var total = 0
             val isDebug = SoTerm.debugFlags.contains("diamonds")
     
             val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
@@ -111,29 +111,26 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             val lines = detailedHoverText.split("\n")
             for (line in lines) {
                 val cleanLine = line.replace(Regex("§."), "").trim()
+                val m = diamondRegex.find(cleanLine) ?: continue
                 
-                val match = diamondRegex.find(cleanLine) ?: continue
-                
-                val sign = if (match.groupValues[1] == "-") -1 else 1
-                val amt = match.groupValues[2].replace(",", "").toIntOrNull() ?: 0
-                val type = match.groupValues[3]
+                val signStr = m.groupValues[1]
+                val sign = if (signStr == "-") -1 else 1
+                val amt = m.groupValues[2].replace(",", "").toIntOrNull() ?: 0
+                val type = m.groupValues[3]
                 
                 val baseValue = if (type == "Enchanted Diamond") amt * 160 else amt
-                val calculatedChange = baseValue * sign
-                
-                netChange += calculatedChange
+                total += (baseValue * sign)
                 
                 if (isDebug) {
-                    val color = if (sign > 0) "§a" else "§c"
-                    ChatUtils.modMessage("§7[Debug] $color${if(sign > 0) "+" else ""}$calculatedChange §bDiamonds ($type)")
+                    val plural = if (amt != 1) "s" else ""
+                    val displayName = if (type == "Enchanted Diamond") "Enchanted Diamond$plural" else "Diamond$plural"
+                    
+                    val color = if (sign > 0) "§b" else "§c"
+                    ChatUtils.modMessage("$color[Debug] $signStr$amt $displayName")
                 }
             }
             
-            if (isDebug && netChange != 0) {
-                ChatUtils.modMessage("§e[Debug] Net Transaction: $netChange Diamonds")
-            }
-    
-            return netChange
+            return total
         }
 
     private fun numFormat(num: Long): String = 
