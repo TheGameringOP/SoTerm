@@ -306,6 +306,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             }
+            TerminalType.MELODY -> {
+                currentItems.filter { it.value.item == Items.LIME_STAINED_GLASS_PANE }.forEach { (slot, _) ->
+                    solution.add(TerminalClick(slot))
+                }
+            }
             else -> {}
         }
     }
@@ -319,6 +324,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         noSafeActive = false
         solution.clear()
         queue.clear()
+        solve()
     }
 
     fun onTerminalClose() {
