@@ -101,29 +101,25 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             event.context.pose().pushMatrix()
             event.context.pose().scale(uiScale, uiScale)
 
-            Render2D.drawCenteredString(event.context, termType.name.lowercase().uppercaseFirst(), offsetX + width / 2f, offsetY - 15f, color = titleColor.value, scale = 1.2f)
+            Render2D.drawCenteredString(
+                event.context,
+                termType.name.lowercase().uppercaseFirst(),
+                offsetX + width / 2f,
+                offsetY - 15f,
+                color = titleColor.value,
+                scale = 1.2f
+            )
             Render2D.drawRect(event.context, offsetX, offsetY, width, height, backgroundColor.value)
             Render2D.drawBorder(event.context, offsetX, offsetY, width, height, borderColor.value)
 
-            if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
-                val btnW = 50f
-                val btnH = 18f
-                val btnX = offsetX + width + 5f
-                val btnY = offsetY + (height / 2f) - (btnH / 2f)
+            val baseColor = solutionColor.value
 
-                Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
-                val btnColor = if (noSafeActive) Color.GREEN else Color.RED
-                Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
-                Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
-            }
-
-            solution.forEach { (slot, btn) ->
+            solution.forEachIndexed { index, (slot, btn) ->
                 val slotX = slot % 9 * 18 + offsetX
                 val slotY = floor(slot / 9.0).toInt() * 18 + offsetY
 
                 when (TerminalListener.currentType) {
                     TerminalType.NUMBERS -> {
-                        val index = solution.indexOfFirst { it.slotId == slot }
                         if (index <= 2) {
                             val color = when (index) {
                                 0 -> numbersFirstColor.value
@@ -131,20 +127,67 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                                 else -> numbersThirdColor.value
                             }
                             drawSlot(event.context, slotX, slotY, color)
+
                             if (numbersNumbers.value) {
                                 val count = TerminalType.numbersSlotCounts[slot] ?: 0
                                 drawCenteredText(event.context, count.toString(), slotX, slotY)
                             }
                         }
                     }
+
                     TerminalType.RUBIX -> {
                         val color = if (btn > 0) rubixPositiveColor.value else rubixNegativeColor.value
                         drawSlot(event.context, slotX, slotY, color)
                         drawCenteredText(event.context, "$btn", slotX, slotY)
                     }
-                    else -> drawSlot(event.context, slotX, slotY, solutionColor.value)
+
+                    else -> drawSlot(event.context, slotX, slotY, baseColor)
                 }
             }
+
+            if (TerminalListener.currentType == TerminalType.MELODY) {
+                val correct = TerminalType.melodyState.correct
+                val button = TerminalType.melodyState.button
+                val current = TerminalType.melodyState.current
+
+                if (correct != null && button != null && current != null) {
+                    drawSlot(event.context, offsetX + (correct + 1) * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
+
+                    for (i in 0 until windowSize) {
+                        val x = (i % 9 * 18) + offsetX
+                        val y = floor((i / 9f)) * 18f + offsetY
+                        val buttonSlot = button * 9 + 16
+                        val currentSlot = button * 9 + 10 + current
+
+                        when {
+                            i == buttonSlot -> drawSlot(event.context, x, y, baseColor)
+                            i.equalsOneOf(16, 25, 34, 43) -> drawSlot(event.context, x, y, melodyWrongColor.value)
+                            i == currentSlot -> drawSlot(event.context, x, y, melodyIndicatorColor.value)
+                        }
+                    }
+                }
+
+                if (melodyBlock.value) {
+                    val btnW = 50f
+                    val btnH = 18f
+                    val btnX = offsetX + width + 5f
+                    val btnY = offsetY + (height / 2f) - (btnH / 2f)
+
+                    Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
+                    val btnColor = if (noSafeActive) Color.GREEN else Color.RED
+                    Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
+                    Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
+                }
+            }
+
+            if (mode.value == 1 && queueString.value) Render2D.drawCenteredString(
+                event.context,
+                "Queue: ${queue.size}",
+                offsetX + width / 2,
+                offsetY + height + 5,
+                color = queueColor.value,
+                scale = 1.2f
+            )
 
             event.context.pose().popMatrix()
             Resolution.pop(event.context)
@@ -170,10 +213,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
-                val btnX = offsetX + width + 5f
-                val btnY = offsetY + (height / 2f) - (btnH / 2f)
+                
+                val btnX = (offsetX + width + 5f) * uiScale
+                val btnY = (offsetY + (height / 2f) - (btnH / 2f)) * uiScale
 
-                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
+                if (mx >= btnX && mx <= (btnX + btnW * uiScale) && my >= btnY && my <= (btnY + btnH * uiScale)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
@@ -183,78 +227,150 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 }
             }
 
+            event.isCanceled = true
+            if (TerminalListener.checkFcDelay()) return@register
+
             val slotX = floor((mx - offsetX) / 18).toInt()
             val slotY = floor((my - offsetY) / 18).toInt()
+
             if (slotX !in 0..8 || slotY < 0) return@register
+
             val slot = slotX + slotY * 9
             if (slot >= windowSize) return@register
 
-            if (TerminalListener.currentType == TerminalType.MELODY) {
-                handleMelodyClick(slot)
-                event.isCanceled = true
-                return@register
-            }
-
             val click = when {
                 TerminalListener.currentType == TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
-                TerminalListener.currentType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> solution.find { it.slotId == slot }
-                TerminalType.RUBIX == TerminalListener.currentType -> solution.find { it.slotId == slot }?.btn?.let { TerminalClick(slot, if (it > 0) 0 else 1) }
+                TerminalListener.currentType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> {
+                    solution.find { it.slotId == slot }
+                }
+                TerminalType.RUBIX == TerminalListener.currentType -> {
+                    solution.find { it.slotId == slot }?.btn?.let {
+                        TerminalClick(slot, if (it > 0) 0 else 1)
+                    }
+                }
+                TerminalListener.currentType == TerminalType.MELODY -> {
+                    handleMelodyClick(slot)
+                    return@register
+                }
                 else -> null
             }
 
             if (click == null) return@register
-            event.isCanceled = true
+            if (mode.value != 0) predict(click)
             if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
         }
     }
 
     private fun handleMelodyClick(slot: Int) {
-        if (noSafeActive || !melodyBlock.value) {
+        if (slot !in listOf(16, 25, 34, 43)) return
+
+        if (noSafeActive) {
             sendClickPacket(slot, 0)
             return
         }
 
-        val clickedItem = TerminalListener.currentItems[slot]
-        if (clickedItem?.item != Items.LIME_STAINED_GLASS_PANE) {
-            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("§e[Melody] Blocked: Slot $slot is not green.")
-            return
-        }
+        val columnMap = mapOf(
+            10 to listOf(10, 19, 28, 37),
+            11 to listOf(11, 20, 29, 38),
+            12 to listOf(12, 21, 30, 39),
+            13 to listOf(13, 22, 31, 40),
+            14 to listOf(14, 23, 32, 41)
+        )
 
-        var foundMagenta = false
-        var checkSlot = slot - 9
-        while (checkSlot >= 0) {
-            val itemAbove = TerminalListener.currentItems[checkSlot]
-            if (itemAbove?.item == Items.MAGENTA_STAINED_GLASS_PANE) {
-                foundMagenta = true
-                break
+        val currentItems = TerminalListener.currentItems
+        val purpleIndicatorSlot = currentItems.entries.find { 
+            it.key in 10..14 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
+        }?.key
+
+        val limeGlassSlot = currentItems.entries.find { 
+            it.value.item == Items.LIME_STAINED_GLASS_PANE 
+        }?.key
+
+        if (purpleIndicatorSlot == null || limeGlassSlot == null) {
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("§6[Melody] §cMissing components! Purple: $purpleIndicatorSlot, Lime: $limeGlassSlot")
             }
-            checkSlot -= 9
+            return
         }
 
-        if (foundMagenta) {
-            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("§a[Melody] Match! Purple note found above slot $slot.")
+        val validSlotsForColumn = columnMap[purpleIndicatorSlot] ?: emptyList()
+        
+        if (limeGlassSlot in validSlotsForColumn) {
             sendClickPacket(slot, 0)
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("§6[Melody] §aMatch! Column $purpleIndicatorSlot contains Lime Glass $limeGlassSlot. Clicking button $slot.")
+            }
         } else {
-            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("§c[Melody] Blocked: No purple note above slot $slot.")
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Purple Column ($purpleIndicatorSlot).")
+            }
         }
     }
 
-    private fun sendClickPacket(slot: Int, btn: Int) {
-        mc.gameMode?.handleInventoryMouseClick(TerminalListener.lastWindowId, slot, if (btn == 0) 2 else btn, if (btn == 0) ClickType.CLONE else ClickType.PICKUP, mc.player)
+    private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
+        when (slotStyle.value) {
+            0 -> Render2D.drawRect(ctx, x, y, w, h, color)
+            1 -> {
+                Render2D.drawBorder(ctx, x, y, w, h, color)
+                Render2D.drawRect(ctx, x, y, w, h, color.withAlpha(40))
+            }
+            2 -> Render2D.drawFloatingRect(ctx, x, y, w, h, color.darker())
+        }
+    }
+
+    private fun drawCenteredText(ctx: GuiGraphics, text: String, slotX: Number, slotY: Number) {
+        val centerX = slotX.toFloat() + 8f
+        val centerY = slotY.toFloat() + 8f - mc.font.lineHeight / 2
+        Render2D.drawCenteredString(ctx, text, centerX, centerY, color = overlayTextColor.value)
+    }
+
+    private fun predict(click: TerminalClick) {
+        if (TerminalListener.currentType.equalsOneOf(TerminalType.NUMBERS, TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS)) {
+            solution.remove(click)
+        }
+        else if (TerminalListener.currentType == TerminalType.RUBIX) {
+            val currentSolution = solution.find { it.slotId == click.slotId } ?: return
+            val change = if (click.btn == 0) -1 else 1
+            val newDiff = currentSolution.btn + change
+            if (newDiff == 0) solution.remove(currentSolution)
+            else solution[solution.indexOf(currentSolution)] = TerminalClick(click.slotId, newDiff)
+        }
     }
 
     fun click(click: TerminalClick) {
         isClicked = true
         sendClickPacket(click.slotId, click.btn)
+
         val initialWindowId = TerminalListener.lastWindowId
         Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
             if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
+
+            if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Resync Timeout Triggered")
+
             if (mode.value == 1) {
                 TerminalType.clickedStartWithSlots.clear()
                 queue.clear()
                 solve()
                 isClicked = false
             }
+        }
+    }
+
+    private fun sendClickPacket(slot: Int, btn: Int) {
+        mc.gameMode?.handleInventoryMouseClick(
+            TerminalListener.lastWindowId,
+            slot,
+            if (btn == 0) 2 else btn,
+            if (btn == 0) ClickType.CLONE else ClickType.PICKUP,
+            mc.player
+        )
+        
+        if (SoTerm.debugFlags.contains("terminal")) {
+            ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
+        }
+
+        if (TerminalListener.currentType == TerminalType.STARTWITH) {
+            TerminalType.clickedStartWithSlots.add(slot)
         }
     }
 
@@ -265,24 +381,41 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         when (type) {
             TerminalType.NUMBERS -> {
-                currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }.toList().sortedBy { it.second.count }.forEach {
-                    TerminalType.numbersSlotCounts[it.first] = it.second.count
-                    solution.add(TerminalClick(it.first))
-                }
+                currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }
+                    .toList()
+                    .sortedBy { it.second.count }
+                    .forEach {
+                        TerminalType.numbersSlotCounts[it.first] = it.second.count
+                        solution.add(TerminalClick(it.first))
+                    }
             }
-            TerminalType.REDGREEN -> currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }.forEach { solution.add(TerminalClick(it.key)) }
+            TerminalType.REDGREEN -> {
+                currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }
+                    .forEach { solution.add(TerminalClick(it.key)) }
+            }
             TerminalType.STARTWITH -> {
                 val match = TerminalType.startwithRegex.matchEntire(TerminalListener.currentTitle)
                 val letter = match?.groupValues?.get(1)?.lowercase() ?: return
                 currentItems.forEach { (slot, item) ->
                     val name = item.hoverName.string.removeFormatting().lowercase()
-                    if (name.startsWith(letter) && ! item.hasGlint() && slot !in TerminalType.clickedStartWithSlots) solution.add(TerminalClick(slot))
+                    if (name.startsWith(letter) && ! item.hasGlint() && slot !in TerminalType.clickedStartWithSlots) {
+                        solution.add(TerminalClick(slot))
+                    }
                 }
             }
             TerminalType.COLORS -> {
                 val match = TerminalType.colorsRegex.matchEntire(TerminalListener.currentTitle)
                 val extra = match?.groupValues?.get(1)?.lowercase() ?: return
-                currentItems.filter { it.value.item != Items.BLACK_STAINED_GLASS_PANE && it.value.hoverName.unformattedText.lowercase().startsWith(extra) && ! it.value.hasGlint() }.forEach { solution.add(TerminalClick(it.key)) }
+                fun fixName(name: String): String {
+                    var fixedName = name
+                    TerminalType.colorReplacements.forEach { (k, v) -> fixedName = fixedName.replace(k, v) }
+                    return fixedName
+                }
+                currentItems.filter {
+                    it.value.item != Items.BLACK_STAINED_GLASS_PANE
+                        && fixName(it.value.hoverName.unformattedText.lowercase()).startsWith(extra)
+                        && ! it.value.hasGlint()
+                }.map { it.key }.forEach { solution.add(TerminalClick(it)) }
             }
             TerminalType.RUBIX -> {
                 val allowedSlots = listOf(12, 13, 14, 21, 22, 23, 30, 31, 32)
@@ -291,14 +424,17 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 for (i in 0 until 5) {
                     panes.forEach { (_, itemStack) ->
                         val itemIdx = TerminalType.rubixOrder.indexOf(itemStack.item)
-                        val dist = abs(i - itemIdx)
-                        costs[i] += if (dist > 2) 5 - dist else dist
+                        if (itemIdx != -1) {
+                            val dist = abs(i - itemIdx)
+                            val clicksNeeded = if (dist > 2) 5 - dist else dist
+                            costs[i] += clicksNeeded
+                        }
                     }
                 }
                 val origin = costs.indices.minByOrNull { costs[it] } ?: 0
                 panes.forEach { (slotId, itemStack) ->
                     val currentIdx = TerminalType.rubixOrder.indexOf(itemStack.item)
-                    if (currentIdx != origin) {
+                    if (currentIdx != -1 && currentIdx != origin) {
                         var diff = origin - currentIdx
                         if (diff > 2) diff -= 5
                         if (diff < -2) diff += 5
@@ -307,38 +443,51 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 }
             }
             TerminalType.MELODY -> {
-                currentItems.filter { it.value.item == Items.LIME_STAINED_GLASS_PANE }.forEach { (slot, _) ->
-                    solution.add(TerminalClick(slot))
+                if (updatedItem1.item == Items.LIME_STAINED_GLASS_PANE) {
+                    val correct = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key?.minus(1)
+                    val button = floor((updatedSlot1 / 9).toDouble()) - 1
+                    val current = updatedSlot1 % 9 - 1
+                    if (correct != null) TerminalType.melodyState.correct = correct
+                    TerminalType.melodyState.button = button.toInt()
+                    TerminalType.melodyState.current = current
                 }
             }
-            else -> {}
         }
     }
 
     fun onItemsUpdated(slot: Int, item: ItemStack) {
         solve(slot, item)
+        if (mode.value == 1 && queue.isNotEmpty() && enabled) {
+            val nextClick = queue[0]
+            val isValid = when (TerminalListener.currentType) {
+                TerminalType.NUMBERS -> {
+                    val firstSol = solution.firstOrNull()
+                    firstSol != null && firstSol.slotId == nextClick.slotId
+                }
+                TerminalType.RUBIX -> {
+                    val sol = solution.find { it.slotId == nextClick.slotId }
+                    sol != null && ((sol.btn > 0 && nextClick.btn == 0) || (sol.btn < 0 && nextClick.btn == 1))
+                }
+                else -> solution.any { it.slotId == nextClick.slotId }
+            }
+            if (isValid) {
+                queue.forEach(::predict)
+                click(queue.removeAt(0))
+            } else queue.clear()
+        }
     }
 
     fun onTerminalOpen() {
         isClicked = false
+        TerminalType.reset()
         noSafeActive = false
-        solution.clear()
-        queue.clear()
-        solve()
     }
 
     fun onTerminalClose() {
-        noSafeActive = false
-        solution.clear()
         queue.clear()
-    }
-
-    private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
-        Render2D.drawRect(ctx, x, y, w, h, color)
-    }
-
-    private fun drawCenteredText(ctx: GuiGraphics, text: String, slotX: Number, slotY: Number) {
-        Render2D.drawCenteredString(ctx, text, slotX.toFloat() + 8f, slotY.toFloat() + 8f - mc.font.lineHeight / 2, color = overlayTextColor.value)
+        solution.clear()
+        TerminalType.reset()
+        noSafeActive = false
     }
 
     fun register() {
