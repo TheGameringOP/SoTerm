@@ -193,7 +193,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             Resolution.pop(event.context)
         }
     
-        register<ContainerEvent.MouseClick> {
+        register<ContainerEvent.MouseClick> { event ->
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             
