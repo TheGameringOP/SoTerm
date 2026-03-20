@@ -182,53 +182,62 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             val uiScale = 3f * scale.value
-    
+        
             val mx = (event.mouseX / uiScale).toFloat()
             val my = (event.mouseY / uiScale).toFloat()
-    
+        
             val screenWidth = Resolution.width / uiScale
             val screenHeight = Resolution.height / uiScale
             val windowSize = termType.slotCount
-    
+        
             val width = 9 * 18f
             val height = (windowSize / 9) * 18f
             val offsetX = (screenWidth / 2f - width / 2f).toFloat()
             val offsetY = (screenHeight / 2f - height / 2f).toFloat()
-    
+        
             if (SoTerm.debugFlags.contains("terminal")) {
-                ChatUtils.modMessage("§d[Debug] §fType: §b$termType §f| Mouse: §e($mx, $my) §f| Offset: §e($offsetX, $offsetY)")
+                ChatUtils.modMessage("§d[Debug] §fClick at: §e($mx, $my) §7| Offset: ($offsetX, $offsetY)")
             }
-
+        
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
-                
-                if (SoTerm.debugFlags.contains("terminal")) {
-                    ChatUtils.modMessage("§d[Debug] §fButton Box: §aX[$btnX to ${btnX+btnW}] Y[$btnY to ${btnY+btnH}]")
+        
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §fChecking Box: X[$btnX to ${btnX+btnW}] Y[$btnY to ${btnY+btnH}]")
                 }
-    
+        
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
-                    ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if (noSafeActive) "§aON" else "§cOFF"}")
+                    if (SoTerm.debugFlags.contains("melody")) {
+                        ChatUtils.modMessage("§6[Melody] §fNo-Safe: ${if(noSafeActive) "§aON" else "§cOFF"}")
+                    }
                     event.isCanceled = true
                     return@register
                 }
             }
-    
+        
             val slotX = floor((mx - offsetX) / 18.0).toInt()
             val slotY = floor((my - offsetY) / 18.0).toInt()
-    
-            if (slotX !in 0..8 || slotY < 0) return@register
+        
+            if (slotX !in 0..8 || slotY < 0) {
+                if (SoTerm.debugFlags.contains("terminal")) {
+                    ChatUtils.modMessage("§7[Debug] Clicked outside slot grid.")
+                }
+                return@register
+            }
+        
             val slot = slotX + slotY * 9
             
-            if (SoTerm.debugFlags.contains("terminal")) {
-                ChatUtils.modMessage("§d[Debug] §fHovering Slot: §e$slot")
+            if (slot >= windowSize) {
+                if (SoTerm.debugFlags.contains("terminal")) {
+                    ChatUtils.modMessage("§7[Debug] Slot $slot is out of bounds for $termType")
+                }
+                return@register
             }
-    
-            if (slot >= windowSize) return@register
-    
+        
             val click = when (termType) {
                 TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
                 TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS -> solution.find { it.slotId == slot }
@@ -244,10 +253,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 }
                 else -> null
             }
-    
+        
             if (click != null) {
                 event.isCanceled = true
                 if (TerminalListener.checkFcDelay()) return@register
+                
                 if (mode.value != 0) predict(click)
                 if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
             }
