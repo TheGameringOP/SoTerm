@@ -146,6 +146,27 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             }
 
             if (TerminalListener.currentType == TerminalType.MELODY) {
+                val correct = TerminalType.melodyState.correct
+                val button = TerminalType.melodyState.button
+                val current = TerminalType.melodyState.current
+
+                if (correct != null && button != null && current != null) {
+                    drawSlot(event.context, offsetX + correct * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
+
+                    for (i in 0 until windowSize) {
+                        val x = (i % 9 * 18) + offsetX
+                        val y = floor((i / 9f)) * 18f + offsetY
+                        val buttonSlot = button * 9 + 16
+                        val currentSlot = button * 9 + 10 + current
+
+                        when {
+                            i == buttonSlot -> drawSlot(event.context, x, y, baseColor)
+                            i.equalsOneOf(16, 25, 34, 43) -> drawSlot(event.context, x, y, melodyWrongColor.value)
+                            i == currentSlot -> drawSlot(event.context, x, y, melodyIndicatorColor.value)
+                        }
+                    }
+                }
+
                 if (melodyBlock.value) {
                     val btnW = 50f
                     val btnH = 18f
@@ -260,7 +281,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         )
 
         val currentItems = TerminalListener.currentItems
-        val purpleIndicatorSlot = currentItems.entries.find { 
+        val magentaIndicatorSlot = currentItems.entries.find { 
             it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
         }?.key
 
@@ -268,23 +289,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             it.value.item == Items.LIME_STAINED_GLASS_PANE 
         }?.key
 
-        if (purpleIndicatorSlot == null || limeGlassSlot == null) {
+        if (magentaIndicatorSlot == null || limeGlassSlot == null) {
             if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta: $purpleIndicatorSlot, Lime: $limeGlassSlot, Column: $purpleIndicatorSlot")
+                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta: $magentaIndicatorSlot, Lime: $limeGlassSlot, Column: $magentaIndicatorSlot")
             }
             return
         }
 
-        val validSlotsForColumn = columnMap[purpleIndicatorSlot] ?: emptyList()
+        val validSlotsForColumn = columnMap[magentaIndicatorSlot] ?: emptyList()
         
         if (limeGlassSlot in validSlotsForColumn) {
             sendClickPacket(slot, 0)
             if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §aMatch! Column $purpleIndicatorSlot contains Lime Glass $limeGlassSlot. Clicking button $slot.")
+                ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaIndicatorSlot contains Lime Glass $limeGlassSlot. Clicking button $slot.")
             }
         } else {
             if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Magenta Column ($purpleIndicatorSlot).")
+                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Magenta Column ($magentaIndicatorSlot).")
             }
         }
     }
@@ -424,7 +445,16 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             }
-            TerminalType.MELODY -> {}
+            TerminalType.MELODY -> {
+                if (updatedItem1.item == Items.LIME_STAINED_GLASS_PANE) {
+                    val magenta = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key
+                    val button = floor((updatedSlot1 / 9).toDouble()) - 1
+                    val current = updatedSlot1 % 9 - 1
+                    if (magenta != null) TerminalType.melodyState.correct = magenta
+                    TerminalType.melodyState.button = button.toInt()
+                    TerminalType.melodyState.current = current
+                }
+            }
         }
     }
 
