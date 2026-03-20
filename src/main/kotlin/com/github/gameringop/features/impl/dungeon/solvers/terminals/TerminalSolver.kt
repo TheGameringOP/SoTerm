@@ -193,35 +193,37 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             Resolution.pop(event.context)
         }
     
-        register<ContainerEvent.MouseClick> { event ->
+        register<EventBus.EventContext<ContainerEvent.MouseClick>> { ctx ->
+            val event = ctx.event
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             
             val uiScale = 3f * scale.value
             
-            val mx = event.x / uiScale
-            val my = event.y / uiScale
+            val mx = (event.x / uiScale).toFloat()
+            val my = (event.y / uiScale).toFloat()
 
-            val screenWidth = Resolution.width / uiScale
-            val screenHeight = Resolution.height / uiScale
+            val screenWidth = (Resolution.width / uiScale).toFloat()
+            val screenHeight = (Resolution.height / uiScale).toFloat()
             val windowSize = termType.slotCount
 
-            val width = 9 * 18
-            val height = (windowSize / 9) * 18
-            val offsetX = screenWidth / 2 - width / 2
-            val offsetY = screenHeight / 2 - height / 2
+            val width = 9 * 18f
+            val height = (windowSize / 9) * 18f
+            val offsetX = screenWidth / 2f - width / 2f
+            val offsetY = screenHeight / 2f - height / 2f
 
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f 
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
+
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
                     }
-                    event.isCanceled = true
+                    ctx.isCanceled = true
                     return@register
                 }
             }
