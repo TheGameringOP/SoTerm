@@ -219,9 +219,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
                 if (mx in btnX..(btnX + btnW) && my in btnY..(btnY + btnH)) {
                     noSafeActive = !noSafeActive
-                    if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
-                    }
                     event.isCanceled = true
                     return@register
                 }
@@ -270,7 +267,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         val melodyState = TerminalType.melodyState
         
         if (waitingForLimeMove && !noSafeActive) {
-            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Waiting for lime glass to move, blocking click")
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("Waiting for lime glass to move, blocking click")
+            }
             return
         }
         
@@ -279,7 +278,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val correct = TerminalType.melodyState.correct
             
             if (!noSafeActive && current != null && correct != null && current != correct) {
-                if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Wrong column, blocking click")
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("Wrong column, blocking click")
+                }
                 return
             }
             
@@ -287,7 +288,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
             
             if (!noSafeActive && clickedRowIndex != expectedRowIndex) {
-                if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Wrong row, blocking click")
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("Wrong row, blocking click")
+                }
                 return
             }
             
@@ -296,7 +299,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             waitingForLimeMove = true
             melodyState.expectedNextRow += 9
             
-            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Clicked row $clickedRowIndex, waiting for lime glass to move")
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("Clicked row $clickedRowIndex, waiting for lime glass to move")
+            }
         }
     }
 
@@ -339,7 +344,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
             if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
 
-            if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Resync Timeout Triggered")
+            if (SoTerm.debugFlags.contains("terminal")) {
+                ChatUtils.modMessage("Resync Timeout Triggered")
+            }
 
             if (mode.value == 1) {
                 TerminalType.clickedStartWithSlots.clear()
@@ -359,7 +366,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             mc.player
         )
         
-        if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
+        if (SoTerm.debugFlags.contains("terminal")) {
+            ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
+        }
 
         if (TerminalListener.currentType == TerminalType.STARTWITH) {
             TerminalType.clickedStartWithSlots.add(slot)
@@ -452,7 +461,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         if (TerminalListener.currentType == TerminalType.MELODY && waitingForLimeMove) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE && slot != lastLimeSlot) {
                 waitingForLimeMove = false
-                if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Lime glass moved from $lastLimeSlot to $slot, clicks re-enabled")
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("Lime glass moved from $lastLimeSlot to $slot, clicks re-enabled")
+                }
             }
         }
         if (mode.value == 1 && queue.isNotEmpty() && enabled) {
