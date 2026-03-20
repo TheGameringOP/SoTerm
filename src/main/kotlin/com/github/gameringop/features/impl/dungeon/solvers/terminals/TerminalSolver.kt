@@ -198,8 +198,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val termType = TerminalListener.currentType ?: return@register
             
             val uiScale = 3f * scale.value
-            val mx = Resolution.getMouseX() / uiScale
-            val my = Resolution.getMouseY() / uiScale
+            
+            val mx = event.x / uiScale
+            val my = event.y / uiScale
 
             val screenWidth = Resolution.width / uiScale
             val screenHeight = Resolution.height / uiScale
@@ -215,8 +216,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 val btnH = 18f 
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
-
-                if (mx >= btnX && mx <= (btnX + btnW) && my >= (btnY - 10f) && my <= (btnY + btnH + 10f)) {
+                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
