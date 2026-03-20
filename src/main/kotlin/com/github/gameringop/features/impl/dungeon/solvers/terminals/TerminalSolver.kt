@@ -254,68 +254,69 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     private fun handleMelodyClick(slot: Int) {
-        val currentItems = TerminalListener.currentItems
-        val clickedItem = currentItems[slot]?.item
-
-        if (!melodyBlock.value) {
-            sendClickPacket(slot, 0)
-            return
-        }
-
-        if (isMelodyWaiting) return
-
-        if (clickedItem != Items.LIME_TERRACOTTA) return
-
-        if (noSafeActive) {
-            sendClickPacket(slot, 0)
-            return
-        }
-
-        val columnMap = mapOf(
-            1 to listOf(10, 19, 28, 37),
-            2 to listOf(11, 20, 29, 38),
-            3 to listOf(12, 21, 30, 39),
-            4 to listOf(13, 22, 31, 40),
-            5 to listOf(14, 23, 32, 41)
-        )
-
-        val magentaSlot = currentItems.entries.find { 
-            it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
-        }?.key
-
-        val limeGlassSlot = currentItems.entries.find { 
-            it.value.item == Items.LIME_STAINED_GLASS_PANE 
-        }?.key
-
-        if (SoTerm.debugFlags.contains("melody")) {
-            if (magentaSlot == null || limeGlassSlot == null) {
-                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
-            } else if (limeGlassSlot in (columnMap[magentaSlot] ?: emptyList())) {
-                ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
-            } else {
-                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
+            val currentItems = TerminalListener.currentItems
+            val clickedItem = currentItems[slot]?.item
+    
+            if (!melodyBlock.value) {
+                sendClickPacket(slot, 0)
+                return
             }
-        }
-
-        if (magentaSlot == null || limeGlassSlot == null) return
-        val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
-
-        if (limeGlassSlot in validSlotsForColumn) {
-            sendClickPacket(slot, 0)
-            
-            isMelodyWaiting = true
-            val delay = offsetPacket.value
-            
-            if (delay > 0) {
-                // Switched from multithreading to your existing Scheduler
-                Scheduler.schedule(delay.toInt(), 0) {
-                    isMelodyWaiting = false
+    
+            if (isMelodyWaiting) return
+    
+            if (clickedItem != Items.LIME_TERRACOTTA) return
+    
+            if (noSafeActive) {
+                sendClickPacket(slot, 0)
+                return
+            }
+    
+            val columnMap = mapOf(
+                1 to listOf(10, 19, 28, 37),
+                2 to listOf(11, 20, 29, 38),
+                3 to listOf(12, 21, 30, 39),
+                4 to listOf(13, 22, 31, 40),
+                5 to listOf(14, 23, 32, 41)
+            )
+    
+            val magentaSlot = currentItems.entries.find { 
+                it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
+            }?.key
+    
+            val limeGlassSlot = currentItems.entries.find { 
+                it.value.item == Items.LIME_STAINED_GLASS_PANE 
+            }?.key
+    
+            if (SoTerm.debugFlags.contains("melody")) {
+                if (magentaSlot == null || limeGlassSlot == null) {
+                    ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
+                } else if (limeGlassSlot in (columnMap[magentaSlot] ?: emptyList())) {
+                    ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
+                } else {
+                    ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
                 }
-            } else {
-                isMelodyWaiting = false 
+            }
+    
+            if (magentaSlot == null || limeGlassSlot == null) return
+            val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
+    
+            if (limeGlassSlot in validSlotsForColumn) {
+                sendClickPacket(slot, 0)
+                
+                isMelodyWaiting = true
+                val delayMs = offsetPacket.value
+                
+                if (delayMs > 0) {
+                    val delayTicks = (delayMs / 50).toInt()
+                    
+                    Scheduler.schedule(delayMs.toInt(), delayTicks) {
+                        isMelodyWaiting = false
+                    }
+                } else {
+                    isMelodyWaiting = false 
+                }
             }
         }
-    }
 
     private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
         when (slotStyle.value) {
