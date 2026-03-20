@@ -194,7 +194,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
     
         register<ContainerEvent.MouseClick> {
-if (!TerminalListener.inTerm) return@register
+            if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             
             val uiScale = 3f * scale.value
@@ -206,14 +206,15 @@ if (!TerminalListener.inTerm) return@register
             val windowSize = termType.slotCount
 
             val width = 9 * 18
-            val height = (windowSize / 9) * 18
+            val height = windowSize / 9 * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
-                val btnH = 40f 
+                val btnH = 20f 
                 val btnX = offsetX + width + 5f
+                
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
