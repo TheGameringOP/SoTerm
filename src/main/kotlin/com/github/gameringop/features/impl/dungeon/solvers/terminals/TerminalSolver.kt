@@ -310,6 +310,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
     }
 
+    fun onItemsUpdated(slot: Int, item: ItemStack) {
+        solve(slot, item)
+    }
+
     fun onTerminalOpen() {
         isClicked = false
         noSafeActive = false
