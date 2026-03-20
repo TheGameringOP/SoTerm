@@ -83,44 +83,36 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
     override fun init() {
         register<ScreenEvent.PreRender> {
-            if (! TerminalListener.inTerm) return@register
+            if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             event.isCanceled = true
-
+    
             Resolution.refresh()
             Resolution.push(event.context)
-
+    
             val uiScale = 3f * scale.value
             val screenWidth = Resolution.width / uiScale
             val screenHeight = Resolution.height / uiScale
             val windowSize = termType.slotCount
-
-            val width = 9 * 18
-            val height = (windowSize / 9) * 18
-            val offsetX = screenWidth / 2 - width / 2
-            val offsetY = screenHeight / 2 - height / 2
-
+    
+            val width = 9 * 18f
+            val height = (windowSize / 9) * 18f
+            val offsetX = (screenWidth / 2f - width / 2f).toFloat()
+            val offsetY = (screenHeight / 2f - height / 2f).toFloat()
+    
             event.context.pose().pushMatrix()
             event.context.pose().scale(uiScale, uiScale)
-
-            Render2D.drawCenteredString(
-                event.context,
-                termType.name.lowercase().uppercaseFirst(),
-                offsetX + width / 2f,
-                offsetY - 15f,
-                color = titleColor.value,
-                scale = 1.2f
-            )
+    
+            Render2D.drawCenteredString(event.context, termType.name.lowercase().uppercaseFirst(), offsetX + width / 2f, offsetY - 15f, color = titleColor.value, scale = 1.2f)
             Render2D.drawRect(event.context, offsetX, offsetY, width, height, backgroundColor.value)
             Render2D.drawBorder(event.context, offsetX, offsetY, width, height, borderColor.value)
-
+    
             val baseColor = solutionColor.value
-
             solution.forEachIndexed { index, (slot, btn) ->
-                val slotX = slot % 9 * 18 + offsetX
-                val slotY = floor(slot / 9.0).toInt() * 18 + offsetY
-
-                when (TerminalListener.currentType) {
+                val slotX = (slot % 9 * 18) + offsetX
+                val slotY = (slot / 9 * 18) + offsetY
+    
+                when (termType) {
                     TerminalType.NUMBERS -> {
                         if (index <= 2) {
                             val color = when (index) {
@@ -129,38 +121,38 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                                 else -> numbersThirdColor.value
                             }
                             drawSlot(event.context, slotX, slotY, color)
-
                             if (numbersNumbers.value) {
                                 val count = TerminalType.numbersSlotCounts[slot] ?: 0
                                 drawCenteredText(event.context, count.toString(), slotX, slotY)
                             }
                         }
                     }
-
                     TerminalType.RUBIX -> {
                         val color = if (btn > 0) rubixPositiveColor.value else rubixNegativeColor.value
                         drawSlot(event.context, slotX, slotY, color)
                         drawCenteredText(event.context, "$btn", slotX, slotY)
                     }
-
-                    else -> drawSlot(event.context, slotX, slotY, baseColor)
+                    else -> {
+                        if (termType != TerminalType.MELODY) drawSlot(event.context, slotX, slotY, baseColor)
+                    }
                 }
             }
-
-            if (TerminalListener.currentType == TerminalType.MELODY) {
-                val correct = TerminalType.melodyState.correct
-                val button = TerminalType.melodyState.button
-                val current = TerminalType.melodyState.current
-
+    
+            if (termType == TerminalType.MELODY) {
+                val state = TerminalType.melodyState
+                val correct = state.correct
+                val button = state.button
+                val current = state.current
+    
                 if (correct != null && button != null && current != null) {
                     drawSlot(event.context, offsetX + correct * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
-
+    
                     for (i in 0 until windowSize) {
                         val x = (i % 9 * 18) + offsetX
-                        val y = floor((i / 9f)) * 18f + offsetY
+                        val y = (i / 9 * 18) + offsetY
                         val buttonSlot = button * 9 + 16
                         val currentSlot = button * 9 + 10 + current
-
+    
                         when {
                             i == buttonSlot -> drawSlot(event.context, x, y, baseColor)
                             i.equalsOneOf(16, 25, 34, 43) -> drawSlot(event.context, x, y, melodyWrongColor.value)
@@ -168,29 +160,20 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                         }
                     }
                 }
-
+    
                 if (melodyBlock.value) {
                     val btnW = 50f
                     val btnH = 18f
                     val btnX = offsetX + width + 5f
                     val btnY = offsetY + (height / 2f) - (btnH / 2f)
-
+    
                     Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
                     val btnColor = if (noSafeActive) Color.GREEN else Color.RED
                     Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
                     Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
                 }
             }
-
-            if (mode.value == 1 && queueString.value) Render2D.drawCenteredString(
-                event.context,
-                "Queue: ${queue.size}",
-                offsetX + width / 2,
-                offsetY + height + 5,
-                color = queueColor.value,
-                scale = 1.2f
-            )
-
+    
             event.context.pose().popMatrix()
             Resolution.pop(event.context)
         }
@@ -198,9 +181,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         register<ContainerEvent.MouseClick> {
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
-    
             val uiScale = 3f * scale.value
-
+    
             val mx = (event.mouseX / uiScale).toFloat()
             val my = (event.mouseY / uiScale).toFloat()
     
@@ -215,14 +197,14 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
-                val btnH = 18f 
+                val btnH = 18f
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
     
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
+                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if (noSafeActive) "§aON" else "§cOFF"}")
                     }
                     event.isCanceled = true
                     return@register
@@ -238,14 +220,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     
             val click = when (termType) {
                 TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
-                TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS -> {
-                    solution.find { it.slotId == slot }
-                }
-                TerminalType.RUBIX -> {
-                    solution.find { it.slotId == slot }?.btn?.let { 
-                        TerminalClick(slot, if (it > 0) 0 else 1) 
-                    }
-                }
+                TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS -> solution.find { it.slotId == slot }
+                TerminalType.RUBIX -> solution.find { it.slotId == slot }?.btn?.let { TerminalClick(slot, if (it > 0) 0 else 1) }
                 TerminalType.MELODY -> {
                     if (isMelodyWaiting && !noSafeActive) {
                         event.isCanceled = true
@@ -495,7 +471,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     fun onTerminalOpen() {
         isClicked = false
         TerminalType.reset()
+        TerminalType.melodyState.correct = null
+        TerminalType.melodyState.button = null
+        TerminalType.melodyState.current = null
         noSafeActive = false
+        isMelodyWaiting = false
     }
 
     fun onTerminalClose() {
