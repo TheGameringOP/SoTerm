@@ -70,6 +70,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private var waitingForLimeMove = false
     private var lastLimeSlot = -1
     private var currentRowSlots = listOf(16, 25, 34, 43)
+    private var noSafeActive = false
 
     override fun onEnable() {
         super.onEnable()
@@ -158,7 +159,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     for (i in 0 until windowSize) {
                         val x = i % 9 * 18 + offsetX
                         val y = floor((i / 9f)) * 18f + offsetY
-
                         val buttonSlot = button * 9 + 16
                         val currentSlot = button * 9 + 10 + current
 
@@ -169,6 +169,16 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                         }
                     }
                 }
+
+                val btnW = 50f
+                val btnH = 18f
+                val btnX = offsetX + width + 5f
+                val btnY = offsetY + (height / 2f) - (btnH / 2f)
+
+                Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
+                val btnColor = if (noSafeActive) Color(150, 0, 0) else Color.RED
+                Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
+                Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
             }
 
             if (mode.value == 1 && queueString.value) Render2D.drawCenteredString(
@@ -187,9 +197,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         register<ContainerEvent.MouseClick> {
             if (! TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
-            event.isCanceled = true
-            if (TerminalListener.checkFcDelay()) return@register
-
+            
             val uiScale = 3f * scale.value
             val mx = Resolution.getMouseX() / uiScale
             val my = Resolution.getMouseY() / uiScale
@@ -202,6 +210,22 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val height = windowSize / 9 * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
+
+            if (TerminalListener.currentType == TerminalType.MELODY) {
+                val btnW = 50f
+                val btnH = 18f
+                val btnX = offsetX + width + 5f
+                val btnY = offsetY + (height / 2f) - (btnH / 2f)
+
+                if (mx in btnX..(btnX + btnW) && my in btnY..(btnY + btnH)) {
+                    noSafeActive = !noSafeActive
+                    event.isCanceled = true
+                    return@register
+                }
+            }
+
+            event.isCanceled = true
+            if (TerminalListener.checkFcDelay()) return@register
 
             val slotX = floor((mx - offsetX) / 18).toInt()
             val slotY = floor((my - offsetY) / 18).toInt()
@@ -242,43 +266,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private fun handleMelodyClick(slot: Int) {
         val melodyState = TerminalType.melodyState
         
-        if (waitingForLimeMove) {
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("Waiting for lime glass to move, blocking click")
-            }
-            return
-        }
+        if (waitingForLimeMove && !noSafeActive) return
         
         if (slot in currentRowSlots) {
             val current = TerminalType.melodyState.current
             val correct = TerminalType.melodyState.correct
             
-            if (current != null && correct != null && current != correct) {
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Wrong column, blocking click")
-                }
-                return
-            }
+            if (!noSafeActive && current != null && correct != null && current != correct) return
             
             val clickedRowIndex = currentRowSlots.indexOf(slot)
             val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
             
-            if (clickedRowIndex != expectedRowIndex) {
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Wrong row, blocking click")
-                }
-                return
-            }
+            if (!noSafeActive && clickedRowIndex != expectedRowIndex) return
             
             sendClickPacket(slot, 0)
-            
             lastLimeSlot = slot
             waitingForLimeMove = true
             melodyState.expectedNextRow += 9
-            
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("Clicked row $clickedRowIndex, waiting for lime glass to move")
-            }
         }
     }
 
@@ -289,7 +293,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 Render2D.drawBorder(ctx, x, y, w, h, color)
                 Render2D.drawRect(ctx, x, y, w, h, color.withAlpha(40))
             }
-
             2 -> Render2D.drawFloatingRect(ctx, x, y, w, h, color.darker())
         }
     }
@@ -322,10 +325,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
             if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
 
-            if (SoTerm.debugFlags.contains("terminal")) {
-                ChatUtils.modMessage("Resync Timeout Triggered")
-            }
-
             if (mode.value == 1) {
                 TerminalType.clickedStartWithSlots.clear()
                 queue.clear()
@@ -343,11 +342,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (btn == 0) ClickType.CLONE else ClickType.PICKUP,
             mc.player
         )
-
-        if (SoTerm.debugFlags.contains("terminal")) {
-            ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
-        }
-
         if (TerminalListener.currentType == TerminalType.STARTWITH) {
             TerminalType.clickedStartWithSlots.add(slot)
         }
@@ -368,12 +362,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                         solution.add(TerminalClick(it.first))
                     }
             }
-
             TerminalType.REDGREEN -> {
                 currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }
                     .forEach { solution.add(TerminalClick(it.key)) }
             }
-
             TerminalType.STARTWITH -> {
                 val match = TerminalType.startwithRegex.matchEntire(TerminalListener.currentTitle)
                 val letter = match?.groupValues?.get(1)?.lowercase() ?: return
@@ -384,15 +376,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             }
-
             TerminalType.COLORS -> {
                 val match = TerminalType.colorsRegex.matchEntire(TerminalListener.currentTitle)
                 val extra = match?.groupValues?.get(1)?.lowercase() ?: return
                 fun fixName(name: String): String {
                     var fixedName = name
-                    TerminalType.colorReplacements.forEach { (k, v) ->
-                        fixedName = fixedName.replace(k, v)
-                    }
+                    TerminalType.colorReplacements.forEach { (k, v) -> fixedName = fixedName.replace(k, v) }
                     return fixedName
                 }
                 currentItems.filter {
@@ -401,7 +390,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                         && ! it.value.hasGlint()
                 }.map { it.key }.forEach { solution.add(TerminalClick(it)) }
             }
-
             TerminalType.RUBIX -> {
                 val allowedSlots = listOf(12, 13, 14, 21, 22, 23, 30, 31, 32)
                 val panes = currentItems.filter { it.key in allowedSlots && TerminalType.rubixOrder.contains(it.value.item) }
@@ -427,15 +415,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             }
-
             TerminalType.MELODY -> {
                 if (updatedItem1.item == Items.LIME_STAINED_GLASS_PANE) {
                     val correct = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key?.minus(1)
                     val button = floor((updatedSlot1 / 9).toDouble()) - 1
                     val current = updatedSlot1 % 9 - 1
-                    if (correct != null) {
-                        TerminalType.melodyState.correct = correct
-                    }
+                    if (correct != null) TerminalType.melodyState.correct = correct
                     TerminalType.melodyState.button = button.toInt()
                     TerminalType.melodyState.current = current
                 }
@@ -445,33 +430,24 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
     fun onItemsUpdated(slot: Int, item: ItemStack) {
         solve(slot, item)
-        
         if (TerminalListener.currentType == TerminalType.MELODY && waitingForLimeMove) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE && slot != lastLimeSlot) {
                 waitingForLimeMove = false
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Lime glass moved from $lastLimeSlot to $slot, clicks re-enabled")
-                }
             }
         }
-        
         if (mode.value == 1 && queue.isNotEmpty() && enabled) {
             val nextClick = queue[0]
-
             val isValid = when (TerminalListener.currentType) {
                 TerminalType.NUMBERS -> {
                     val firstSol = solution.firstOrNull()
                     firstSol != null && firstSol.slotId == nextClick.slotId
                 }
-
                 TerminalType.RUBIX -> {
                     val sol = solution.find { it.slotId == nextClick.slotId }
                     sol != null && ((sol.btn > 0 && nextClick.btn == 0) || (sol.btn < 0 && nextClick.btn == 1))
                 }
-
                 else -> solution.any { it.slotId == nextClick.slotId }
             }
-
             if (isValid) {
                 queue.forEach(::predict)
                 click(queue.removeAt(0))
@@ -484,6 +460,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         TerminalType.reset()
         waitingForLimeMove = false
         lastLimeSlot = -1
+        noSafeActive = false
     }
 
     fun onTerminalClose() {
@@ -492,6 +469,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         TerminalType.reset()
         waitingForLimeMove = false
         lastLimeSlot = -1
+        noSafeActive = false
     }
 
     fun register() {
