@@ -1,7 +1,6 @@
 package com.github.gameringop.features.impl.dungeon.solvers.terminals
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.features.Feature
@@ -195,23 +194,22 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
     
         register<ContainerEvent.MouseClick> {
-            val event = it.event
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
-            
+
             val uiScale = 3f * scale.value
             
             val mx = (event.x / uiScale).toFloat()
             val my = (event.y / uiScale).toFloat()
 
-            val screenWidth = (Resolution.width / uiScale).toFloat()
-            val screenHeight = (Resolution.height / uiScale).toFloat()
+            val screenWidth = Resolution.width / uiScale
+            val screenHeight = Resolution.height / uiScale
             val windowSize = termType.slotCount
 
             val width = 9 * 18f
             val height = (windowSize / 9) * 18f
-            val offsetX = screenWidth / 2f - width / 2f
-            val offsetY = screenHeight / 2f - height / 2f
+            val offsetX = (screenWidth / 2f - width / 2f).toFloat()
+            val offsetY = (screenHeight / 2f - height / 2f).toFloat()
 
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
@@ -224,7 +222,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
                     }
-                    it.isCanceled = true
+                    isCanceled = true
                     return@register
                 }
             }
@@ -236,26 +234,26 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val slot = slotX + slotY * 9
             if (slot >= windowSize) return@register
 
-            val click = when {
-                termType == TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
-                termType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> {
+            val click = when (termType) {
+                TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
+                TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS -> {
                     solution.find { it.slotId == slot }
                 }
-                termType == TerminalType.RUBIX -> {
-                    solution.find { it.slotId == slot }?.btn?.let {
-                        TerminalClick(slot, if (it > 0) 0 else 1)
+                TerminalType.RUBIX -> {
+                    solution.find { it.slotId == slot }?.btn?.let { 
+                        TerminalClick(slot, if (it > 0) 0 else 1) 
                     }
                 }
-                termType == TerminalType.MELODY -> {
+                TerminalType.MELODY -> {
                     handleMelodyClick(slot)
-                    event.isCanceled = true
+                    isCanceled = true
                     return@register
                 }
                 else -> null
             }
 
             if (click != null) {
-                event.isCanceled = true
+                isCanceled = true
                 if (TerminalListener.checkFcDelay()) return@register
                 if (mode.value != 0) predict(click)
                 if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
