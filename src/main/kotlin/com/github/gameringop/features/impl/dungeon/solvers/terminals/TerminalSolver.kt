@@ -97,7 +97,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val windowSize = termType.slotCount
 
             val width = 9 * 18
-            val height = windowSize / 9 * 18
+            val height = (windowSize / 9) * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
@@ -157,7 +157,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     drawSlot(event.context, offsetX + (correct + 1) * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
 
                     for (i in 0 until windowSize) {
-                        val x = i % 9 * 18 + offsetX
+                        val x = (i % 9 * 18) + offsetX
                         val y = floor((i / 9f)) * 18f + offsetY
                         val buttonSlot = button * 9 + 16
                         val currentSlot = button * 9 + 10 + current
@@ -170,15 +170,18 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
 
-                val btnW = 50f
-                val btnH = 18f
-                val btnX = offsetX + width + 5f
-                val btnY = offsetY + (height / 2f) - (btnH / 2f)
+                // Button rendering only if melodyBlock is enabled
+                if (melodyBlock.value) {
+                    val btnW = 50f
+                    val btnH = 18f
+                    val btnX = offsetX + width + 5f
+                    val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
-                Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
-                val btnColor = if (noSafeActive) Color(150, 0, 0) else Color.RED
-                Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
-                Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
+                    Render2D.drawBorder(event.context, btnX - 1, btnY - 1, btnW + 2, btnH + 2, Color.BLACK)
+                    val btnColor = if (noSafeActive) Color.GREEN else Color.RED
+                    Render2D.drawRect(event.context, btnX, btnY, btnW, btnH, btnColor)
+                    Render2D.drawCenteredString(event.context, "No Safe", btnX + (btnW / 2f), btnY + (btnH / 2f) - 4f, color = Color.WHITE, scale = 0.8f)
+                }
             }
 
             if (mode.value == 1 && queueString.value) Render2D.drawCenteredString(
@@ -207,18 +210,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val windowSize = termType.slotCount
 
             val width = 9 * 18
-            val height = windowSize / 9 * 18
+            val height = (windowSize / 9) * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
-            if (TerminalListener.currentType == TerminalType.MELODY) {
+            // Handle No Safe button click
+            if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
-                if (mx in btnX..(btnX + btnW) && my in btnY..(btnY + btnH)) {
+                // Hitbox detection fix (now exactly matches the visual rectangle)
+                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
+                    if (SoTerm.debugFlags.contains("melody")) {
+                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
+                    }
                     event.isCanceled = true
                     return@register
                 }
@@ -237,27 +245,22 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
             val click = when {
                 TerminalListener.currentType == TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
-
                 TerminalListener.currentType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> {
                     solution.find { it.slotId == slot }
                 }
-
-                TerminalListener.currentType == TerminalType.RUBIX -> {
+                TerminalType.RUBIX == TerminalListener.currentType -> {
                     solution.find { it.slotId == slot }?.btn?.let {
                         TerminalClick(slot, if (it > 0) 0 else 1)
                     }
                 }
-
                 TerminalListener.currentType == TerminalType.MELODY -> {
                     handleMelodyClick(slot)
                     return@register
                 }
-
                 else -> null
             }
 
             if (click == null) return@register
-
             if (mode.value != 0) predict(click)
             if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
         }
@@ -266,10 +269,14 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private fun handleMelodyClick(slot: Int) {
         val melodyState = TerminalType.melodyState
         
-        if (waitingForLimeMove && !noSafeActive) {
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("Waiting for lime glass to move, blocking click")
-            }
+        // If "No Safe" is active, we completely ignore all safety checks and just send the click
+        if (noSafeActive) {
+            sendClickPacket(slot, 0)
+            return
+        }
+
+        if (waitingForLimeMove) {
+            if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Waiting for lime glass to move, blocking click")
             return
         }
         
@@ -277,20 +284,16 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val current = TerminalType.melodyState.current
             val correct = TerminalType.melodyState.correct
             
-            if (!noSafeActive && current != null && correct != null && current != correct) {
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Wrong column, blocking click")
-                }
+            if (current != null && correct != null && current != correct) {
+                if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Wrong column, blocking click")
                 return
             }
             
             val clickedRowIndex = currentRowSlots.indexOf(slot)
             val expectedRowIndex = (melodyState.expectedNextRow - 16) / 9
             
-            if (!noSafeActive && clickedRowIndex != expectedRowIndex) {
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("Wrong row, blocking click")
-                }
+            if (clickedRowIndex != expectedRowIndex) {
+                if (SoTerm.debugFlags.contains("melody")) ChatUtils.modMessage("Wrong row, blocking click")
                 return
             }
             
@@ -330,7 +333,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val currentSolution = solution.find { it.slotId == click.slotId } ?: return
             val change = if (click.btn == 0) -1 else 1
             val newDiff = currentSolution.btn + change
-
             if (newDiff == 0) solution.remove(currentSolution)
             else solution[solution.indexOf(currentSolution)] = TerminalClick(click.slotId, newDiff)
         }
@@ -344,9 +346,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
             if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
 
-            if (SoTerm.debugFlags.contains("terminal")) {
-                ChatUtils.modMessage("Resync Timeout Triggered")
-            }
+            if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Resync Timeout Triggered")
 
             if (mode.value == 1) {
                 TerminalType.clickedStartWithSlots.clear()
