@@ -170,7 +170,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
 
-                // Button rendering only if melodyBlock is enabled
                 if (melodyBlock.value) {
                     val btnW = 50f
                     val btnH = 18f
@@ -214,14 +213,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
-            // Handle No Safe button click
             if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
-                // Hitbox detection fix (now exactly matches the visual rectangle)
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
@@ -269,7 +266,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private fun handleMelodyClick(slot: Int) {
         val melodyState = TerminalType.melodyState
         
-        // If "No Safe" is active, we completely ignore all safety checks and just send the click
         if (noSafeActive) {
             sendClickPacket(slot, 0)
             return
