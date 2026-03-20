@@ -206,18 +206,17 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val windowSize = termType.slotCount
 
             val width = 9 * 18
-            val height = windowSize / 9 * 18
+            val height = (windowSize / 9) * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
-                val btnH = 20f 
+                val btnH = 18f 
                 val btnX = offsetX + width + 5f
-                
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
-                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
+                if (mx >= btnX && mx <= (btnX + btnW) && my >= (btnY - 10f) && my <= (btnY + btnH + 10f)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
