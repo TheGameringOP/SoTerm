@@ -194,8 +194,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
 
         register<ContainerEvent.MouseClick> {
-            if (! TerminalListener.inTerm) return@register
+            if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
+            if (termType != TerminalType.MELODY || !melodyBlock.value) return@register
             
             val uiScale = 3f * scale.value
             val mx = Resolution.getMouseX() / uiScale
@@ -206,24 +207,22 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val windowSize = termType.slotCount
 
             val width = 9 * 18
-            val height = (windowSize / 9) * 18
+            val height = windowSize / 9 * 18
             val offsetX = screenWidth / 2 - width / 2
             val offsetY = screenHeight / 2 - height / 2
 
-            if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
-                val btnW = 50f
-                val btnH = 18f
-                val btnX = offsetX + width + 5f
-                val btnY = offsetY + (height / 2f) - (btnH / 2f)
-
-                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
-                    noSafeActive = !noSafeActive
-                    if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
-                    }
-                    event.isCanceled = true
-                    return@register
+            val btnW = 50f
+            val btnH = 18f
+            val btnX = offsetX + width + 5f
+            val btnY = offsetY + (height / 2f) - (btnH / 2f)
+            
+            if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
+                noSafeActive = !noSafeActive
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
                 }
+                event.isCanceled = true
+                return@register
             }
 
             event.isCanceled = true
@@ -261,54 +260,55 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     private fun handleMelodyClick(slot: Int) {
-        if (!melodyBlock.value) {
-            sendClickPacket(slot, 0)
-            return
-        }
-
-        if (slot !in listOf(16, 25, 34, 43)) return
-        if (noSafeActive) {
-            sendClickPacket(slot, 0)
-            return
-        }
-
-        val columnMap = mapOf(
-            1 to listOf(10, 19, 28, 37),
-            2 to listOf(11, 20, 29, 38),
-            3 to listOf(12, 21, 30, 39),
-            4 to listOf(13, 22, 31, 40),
-            5 to listOf(14, 23, 32, 41)
-        )
-
-        val currentItems = TerminalListener.currentItems
-        val magentaIndicatorSlot = currentItems.entries.find { 
-            it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
-        }?.key
-
-        val limeGlassSlot = currentItems.entries.find { 
-            it.value.item == Items.LIME_STAINED_GLASS_PANE 
-        }?.key
-
-        if (magentaIndicatorSlot == null || limeGlassSlot == null) {
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta: $magentaIndicatorSlot, Lime: $limeGlassSlot, Column: $magentaIndicatorSlot")
+            if (!melodyBlock.value) {
+                sendClickPacket(slot, 0)
+                return
             }
-            return
-        }
-
-        val validSlotsForColumn = columnMap[magentaIndicatorSlot] ?: emptyList()
-        
-        if (limeGlassSlot in validSlotsForColumn) {
-            sendClickPacket(slot, 0)
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaIndicatorSlot contains Lime Glass $limeGlassSlot. Clicking button $slot.")
+    
+            if (slot !in listOf(16, 25, 34, 43)) return
+            
+            if (noSafeActive) {
+                sendClickPacket(slot, 0)
+                return
             }
-        } else {
-            if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Magenta Column ($magentaIndicatorSlot).")
+    
+            val columnMap = mapOf(
+                1 to listOf(10, 19, 28, 37),
+                2 to listOf(11, 20, 29, 38),
+                3 to listOf(12, 21, 30, 39),
+                4 to listOf(13, 22, 31, 40),
+                5 to listOf(14, 23, 32, 41)
+            )
+    
+            val currentItems = TerminalListener.currentItems
+            val magentaSlot = currentItems.entries.find { 
+                it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
+            }?.key
+    
+            val limeGlassSlot = currentItems.entries.find { 
+                it.value.item == Items.LIME_STAINED_GLASS_PANE 
+            }?.key
+    
+            if (magentaSlot == null || limeGlassSlot == null) {
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
+                }
+                return
+            }
+    
+            val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
+            
+            if (limeGlassSlot in validSlotsForColumn) {
+                sendClickPacket(slot, 0)
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
+                }
+            } else {
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
+                }
             }
         }
-    }
 
     private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
         when (slotStyle.value) {
