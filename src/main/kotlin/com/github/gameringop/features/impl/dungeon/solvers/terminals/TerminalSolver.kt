@@ -146,27 +146,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             }
 
             if (TerminalListener.currentType == TerminalType.MELODY) {
-                val correct = TerminalType.melodyState.correct
-                val button = TerminalType.melodyState.button
-                val current = TerminalType.melodyState.current
-
-                if (correct != null && button != null && current != null) {
-                    drawSlot(event.context, offsetX + (correct + 1) * 18, offsetY + 18, melodyColumnColor.value, 16, 70)
-
-                    for (i in 0 until windowSize) {
-                        val x = (i % 9 * 18) + offsetX
-                        val y = floor((i / 9f)) * 18f + offsetY
-                        val buttonSlot = button * 9 + 16
-                        val currentSlot = button * 9 + 10 + current
-
-                        when {
-                            i == buttonSlot -> drawSlot(event.context, x, y, baseColor)
-                            i.equalsOneOf(16, 25, 34, 43) -> drawSlot(event.context, x, y, melodyWrongColor.value)
-                            i == currentSlot -> drawSlot(event.context, x, y, melodyIndicatorColor.value)
-                        }
-                    }
-                }
-
                 if (melodyBlock.value) {
                     val btnW = 50f
                     val btnH = 18f
@@ -213,11 +192,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (TerminalListener.currentType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
-                
-                val btnX = (offsetX + width + 5f) * uiScale
-                val btnY = (offsetY + (height / 2f) - (btnH / 2f)) * uiScale
+                val btnX = offsetX + width + 5f
+                val btnY = offsetY + (height / 2f) - (btnH / 2f)
 
-                if (mx >= btnX && mx <= (btnX + btnW * uiScale) && my >= btnY && my <= (btnY + btnH * uiScale)) {
+                if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
@@ -262,24 +240,28 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     private fun handleMelodyClick(slot: Int) {
-        if (slot !in listOf(16, 25, 34, 43)) return
+        if (!melodyBlock.value) {
+            sendClickPacket(slot, 0)
+            return
+        }
 
+        if (slot !in listOf(16, 25, 34, 43)) return
         if (noSafeActive) {
             sendClickPacket(slot, 0)
             return
         }
 
         val columnMap = mapOf(
-            10 to listOf(10, 19, 28, 37),
-            11 to listOf(11, 20, 29, 38),
-            12 to listOf(12, 21, 30, 39),
-            13 to listOf(13, 22, 31, 40),
-            14 to listOf(14, 23, 32, 41)
+            1 to listOf(10, 19, 28, 37),
+            2 to listOf(11, 20, 29, 38),
+            3 to listOf(12, 21, 30, 39),
+            4 to listOf(13, 22, 31, 40),
+            5 to listOf(14, 23, 32, 41)
         )
 
         val currentItems = TerminalListener.currentItems
         val purpleIndicatorSlot = currentItems.entries.find { 
-            it.key in 10..14 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
+            it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
         }?.key
 
         val limeGlassSlot = currentItems.entries.find { 
@@ -288,7 +270,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         if (purpleIndicatorSlot == null || limeGlassSlot == null) {
             if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §cMissing components! Purple: $purpleIndicatorSlot, Lime: $limeGlassSlot")
+                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta: $purpleIndicatorSlot, Lime: $limeGlassSlot, Column: $purpleIndicatorSlot")
             }
             return
         }
@@ -302,7 +284,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             }
         } else {
             if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Purple Column ($purpleIndicatorSlot).")
+                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Magenta Column ($purpleIndicatorSlot).")
             }
         }
     }
@@ -442,16 +424,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     }
                 }
             }
-            TerminalType.MELODY -> {
-                if (updatedItem1.item == Items.LIME_STAINED_GLASS_PANE) {
-                    val correct = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key?.minus(1)
-                    val button = floor((updatedSlot1 / 9).toDouble()) - 1
-                    val current = updatedSlot1 % 9 - 1
-                    if (correct != null) TerminalType.melodyState.correct = correct
-                    TerminalType.melodyState.button = button.toInt()
-                    TerminalType.melodyState.current = current
-                }
-            }
+            TerminalType.MELODY -> {}
         }
     }
 
