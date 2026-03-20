@@ -55,9 +55,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val melodyColumnColor by ColorSetting("Melody: Column", Color(255, 0, 255, 127)).showIf { melody.value }
     val melodyIndicatorColor by ColorSetting("Melody: Indicator", Color(0, 255, 0, 255)).showIf { melody.value }
     val melodyWrongColor by ColorSetting("Melody: Wrong", Color(255, 0, 0, 255)).showIf { melody.value }
-    val melodyBlock = ToggleSetting("Melody: Block Wrong Clicks", true).showIf { melody.value }
+    val melodyBlock by ToggleSetting("Melody: Block Wrong Click").showIf { melody.value }
     val offsetPacket = SliderSetting<Long>("Offset Packet", 500, 0, 1000, 1).showIf { melodyBlock.value }
-    val showNoSafeButton = ToggleSetting("Show NoSafe Button", true).showIf { melodyBlock.value }
+    val showNoSafeButton = ToggleSetting("Show NoSafe Button").showIf { melodyBlock.value }
 
     val melody by ToggleSetting("Melody", true).section("Toggles")
     val numbers by ToggleSetting("Numbers", true)
