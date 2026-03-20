@@ -196,7 +196,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val offsetY = (screenHeight / 2f - height / 2f).toFloat()
         
             if (SoTerm.debugFlags.contains("terminal")) {
-                ChatUtils.modMessage("§d[Debug] §fClick at: §e($mx, $my) §7| Offset: ($offsetX, $offsetY)")
+                ChatUtils.modMessage("§d[Debug] §fMouse: §e($mx, $my) §7| Terminal Start: ($offsetX, $offsetY)")
             }
         
             if (termType == TerminalType.MELODY && melodyBlock.value) {
@@ -206,13 +206,13 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
         
                 if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("§6[Melody] §fChecking Box: X[$btnX to ${btnX+btnW}] Y[$btnY to ${btnY+btnH}]")
+                    ChatUtils.modMessage("§6[Melody] §fBtn Box: X[$btnX - ${btnX+btnW}] Y[$btnY - ${btnY+btnH}]")
                 }
         
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
                     if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §fNo-Safe: ${if(noSafeActive) "§aON" else "§cOFF"}")
+                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if (noSafeActive) "§aON" else "§cOFF"}")
                     }
                     event.isCanceled = true
                     return@register
@@ -224,19 +224,13 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         
             if (slotX !in 0..8 || slotY < 0) {
                 if (SoTerm.debugFlags.contains("terminal")) {
-                    ChatUtils.modMessage("§7[Debug] Clicked outside slot grid.")
+                    ChatUtils.modMessage("§7[Debug] Logic says: Outside Grid (SlotX: $slotX, SlotY: $slotY)")
                 }
                 return@register
             }
-        
-            val slot = slotX + slotY * 9
             
-            if (slot >= windowSize) {
-                if (SoTerm.debugFlags.contains("terminal")) {
-                    ChatUtils.modMessage("§7[Debug] Slot $slot is out of bounds for $termType")
-                }
-                return@register
-            }
+            val slot = slotX + slotY * 9
+            if (slot >= windowSize) return@register
         
             val click = when (termType) {
                 TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
@@ -257,7 +251,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (click != null) {
                 event.isCanceled = true
                 if (TerminalListener.checkFcDelay()) return@register
-                
                 if (mode.value != 0) predict(click)
                 if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
             }
