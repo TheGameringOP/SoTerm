@@ -307,7 +307,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val delay = offsetPacket.value
             
             if (delay > 0) {
-                multithreading.runAfter(delay) {
+                // Switched from multithreading to your existing Scheduler
+                Scheduler.schedule(delay.toInt(), 0) {
                     isMelodyWaiting = false
                 }
             } else {
