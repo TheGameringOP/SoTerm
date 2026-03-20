@@ -195,17 +195,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val offsetX = (screenWidth / 2f - width / 2f).toFloat()
             val offsetY = (screenHeight / 2f - height / 2f).toFloat()
     
+            if (SoTerm.debugFlags.contains("terminal")) {
+                ChatUtils.modMessage("§d[Debug] §fType: §b$termType §f| Mouse: §e($mx, $my) §f| Offset: §e($offsetX, $offsetY)")
+            }
+
             if (termType == TerminalType.MELODY && melodyBlock.value) {
                 val btnW = 50f
                 val btnH = 18f
                 val btnX = offsetX + width + 5f
                 val btnY = offsetY + (height / 2f) - (btnH / 2f)
+                
+                if (SoTerm.debugFlags.contains("terminal")) {
+                    ChatUtils.modMessage("§d[Debug] §fButton Box: §aX[$btnX to ${btnX+btnW}] Y[$btnY to ${btnY+btnH}]")
+                }
     
                 if (mx >= btnX && mx <= (btnX + btnW) && my >= btnY && my <= (btnY + btnH)) {
                     noSafeActive = !noSafeActive
-                    if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if (noSafeActive) "§aON" else "§cOFF"}")
-                    }
+                    ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if (noSafeActive) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                     return@register
                 }
@@ -216,6 +222,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     
             if (slotX !in 0..8 || slotY < 0) return@register
             val slot = slotX + slotY * 9
+            
+            if (SoTerm.debugFlags.contains("terminal")) {
+                ChatUtils.modMessage("§d[Debug] §fHovering Slot: §e$slot")
+            }
+    
             if (slot >= windowSize) return@register
     
             val click = when (termType) {
