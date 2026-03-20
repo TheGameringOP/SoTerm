@@ -193,8 +193,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             Resolution.pop(event.context)
         }
     
-        register<EventBus.EventContext<ContainerEvent.MouseClick>> { ctx ->
-            val event = ctx.event
+        register<ContainerEvent.MouseClick> {
+            val event = it.event
             if (!TerminalListener.inTerm) return@register
             val termType = TerminalListener.currentType ?: return@register
             
@@ -223,13 +223,13 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     if (SoTerm.debugFlags.contains("melody")) {
                         ChatUtils.modMessage("§6[Melody] §fNo-Safe Mode: ${if(noSafeActive) "§aON" else "§cOFF"}")
                     }
-                    ctx.isCanceled = true
+                    it.isCanceled = true
                     return@register
                 }
             }
 
-            val slotX = floor((mx - offsetX) / 18).toInt()
-            val slotY = floor((my - offsetY) / 18).toInt()
+            val slotX = floor((mx - offsetX) / 18.0).toInt()
+            val slotY = floor((my - offsetY) / 18.0).toInt()
 
             if (slotX !in 0..8 || slotY < 0) return@register
             val slot = slotX + slotY * 9
