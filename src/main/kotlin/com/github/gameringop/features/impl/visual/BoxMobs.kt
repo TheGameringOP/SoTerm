@@ -5,6 +5,7 @@ import com.github.gameringop.event.impl.EntityDeathEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
+import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
@@ -14,6 +15,7 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
+import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
@@ -29,9 +31,8 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.ambient.Bat
 import java.awt.Color
-import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.text.Regex
 
 object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock.") {
     
@@ -43,6 +44,13 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     
     private val mobColor by ColorSetting("Box Color", Color(0, 255, 0), false)
         .withDescription("Color used for mob highlighting (default: green).")
+
+    private val Bat by ToggleSetting("Bat", true)
+        .withDescription("Highlight bats in the world.")
+    
+    private val BatColor by ColorSetting("Bat Color", Color.GREEN, false)
+        .showIf { Bat.value }
+        .withDescription("The color used for highlighted bats.")
     
     private val mobListInput by TextInputSetting("Mob Names", "")
         .withDescription("Enter mob names separated by commas (e.g., Zealot, Bruiser, Sadan)")
@@ -57,18 +65,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val trackedMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
     private var cachedMobNames = emptyList<String>()
-
-    private fun extractMobName(rawName: String): String {
-        return rawName
-            .replace(Regex("\\[L?v?\\d+\\]"), "")
-            .replace(Regex("[⊙☠⚡✧✦✩✪✫✬✭✮✯✰⍟★☆⭒⭑⭓⭔❤༕☠🦴♃✰]"), "")
-            .replace(Regex("\\d+(?:[,\\.]?\\d+)*[kKmM]?/?\\d*[kKmM]?❤?"), "")
-            .replace(Regex("[,/]"), "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
-            .removeFormatting()
-            .lowercase()
-    }
 
     private fun updateMobList() {
         cachedMobNames = mobListInput.value
@@ -87,31 +83,21 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             if (event.packet !is ClientboundSetEntityDataPacket) return@register
             
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
-            if (entity !is ArmorStand) return@register
-            
-            val name = entity.customName?.formattedText ?: return@register
-            val mobName = extractMobName(name)
-            
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§7Raw: $name")
-                ChatUtils.modMessage("§7Extracted: $mobName")
-            }
-            
-            if (cachedMobNames.isEmpty()) {
-                updateMobList()
-            }
-            
-            if (cachedMobNames.any { mobName.contains(it) }) {
-                if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aMatch found: $mobName contains ${cachedMobNames.find { mobName.contains(it) }}")
-                }
-                checkMob(entity, name)
+            processEntity(entity)
+        }
+
+        register<TickEvent.Client> {
+            if (!LocationUtils.inSkyblock || mc.level == null || mc.player == null) return@register
+            if (mc.player!!.tickCount % 20 != 0) return@register
+
+            mc.level!!.entities.all.forEach { entity ->
+                processEntity(entity)
             }
         }
 
         register<EntityDeathEvent> {
-            trackedMobs.removeIf { it == event.entity.id }
-            checked.removeIf { it == event.entity.id }
+            trackedMobs.remove(event.entity.id)
+            checked.remove(event.entity.id)
         }
 
         register<WorldChangeEvent> {
@@ -121,30 +107,27 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         }
 
         register<RenderWorldEvent> {
-            if (!LocationUtils.inSkyblock) return@register
-            if (trackedMobs.isEmpty()) return@register
+            if (!LocationUtils.inSkyblock || trackedMobs.isEmpty()) return@register
 
             for (id in trackedMobs) {
                 val entity = mc.level?.getEntity(id) ?: continue
                 if (!entity.isAlive) continue
 
-                val renderX = entity.renderX
-                val renderY = entity.renderY
-                val renderZ = entity.renderZ
-                
-                val bb = entity.boundingBox
-                val width = bb.xsize
-                val height = bb.ysize
-                
+                val renderColor = if (entity is Bat) {
+                    BatColor.value
+                } else {
+                    mobColor.value
+                }
+
                 Render3D.renderBox(
                     ctx = event.ctx,
-                    x = renderX,
-                    y = renderY,
-                    z = renderZ,
-                    width = width,
-                    height = height,
-                    outlineColor = mobColor.value,
-                    fillColor = mobColor.value.withAlpha(50),
+                    x = entity.renderX,
+                    y = entity.renderY,
+                    z = entity.renderZ,
+                    width = entity.boundingBox.xsize,
+                    height = entity.boundingBox.ysize,
+                    outlineColor = renderColor,
+                    fillColor = renderColor.withAlpha(50),
                     outline = mode.value.equalsOneOf(1, 2),
                     fill = mode.value.equalsOneOf(0, 2),
                     phase = esp.value
@@ -153,7 +136,29 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         }
     }
 
-    private fun checkMob(armorStand: Entity, name: String) {
+    private fun processEntity(entity: Entity) {
+        if (entity is Bat) {
+            if (Bat.value && !entity.isPassenger) {
+                trackedMobs.add(entity.id)
+            }
+            return
+        }
+
+        if (entity is ArmorStand) {
+            if (checked.contains(entity.id)) return
+
+            val name = entity.customName?.formattedText ?: return
+            val cleanName = name.removeFormatting().lowercase()
+            
+            if (cachedMobNames.isEmpty()) updateMobList()
+            
+            if (cachedMobNames.any { cleanName.contains(it) }) {
+                checkMob(entity)
+            }
+        }
+    }
+
+    private fun checkMob(armorStand: Entity) {
         if (!checked.add(armorStand.id)) return
         
         val possibleEntities = armorStand.level().getEntities(
