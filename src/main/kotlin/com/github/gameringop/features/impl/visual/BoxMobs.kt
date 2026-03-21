@@ -45,11 +45,11 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private val mobColor by ColorSetting("Box Color", Color(0, 255, 0), false)
         .withDescription("Color used for mob highlighting (default: green).")
 
-    private val Bat by ToggleSetting("Bat", true)
+    private val batToggle by ToggleSetting("Bat", true)
         .withDescription("Highlight bats in the world.")
     
-    private val BatColor by ColorSetting("Bat Color", Color.GREEN, false)
-        .showIf { Bat.value }
+    private val batColor by ColorSetting("Bat Color", Color.GREEN, false)
+        .showIf { batToggle.value }
         .withDescription("The color used for highlighted bats.")
     
     private val mobListInput by TextInputSetting("Mob Names", "")
@@ -86,11 +86,11 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             processEntity(entity)
         }
 
-        register<TickEvent.Client> {
+        register<TickEvent.Start> {
             if (!LocationUtils.inSkyblock || mc.level == null || mc.player == null) return@register
             if (mc.player!!.tickCount % 20 != 0) return@register
 
-            mc.level!!.entities.all.forEach { entity ->
+            mc.level!!.entitiesForRendering().forEach { entity ->
                 processEntity(entity)
             }
         }
@@ -114,7 +114,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                 if (!entity.isAlive) continue
 
                 val renderColor = if (entity is Bat) {
-                    BatColor.value
+                    batColor.value
                 } else {
                     mobColor.value
                 }
@@ -138,7 +138,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
 
     private fun processEntity(entity: Entity) {
         if (entity is Bat) {
-            if (Bat.value && !entity.isPassenger) {
+            if (batToggle.value && !entity.isPassenger) {
                 trackedMobs.add(entity.id)
             }
             return
