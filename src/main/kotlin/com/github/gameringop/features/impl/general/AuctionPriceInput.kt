@@ -156,13 +156,19 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
         }
 
         private fun recalculateValue() {
-            val textValue = NumbersUtils.parseCompactNumber(inputField.value)
-
+            val textValue = try {
+                NumbersUtils.parseCompactNumber(inputField.value)
+            } catch (e: Exception) {
+                parsedValue = null
+                ChatUtils.modMessage("§cInvalid price format: \"${inputField.value}\"")
+                return
+            }
+            
             if (textValue == null) {
                 parsedValue = null
                 return
             }
-
+            
             parsedValue = if (undercut) (lowestBin - textValue).coerceAtLeast(0)
             else textValue
         }
