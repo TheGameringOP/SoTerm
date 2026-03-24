@@ -31,7 +31,7 @@ object FarmKeys: Feature("Farm Keys") {
         mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
         mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
 
-        val internalSens = previousSensitivity.toDouble() / 200.0
+        val internalSens = (previousSensitivity as Number).toDouble() / 200.0
         mc.options.sensitivity().set(internalSens)
 
         KeyMapping.resetMapping()
