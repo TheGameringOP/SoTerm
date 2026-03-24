@@ -2,7 +2,6 @@ package com.github.gameringop.mixin;
 
 import com.github.gameringop.event.EventBus;
 import com.github.gameringop.event.impl.MouseClickEvent;
-import com.github.gameringop.features.impl.misc.FarmKeys;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -16,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MouseHandler.class)
 public abstract class MixinMouseHandler {
     @Shadow @Final private Minecraft minecraft;
+    
+    public static boolean cancelMouseMovement = false;
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long l, MouseButtonInfo mouseButtonInfo, int i, CallbackInfo ci) {
@@ -27,7 +28,7 @@ public abstract class MixinMouseHandler {
 
     @Inject(method = "onMove", at = @At("HEAD"), cancellable = true)
     private void onMouseMove(long window, double x, double y, CallbackInfo ci) {
-        if (FarmKeys.isActive()) {
+        if (cancelMouseMovement) {
             ci.cancel();
         }
     }
