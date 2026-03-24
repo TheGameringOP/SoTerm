@@ -161,7 +161,6 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
                 NumbersUtils.parseCompactNumber(inputField.value)
             } catch (e: Exception) {
                 parsedValue = null
-                ChatUtils.modMessage("§cInvalid price format: \"${inputField.value}\"")
                 return
             }
             
