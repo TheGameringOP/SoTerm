@@ -21,6 +21,8 @@ object FarmKeys : Feature("Farm Keys") {
 
     private var active = false
 
+    fun isActive(): Boolean = active
+
     override fun init() {
         register<KeyboardEvent.KeyPressed> {
             if (event.action != GLFW.GLFW_PRESS) return@register
