@@ -27,12 +27,10 @@ object FarmKeys : Feature("Farm Keys") {
             if (mc.screen != null) return@register
 
             if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§7Key pressed, checking toggleKey...")
-                ChatUtils.modMessage("§7toggleKey.value = ${toggleKey.value}")
-                ChatUtils.modMessage("§7event.keyEvent.key = ${event.keyEvent.key}")
+                ChatUtils.modMessage("§7Key pressed: ${event.keyEvent.key}, toggleKey value: ${toggleKey.value}")
             }
 
-            if (toggleKey.isPressed()) {
+            if (event.keyEvent.key == toggleKey.value) {
                 if (SoTerm.debugFlags.contains("farm")) {
                     ChatUtils.modMessage("§eToggle key detected!")
                 }
@@ -51,9 +49,9 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
-                    mc.options.sensitivity().set(-1.0 / 3.0)
+                    mc.options.sensitivity().set(0.0)
                     if (SoTerm.debugFlags.contains("farm")) {
-                        ChatUtils.modMessage("§aSensitivity set to -1/3")
+                        ChatUtils.modMessage("§aSensitivity set to 0 (disabled)")
                     }
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
