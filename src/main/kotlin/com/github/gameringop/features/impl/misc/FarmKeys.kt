@@ -42,6 +42,8 @@ object FarmKeys : Feature("Farm Keys") {
                 }
                 
                 active = !active
+
+                val accessibility = mc.options.accessibilityOptions()
                 
                 if (SoTerm.debugFlags.contains("farm")) {
                     ChatUtils.modMessage("§eFarm mode toggled: ${if (active) "ON" else "OFF"}")
@@ -54,10 +56,10 @@ object FarmKeys : Feature("Farm Keys") {
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
 
-                    previousAttackToggled = mc.options.discreteMouseClick.get()
+                    previousAttackToggled = accessibility.discreteMouseClick().get()
                     
                     val wantToggle = (isAuto.value == 1)
-                    mc.options.discreteMouseClick.set(wantToggle)
+                    accessibility.discreteMouseClick().set(wantToggle)
                     
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
@@ -69,7 +71,7 @@ object FarmKeys : Feature("Farm Keys") {
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     
-                    mc.options.discreteMouseClick.set(previousAttackToggled)
+                    accessibility.discreteMouseClick().set(previousAttackToggled)
                 }
                 
                 mc.options.save()
