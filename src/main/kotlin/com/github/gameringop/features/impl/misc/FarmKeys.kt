@@ -14,7 +14,7 @@ object FarmKeys: Feature("Farm Keys") {
         
     private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
         
-    private var previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
+    private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
 
     private var originalAttackKey: InputConstants.Key? = null
     private var originalJumpKey: InputConstants.Key? = null
