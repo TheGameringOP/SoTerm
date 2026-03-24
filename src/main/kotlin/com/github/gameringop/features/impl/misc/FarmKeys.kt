@@ -50,7 +50,7 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
-                    MixinMouseHandler.cancelMouseMovement = active
+                    MixinMouseHandler.setCancelMouseMovement(true)
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§cRestoring original keybinds...")
