@@ -2,6 +2,7 @@ package com.github.gameringop.mixin;
 
 import com.github.gameringop.event.EventBus;
 import com.github.gameringop.event.impl.MouseClickEvent;
+import com.github.gameringop.features.impl.misc.FarmKeys;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -20,6 +21,13 @@ public abstract class MixinMouseHandler {
     private void onMouseButton(long l, MouseButtonInfo mouseButtonInfo, int i, CallbackInfo ci) {
         if (l != minecraft.getWindow().handle()) return;
         if (EventBus.post(new MouseClickEvent(mouseButtonInfo.button(), i, mouseButtonInfo.modifiers()))) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "onMove", at = @At("HEAD"), cancellable = true)
+    private void onMouseMove(long window, double x, double y, CallbackInfo ci) {
+        if (FarmKeys.isActive()) {
             ci.cancel();
         }
     }
