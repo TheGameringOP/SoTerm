@@ -9,10 +9,12 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
-object FarmKeys : Feature("Farm Keys") {
+object FarmKeys: Feature("Farm Keys") {
+
     private val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value)
     private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
     private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
+    private val toggleKey by KeybindSetting("Toggle Key", InputConstants.UNKNOWN.value)
 
     override fun onEnable() {
         val breakSetting = getSettingByName("Block breaking") as? KeybindSetting
@@ -22,7 +24,6 @@ object FarmKeys : Feature("Farm Keys") {
         jumpSetting?.let { updateKeyBinding(mc.options.keyJump, it) }
 
         mc.options.sensitivity().set(-1.0 / 3.0)
-
         KeyMapping.resetMapping()
     }
 
@@ -38,7 +39,6 @@ object FarmKeys : Feature("Farm Keys") {
 
     private fun updateKeyBinding(keyMapping: KeyMapping, customBind: KeybindSetting) {
         if (customBind.value == InputConstants.UNKNOWN.value) return
-        
         keyMapping.setDown(false)
         
         val newKey = if (customBind.isMouse) {
@@ -46,7 +46,6 @@ object FarmKeys : Feature("Farm Keys") {
         } else {
             InputConstants.Type.KEYSYM.getOrCreate(customBind.value)
         }
-        
         keyMapping.setKey(newKey)
     }
 }
