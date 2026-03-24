@@ -11,37 +11,33 @@ import org.lwjgl.glfw.GLFW
 
 object FarmKeys : Feature("Farm Keys") {
 
-    val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value)
-    val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
-    val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
-    val toggleKey by KeybindSetting("Toggle Key", InputConstants.UNKNOWN.value)
+    private val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
+    private val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
+    private val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
+    private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
     override fun init() {
         register<TickEvent.Server> {
+            if (toggleKey.isPressed()) {
+                if (mc.options.keyAttack.key.value == InputConstants.UNKNOWN.value) {
+                    updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
+                    updateKeyBinding(mc.options.keyJump, jumpKey.value)
+                    mc.options.sensitivity().set(-1.0 / 3.0)
+                    KeyMapping.resetMapping()
+                } else {
+                    mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
+                    mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
+                    val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
+                    mc.options.sensitivity().set(internalSens)
+                    KeyMapping.resetMapping()
+                }
+            }
         }
-    }
-
-    override fun onEnable() {
-        updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
-        updateKeyBinding(mc.options.keyJump, jumpKey.value)
-
-        mc.options.sensitivity().set(-1.0 / 3.0)
-        KeyMapping.resetMapping()
-    }
-
-    override fun onDisable() {
-        mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
-        mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
-
-        val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
-        mc.options.sensitivity().set(internalSens)
-
-        KeyMapping.resetMapping()
     }
 
     private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
         if (bindValue == InputConstants.UNKNOWN.value) return
-        
+
         keyMapping.setDown(false)
 
         val newKey = if (bindValue < 8) {
@@ -49,7 +45,7 @@ object FarmKeys : Feature("Farm Keys") {
         } else {
             InputConstants.Type.KEYSYM.getOrCreate(bindValue)
         }
-        
+
         keyMapping.setKey(newKey)
     }
 }
