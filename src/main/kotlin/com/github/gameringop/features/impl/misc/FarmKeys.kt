@@ -57,6 +57,7 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
+                    MixinMouseHandler.setCancelMouseMovement(false)
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     if (SoTerm.debugFlags.contains("farm")) {
