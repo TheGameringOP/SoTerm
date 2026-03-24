@@ -1,6 +1,8 @@
 package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
+import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.setValue
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
@@ -13,7 +15,7 @@ object FarmKeys: Feature("Farm Keys") {
         
     private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
         
-    private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
+    private var previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
 
     private var originalAttackKey: InputConstants.Key? = null
     private var originalJumpKey: InputConstants.Key? = null
@@ -41,7 +43,7 @@ object FarmKeys: Feature("Farm Keys") {
         mc.options.keyAttack.setKey(attackRestore)
         mc.options.keyJump.setKey(jumpRestore)
         
-        val internalSens = previousSensitivity.value.toDouble() / 200.0
+        val internalSens = previousSensitivity.toDouble() / 200.0
         mc.options.sensitivity().set(internalSens)
         
         KeyMapping.resetMapping()
