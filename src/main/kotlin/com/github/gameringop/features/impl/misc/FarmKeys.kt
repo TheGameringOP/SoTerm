@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.misc
 
+import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.provideDelegate
@@ -16,10 +17,13 @@ object FarmKeys : Feature("Farm Keys") {
     private val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
     private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
+    private var active = false
+
     override fun init() {
         register<TickEvent.Server> {
             if (toggleKey.isPressed()) {
-                if (mc.options.keyAttack.key.value == InputConstants.UNKNOWN.value) {
+                active = !active
+                if (active) {
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
                     mc.options.sensitivity().set(-1.0 / 3.0)
