@@ -1,11 +1,13 @@
 package com.github.gameringop.features.impl.misc
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
+import com.github.gameringop.utils.ChatUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
@@ -23,23 +25,50 @@ object FarmKeys : Feature("Farm Keys") {
     override fun init() {
         register<TickEvent.Server> {
             val isPressed = toggleKey.isPressed()
+            
+            if (SoTerm.debugFlags.contains("farm")) {
+                if (isPressed != wasPressed) {
+                    ChatUtils.modMessage("§7Toggle key state changed: $isPressed")
+                }
+            }
 
             if (isPressed && !wasPressed) {
                 active = !active
                 
+                if (SoTerm.debugFlags.contains("farm")) {
+                    ChatUtils.modMessage("§eFarm mode toggled: ${if (active) "ON" else "OFF"}")
+                }
+                
                 if (active) {
+                    if (SoTerm.debugFlags.contains("farm")) {
+                        ChatUtils.modMessage("§aApplying farm keybinds...")
+                        ChatUtils.modMessage("§7Attack key: $blockBreakKey.value")
+                        ChatUtils.modMessage("§7Jump key: $jumpKey.value")
+                    }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
                     mc.options.sensitivity().set(-1.0 / 3.0)
+                    if (SoTerm.debugFlags.contains("farm")) {
+                        ChatUtils.modMessage("§aSensitivity set to -1/3")
+                    }
                 } else {
+                    if (SoTerm.debugFlags.contains("farm")) {
+                        ChatUtils.modMessage("§cRestoring original keybinds...")
+                    }
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
                     
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
+                    if (SoTerm.debugFlags.contains("farm")) {
+                        ChatUtils.modMessage("§cSensitivity restored to $internalSens")
+                    }
                 }
                 
                 KeyMapping.resetMapping()
+                if (SoTerm.debugFlags.contains("farm")) {
+                    ChatUtils.modMessage("§aKey mappings reset")
+                }
             }
             
             wasPressed = isPressed
@@ -47,7 +76,12 @@ object FarmKeys : Feature("Farm Keys") {
     }
 
     private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
-        if (bindValue == InputConstants.UNKNOWN.value) return
+        if (bindValue == InputConstants.UNKNOWN.value) {
+            if (SoTerm.debugFlags.contains("farm")) {
+                ChatUtils.modMessage("§cSkipping keybind update: value is UNKNOWN")
+            }
+            return
+        }
 
         keyMapping.setDown(false)
 
@@ -57,6 +91,10 @@ object FarmKeys : Feature("Farm Keys") {
             InputConstants.Type.KEYSYM.getOrCreate(bindValue)
         }
 
+        if (SoTerm.debugFlags.contains("farm")) {
+            ChatUtils.modMessage("§7Setting key to: $newKey")
+        }
+        
         keyMapping.setKey(newKey)
     }
 }
