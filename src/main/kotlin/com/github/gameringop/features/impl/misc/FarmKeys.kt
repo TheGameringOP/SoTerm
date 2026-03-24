@@ -9,25 +9,23 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
-object FarmKeys : Feature("Helps you farm") {
+object FarmKeys : Feature("Farm Keys") {
 
-    private val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value)
-    private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
-    private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
-    private val toggleKey by KeybindSetting("Toggle Key", InputConstants.UNKNOWN.value)
+    val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value)
+    val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
+    val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
+    val toggleKey by KeybindSetting("Toggle Key", InputConstants.UNKNOWN.value)
 
     override fun init() {
+        register<TickEvent.Server> {
+        }
     }
 
     override fun onEnable() {
-        val breakSetting = getSettingByName("Block breaking") as? KeybindSetting
-        val jumpSetting = getSettingByName("Jump") as? KeybindSetting
-
-        breakSetting?.let { updateKeyBinding(mc.options.keyAttack, it) }
-        jumpSetting?.let { updateKeyBinding(mc.options.keyJump, it) }
+        updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
+        updateKeyBinding(mc.options.keyJump, jumpKey.value)
 
         mc.options.sensitivity().set(-1.0 / 3.0)
-        
         KeyMapping.resetMapping()
     }
 
@@ -35,21 +33,21 @@ object FarmKeys : Feature("Helps you farm") {
         mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
         mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
 
-        val internalSens = (previousSensitivity as Number).toDouble() / 200.0
+        val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
         mc.options.sensitivity().set(internalSens)
 
         KeyMapping.resetMapping()
     }
 
-    private fun updateKeyBinding(keyMapping: KeyMapping, customBind: KeybindSetting) {
-        if (customBind.value == InputConstants.UNKNOWN.value) return
+    private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
+        if (bindValue == InputConstants.UNKNOWN.value) return
         
         keyMapping.setDown(false)
-        
-        val newKey = if (customBind.isMouse) {
-            InputConstants.Type.MOUSE.getOrCreate(customBind.value)
+
+        val newKey = if (bindValue < 8) {
+            InputConstants.Type.MOUSE.getOrCreate(bindValue)
         } else {
-            InputConstants.Type.KEYSYM.getOrCreate(customBind.value)
+            InputConstants.Type.KEYSYM.getOrCreate(bindValue)
         }
         
         keyMapping.setKey(newKey)
