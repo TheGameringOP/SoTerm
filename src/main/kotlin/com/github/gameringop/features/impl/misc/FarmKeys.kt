@@ -1,32 +1,35 @@
 package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.mixin.IKeyMapping
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
+import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.provideDelegate
 
-object FarmKeys: Feature("Farm Keys") {
+object FarmKeys : Feature("Farm Keys") {
 
-    private val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value)
-        
-    private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value)
-        
-    private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f)
+    private val blockBreakKey by KeybindSetting("Block breaking", InputConstants.UNKNOWN.value).also { configSettings.add(it) }
+    private val jumpKey by KeybindSetting("Jump", InputConstants.UNKNOWN.value).also { configSettings.add(it) }
+    private val previousSensitivity by SliderSetting("Previous Sensitivity", 100f, 0f, 200f, 1f).also { configSettings.add(it) }
 
     private var originalAttackKey: InputConstants.Key? = null
     private var originalJumpKey: InputConstants.Key? = null
 
     override fun onEnable() {
-        super.onEnable()
+        val attackMapping = mc.options.keyAttack as IKeyMapping
+        val jumpMapping = mc.options.keyJump as IKeyMapping
         
-        originalAttackKey = mc.options.keyAttack.key
-        originalJumpKey = mc.options.keyJump.key
+        originalAttackKey = attackMapping.key
+        originalJumpKey = jumpMapping.key
         
-        updateKeyBinding(mc.options.keyAttack, blockBreakKey)
-        updateKeyBinding(mc.options.keyJump, jumpKey)
+        val breakSetting = getSettingByName("Block breaking") as? KeybindSetting
+        val jumpSetting = getSettingByName("Jump") as? KeybindSetting
+        
+        breakSetting?.let { updateKeyBinding(mc.options.keyAttack, it) }
+        jumpSetting?.let { updateKeyBinding(mc.options.keyJump, it) }
         
         mc.options.sensitivity().set(-1.0 / 3.0)
         
@@ -34,10 +37,8 @@ object FarmKeys: Feature("Farm Keys") {
     }
 
     override fun onDisable() {
-        super.onDisable()
-
         val attackRestore = originalAttackKey ?: InputConstants.Type.MOUSE.getOrCreate(0) 
-        val jumpRestore = originalJumpKey ?: InputConstants.Type.KEYSYM.getOrCreate(32)
+        val jumpRestore = originalJumpKey ?: InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_SPACE)
         
         mc.options.keyAttack.setKey(attackRestore)
         mc.options.keyJump.setKey(jumpRestore)
