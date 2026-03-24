@@ -2,7 +2,6 @@ package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.setValue
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
