@@ -18,10 +18,11 @@ object FarmKeys : Feature("Farm Keys") {
     private val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
     private val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
     private val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
-    private val isAuto by DropdownSetting("Attack Mode", 0, listOf("Hold", "Auto"))
+    private val isAuto by DropdownSetting("Attack Mode", 0, listOf("Hold", "Auto")) 
     private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
     private var active = false
+    private var previousAttackToggled = false
 
     fun isActive(): Boolean = active
 
@@ -54,19 +55,23 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
-                    if (isAuto.value == 1) {
-                        mc.options.keyAttack.setKey(InputConstants.Type.KEYSYM.getOrCreate(InputConstants.KEY_T))
-                        mc.options.keyAttack.setToggleMode(true)
-                    }
+
+                    previousAttackToggled = mc.options.attackToggled().get()
+                    
+                    val wantToggle = (isAuto.value == 1)
+                    mc.options.attackToggled().set(wantToggle)
+                    
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§cRestoring original keybinds...")
                     }
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
-                    mc.options.keyAttack.setToggleMode(false)
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
+                    
+                    mc.options.attackToggled().set(previousAttackToggled)
+
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§cSensitivity restored to $internalSens")
                     }
@@ -104,6 +109,5 @@ object FarmKeys : Feature("Farm Keys") {
         }
         
         keyMapping.setKey(newKey)
-        keyMapping.setToggleMode(false)
     }
 }
