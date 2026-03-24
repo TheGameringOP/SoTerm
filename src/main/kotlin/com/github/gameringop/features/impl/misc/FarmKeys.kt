@@ -29,7 +29,7 @@ object FarmKeys : Feature("Farm Keys") {
             if (SoTerm.debugFlags.contains("farm")) {
                 ChatUtils.modMessage("§7Key pressed, checking toggleKey...")
                 ChatUtils.modMessage("§7toggleKey.value = ${toggleKey.value}")
-                ChatUtils.modMessage("§7event.key = ${event.key}")
+                ChatUtils.modMessage("§7event.keyEvent.key = ${event.keyEvent.key}")
             }
 
             if (toggleKey.isPressed()) {
