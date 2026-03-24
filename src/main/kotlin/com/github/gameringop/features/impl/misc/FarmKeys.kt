@@ -12,30 +12,37 @@ import org.lwjgl.glfw.GLFW
 
 object FarmKeys : Feature("Farm Keys") {
 
-    private val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
-    private val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
-    private val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
-    private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
+    val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
+    val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
+    val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
+    val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
     private var active = false
+    private var wasPressed = false
 
     override fun init() {
-        register<TickEvent.Server> {
-            if (toggleKey.isPressed()) {
+        register<TickEvent.Client> {
+            val isPressed = toggleKey.isPressed()
+
+            if (isPressed && !wasPressed) {
                 active = !active
+                
                 if (active) {
-                    updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
-                    updateKeyBinding(mc.options.keyJump, jumpKey.value)
+                    updateKeyBinding(mc.options.keyAttack, blockBreakKey)
+                    updateKeyBinding(mc.options.keyJump, jumpKey)
                     mc.options.sensitivity().set(-1.0 / 3.0)
-                    KeyMapping.resetMapping()
                 } else {
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
-                    val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
+                    
+                    val internalSens = (previousSensitivity as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
-                    KeyMapping.resetMapping()
                 }
+                
+                KeyMapping.resetMapping()
             }
+            
+            wasPressed = isPressed
         }
     }
 
