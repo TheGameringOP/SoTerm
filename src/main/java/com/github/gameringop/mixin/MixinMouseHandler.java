@@ -16,7 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinMouseHandler {
     @Shadow @Final private Minecraft minecraft;
     
-    public static boolean cancelMouseMovement = false;
+    private static boolean cancelMouseMovement = false;
+    
+    public static void setCancelMouseMovement(boolean cancel) {
+        cancelMouseMovement = cancel;
+    }
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long l, MouseButtonInfo mouseButtonInfo, int i, CallbackInfo ci) {
