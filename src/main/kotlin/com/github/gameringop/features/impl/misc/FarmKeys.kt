@@ -11,6 +11,7 @@ import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.utils.ChatUtils
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.Options
 import org.lwjgl.glfw.GLFW
 
 object FarmKeys : Feature("Farm Keys") {
@@ -31,35 +32,20 @@ object FarmKeys : Feature("Farm Keys") {
             if (event.action != GLFW.GLFW_PRESS) return@register
             if (mc.screen != null) return@register
 
-            if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§7Key pressed: ${event.keyEvent.key}, toggleKey value: ${toggleKey.value}")
-            }
-
             if (event.keyEvent.key == toggleKey.value) {
-                if (SoTerm.debugFlags.contains("farm")) {
-                    ChatUtils.modMessage("§eToggle key detected!")
-                }
-                
                 active = !active
-                
-                if (SoTerm.debugFlags.contains("farm")) {
-                    ChatUtils.modMessage("§eFarm mode toggled: ${if (active) "ON" else "OFF"}")
-                }
                 
                 if (active) {
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§aApplying farm keybinds...")
-                        ChatUtils.modMessage("§7Attack key: ${blockBreakKey.value}")
-                        ChatUtils.modMessage("§7Jump key: ${jumpKey.value}")
-                        ChatUtils.modMessage("§7Attack mode: ${if (isAuto.value == 0) "Hold" else "Auto"}")
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
 
-                    previousAttackToggled = mc.options.attackToggled().get()
+                    previousAttackToggled = mc.options.focusedMouseClick().get()
                     
                     val wantToggle = (isAuto.value == 1)
-                    mc.options.attackToggled().set(wantToggle)
+                    mc.options.focusedMouseClick().set(wantToggle)
                     
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
@@ -70,31 +56,17 @@ object FarmKeys : Feature("Farm Keys") {
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     
-                    mc.options.attackToggled().set(previousAttackToggled)
-
-                    if (SoTerm.debugFlags.contains("farm")) {
-                        ChatUtils.modMessage("§cSensitivity restored to $internalSens")
-                    }
+                    mc.options.focusedMouseClick().set(previousAttackToggled)
                 }
                 
                 KeyMapping.resetMapping()
-                if (SoTerm.debugFlags.contains("farm")) {
-                    ChatUtils.modMessage("§aKey mappings reset")
-                }
                 event.isCanceled = true
-            } else if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§7Key pressed but not matching toggleKey")
             }
         }
     }
 
     private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
-        if (bindValue == InputConstants.UNKNOWN.value) {
-            if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§cSkipping keybind update: value is UNKNOWN")
-            }
-            return
-        }
+        if (bindValue == InputConstants.UNKNOWN.value) return
 
         keyMapping.setDown(false)
 
@@ -102,10 +74,6 @@ object FarmKeys : Feature("Farm Keys") {
             InputConstants.Type.MOUSE.getOrCreate(bindValue)
         } else {
             InputConstants.Type.KEYSYM.getOrCreate(bindValue)
-        }
-
-        if (SoTerm.debugFlags.contains("farm")) {
-            ChatUtils.modMessage("§7Setting key to: $newKey")
         }
         
         keyMapping.setKey(newKey)
