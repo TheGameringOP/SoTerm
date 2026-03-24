@@ -18,7 +18,7 @@ object FarmKeys : Feature("Farm Keys") {
     private val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
     private val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
     private val previousSensitivity by SliderSetting("Previous sensitivity", 100f, 0f, 200f, 1f)
-    private val isAuto by DropdownSetting("Attack Mode", 0, listOf("Hold", "Auto")) 
+    private val isAuto by DropdownSetting("Attack Mode", 0, listOf("Hold", "Auto"))
     private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
     private var active = false
