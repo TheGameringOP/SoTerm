@@ -50,17 +50,14 @@ object FarmKeys : Feature("Farm Keys") {
                 if (active) {
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§aApplying farm keybinds...")
-                        ChatUtils.modMessage("§7Attack key: ${blockBreakKey.value}")
-                        ChatUtils.modMessage("§7Jump key: ${jumpKey.value}")
-                        ChatUtils.modMessage("§7Attack mode: ${if (isAuto.value == 0) "Hold" else "Auto"}")
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
 
-                    previousAttackToggled = mc.options.discreteMouseClick().get()
+                    previousAttackToggled = mc.options.discreteMouseClick.get()
                     
                     val wantToggle = (isAuto.value == 1)
-                    mc.options.discreteMouseClick().set(wantToggle)
+                    mc.options.discreteMouseClick.set(wantToggle)
                     
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
@@ -68,50 +65,28 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
+                    
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     
-                    mc.options.discreteMouseClick().set(previousAttackToggled)
-
-                    if (SoTerm.debugFlags.contains("farm")) {
-                        ChatUtils.modMessage("§cSensitivity restored to $internalSens")
-                    }
+                    mc.options.discreteMouseClick.set(previousAttackToggled)
                 }
                 
                 mc.options.save()
                 KeyMapping.resetMapping()
-
-                if (SoTerm.debugFlags.contains("farm")) {
-                    ChatUtils.modMessage("§aKey mappings reset and options saved")
-                }
-
                 event.isCanceled = true
-            } else if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§7Key pressed but not matching toggleKey")
             }
         }
     }
 
     private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
-        if (bindValue == InputConstants.UNKNOWN.value) {
-            if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§cSkipping keybind update: value is UNKNOWN")
-            }
-            return
-        }
-
+        if (bindValue == InputConstants.UNKNOWN.value) return
         keyMapping.setDown(false)
-
         val newKey = if (bindValue < 8) {
             InputConstants.Type.MOUSE.getOrCreate(bindValue)
         } else {
             InputConstants.Type.KEYSYM.getOrCreate(bindValue)
         }
-
-        if (SoTerm.debugFlags.contains("farm")) {
-            ChatUtils.modMessage("§7Setting key to: $newKey")
-        }
-        
         keyMapping.setKey(newKey)
     }
 }
