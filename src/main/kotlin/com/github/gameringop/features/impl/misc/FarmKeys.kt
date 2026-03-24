@@ -3,7 +3,6 @@ package com.github.gameringop.features.impl.misc
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.KeyboardEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.mixin.MixinMouseHandler
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
@@ -21,6 +20,8 @@ object FarmKeys : Feature("Farm Keys") {
     private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
 
     private var active = false
+
+    fun isActive(): Boolean = active
 
     override fun init() {
         register<KeyboardEvent.KeyPressed> {
@@ -50,14 +51,12 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
-                    MixinMouseHandler.setCancelMouseMovement(true)
                 } else {
                     if (SoTerm.debugFlags.contains("farm")) {
                         ChatUtils.modMessage("§cRestoring original keybinds...")
                     }
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
-                    MixinMouseHandler.setCancelMouseMovement(false)
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     if (SoTerm.debugFlags.contains("farm")) {
