@@ -139,6 +139,9 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         if (entity is Bat) {
             if (batToggle.value && !entity.isPassenger) {
                 trackedMobs.add(entity.id)
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§7Added bat: ${entity.id}")
+                }
             }
             return
         }
@@ -149,9 +152,16 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             val name = entity.customName?.formattedText ?: return
             val cleanName = name.removeFormatting().lowercase()
             
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§7ArmorStand ${entity.id}: raw='$name', clean='$cleanName'")
+            }
+            
             if (cachedMobNames.isEmpty()) updateMobList()
             
             if (cachedMobNames.any { cleanName.contains(it) }) {
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§aMatch found for armor stand! Checking mob below...")
+                }
                 checkMob(entity)
             }
         }
@@ -160,18 +170,29 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
     private fun checkMob(armorStand: Entity) {
         if (!checked.add(armorStand.id)) return
         
+        if (SoTerm.debugFlags.contains("boxmobs")) {
+            ChatUtils.modMessage("§eChecking for mob below armorStand ${armorStand.id}")
+        }
+        
         val possibleEntities = armorStand.level().getEntities(
             armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0)
         ) { it !is ArmorStand }
 
-        possibleEntities.find {
+        val foundMob = possibleEntities.find {
             !trackedMobs.contains(it.id) && when (it) {
                 is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
                 is WitherBoss -> false
                 else -> true
             }
-        }?.let {
-            trackedMobs.add(it.id)
+        }
+        
+        if (foundMob != null) {
+            trackedMobs.add(foundMob.id)
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§aAdded mob ${foundMob.id} (${foundMob::class.simpleName}) to tracking")
+            }
+        } else if (SoTerm.debugFlags.contains("boxmobs")) {
+            ChatUtils.modMessage("§cNo mob found below armorStand")
         }
     }
 }
