@@ -129,7 +129,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                     Render3D.renderBox(
                         ctx = event.ctx,
                         x = entity.renderX,
-                        y = entity.renderY,
+                        y = entity.renderY - 0.5,
                         z = entity.renderZ,
                         width = boxSize,
                         height = boxSize,
