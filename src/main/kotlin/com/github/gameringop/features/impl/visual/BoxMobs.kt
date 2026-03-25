@@ -125,7 +125,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                 val isGardenPest = LocationUtils.world == WorldType.Garden && entity is ArmorStand
                 
                 if (isGardenPest) {
-                    val boxSize = 0.8
+                    val boxSize = 0.7
                     Render3D.renderBox(
                         ctx = event.ctx,
                         x = entity.renderX,
