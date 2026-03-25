@@ -9,6 +9,8 @@ import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.location.WorldType
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Options
@@ -29,6 +31,7 @@ object FarmKeys : Feature("Farm Keys") {
 
     override fun init() {
         register<KeyboardEvent.KeyPressed> {
+            if (LocationUtils.world != WorldType.Garden) return@register
             if (event.action != GLFW.GLFW_PRESS) return@register
             if (mc.screen != null) return@register
 
