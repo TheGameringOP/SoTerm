@@ -79,7 +79,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
 
     override fun init() {
         register<MainThreadPacketReceivedEvent.Post> {
-            if (!LocationUtils.inSkyblock) return@register
             if (event.packet !is ClientboundSetEntityDataPacket) return@register
             
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
