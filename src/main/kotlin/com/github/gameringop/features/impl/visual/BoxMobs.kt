@@ -122,19 +122,38 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                     mobColor.value
                 }
 
-                Render3D.renderBox(
-                    ctx = event.ctx,
-                    x = entity.renderX,
-                    y = entity.renderY,
-                    z = entity.renderZ,
-                    width = entity.boundingBox.xsize,
-                    height = entity.boundingBox.ysize,
-                    outlineColor = renderColor,
-                    fillColor = renderColor.withAlpha(50),
-                    outline = mode.value.equalsOneOf(1, 2),
-                    fill = mode.value.equalsOneOf(0, 2),
-                    phase = esp.value
-                )
+                val isGardenPest = LocationUtils.world == WorldType.Garden && entity is ArmorStand
+                
+                if (isGardenPest) {
+                    val boxSize = 0.8
+                    Render3D.renderBox(
+                        ctx = event.ctx,
+                        x = entity.renderX,
+                        y = entity.renderY,
+                        z = entity.renderZ,
+                        width = boxSize,
+                        height = boxSize,
+                        outlineColor = renderColor,
+                        fillColor = renderColor.withAlpha(50),
+                        outline = mode.value.equalsOneOf(1, 2),
+                        fill = mode.value.equalsOneOf(0, 2),
+                        phase = esp.value
+                    )
+                } else {
+                    Render3D.renderBox(
+                        ctx = event.ctx,
+                        x = entity.renderX,
+                        y = entity.renderY,
+                        z = entity.renderZ,
+                        width = entity.boundingBox.xsize,
+                        height = entity.boundingBox.ysize,
+                        outlineColor = renderColor,
+                        fillColor = renderColor.withAlpha(50),
+                        outline = mode.value.equalsOneOf(1, 2),
+                        fill = mode.value.equalsOneOf(0, 2),
+                        phase = esp.value
+                    )
+                }
             }
         }
     }
@@ -180,7 +199,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         
         val isGarden = LocationUtils.world == WorldType.Garden
         
-        // In Garden, search a larger area (2 block radius) since pests move
         val searchRadius = if (isGarden) 2.0 else 1.0
         val searchBox = armorStand.boundingBox.inflate(searchRadius, searchRadius, searchRadius)
         
@@ -196,7 +214,6 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         }
         
         if (foundMob != null) {
-            // In Garden, verify it's a pest (has a skull in head slot)
             if (isGarden && foundMob is ArmorStand) {
                 val headItem = foundMob.getItemBySlot(EquipmentSlot.HEAD)
                 if (headItem.isEmpty || headItem.item != Items.SKELETON_SKULL) {
