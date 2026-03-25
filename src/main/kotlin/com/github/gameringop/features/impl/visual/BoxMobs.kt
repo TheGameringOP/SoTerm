@@ -199,37 +199,34 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         
         val isGarden = LocationUtils.world == WorldType.Garden
         
-        val searchRadius = if (isGarden) 2.0 else 1.0
-        val searchBox = armorStand.boundingBox.inflate(searchRadius, searchRadius, searchRadius)
-        
-        val possibleEntities = armorStand.level().getEntities(
-            armorStand, searchBox
-        ) { it != armorStand }
-
-        val foundMob = possibleEntities.find {
-            !trackedMobs.contains(it.id) && when (it) {
-                is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
-                else -> true
+        if (isGarden) {
+            trackedMobs.add(armorStand.id)
+            if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§aAdded garden pest (name tag armor stand) to tracking")
             }
-        }
-        
-        if (foundMob != null) {
-            if (isGarden && foundMob is ArmorStand) {
-                val headItem = foundMob.getItemBySlot(EquipmentSlot.HEAD)
-                if (headItem.isEmpty || headItem.item != Items.SKELETON_SKULL) {
-                    if (SoTerm.debugFlags.contains("boxmobs")) {
-                        ChatUtils.modMessage("§cFound armor stand but it's not a pest (no skull)")
-                    }
-                    return
+        } else {
+            val searchRadius = 1.0
+            val searchBox = armorStand.boundingBox.inflate(searchRadius, searchRadius, searchRadius)
+            
+            val possibleEntities = armorStand.level().getEntities(
+                armorStand, searchBox
+            ) { it != armorStand }
+
+            val foundMob = possibleEntities.find {
+                !trackedMobs.contains(it.id) && when (it) {
+                    is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
+                    else -> true
                 }
             }
             
-            trackedMobs.add(foundMob.id)
-            if (SoTerm.debugFlags.contains("boxmobs")) {
-                ChatUtils.modMessage("§aAdded mob ${foundMob.id} (${foundMob::class.simpleName}) to tracking")
+            if (foundMob != null) {
+                trackedMobs.add(foundMob.id)
+                if (SoTerm.debugFlags.contains("boxmobs")) {
+                    ChatUtils.modMessage("§aAdded mob ${foundMob.id} (${foundMob::class.simpleName}) to tracking")
+                }
+            } else if (SoTerm.debugFlags.contains("boxmobs")) {
+                ChatUtils.modMessage("§cNo mob found below armorStand")
             }
-        } else if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§cNo mob found within ${searchRadius} blocks")
         }
     }
 }
