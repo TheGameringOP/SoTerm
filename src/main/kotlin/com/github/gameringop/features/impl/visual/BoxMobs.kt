@@ -163,15 +163,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
                 if (SoTerm.debugFlags.contains("boxmobs")) {
                     ChatUtils.modMessage("§aMatch found for armor stand!")
                 }
-                if (LocationUtils.world == WorldType.Garden) {
-                    trackedMobs.add(entity.id)
-                    checked.add(entity.id)
-                    if (SoTerm.debugFlags.contains("boxmobs")) {
-                        ChatUtils.modMessage("§aAdded garden pest (armor stand) to tracking")
-                    }
-                } else {
-                    checkMob(entity)
-                }
+                checkMob(entity)
             }
         }
     }
@@ -185,12 +177,11 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         
         val possibleEntities = armorStand.level().getEntities(
             armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0)
-        ) { it !is ArmorStand }
+        ) { it != armorStand }
 
         val foundMob = possibleEntities.find {
             !trackedMobs.contains(it.id) && when (it) {
                 is Player -> !it.isInvisible && it.uuid.version() == 2 && it != mc.player
-                is WitherBoss -> false
                 else -> true
             }
         }
@@ -202,6 +193,12 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             }
         } else if (SoTerm.debugFlags.contains("boxmobs")) {
             ChatUtils.modMessage("§cNo mob found below armorStand")
+            val allEntities = armorStand.level().getEntities(armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0))
+            if (allEntities.isNotEmpty()) {
+                allEntities.forEach { ent ->
+                    ChatUtils.modMessage("§7Entity found: ${ent.id} (${ent::class.simpleName})")
+                }
+            }
         }
     }
 }
