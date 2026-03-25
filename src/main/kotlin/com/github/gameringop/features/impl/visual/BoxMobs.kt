@@ -29,10 +29,13 @@ import com.github.gameringop.utils.render.RenderHelper.renderY
 import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.boss.wither.WitherBoss
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.ambient.Bat
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import java.awt.Color
 
 object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock.") {
@@ -175,8 +178,14 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             ChatUtils.modMessage("§eChecking for mob below armorStand ${armorStand.id}")
         }
         
+        val isGarden = LocationUtils.world == WorldType.Garden
+        
+        // In Garden, search a larger area (2 block radius) since pests move
+        val searchRadius = if (isGarden) 2.0 else 1.0
+        val searchBox = armorStand.boundingBox.inflate(searchRadius, searchRadius, searchRadius)
+        
         val possibleEntities = armorStand.level().getEntities(
-            armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0)
+            armorStand, searchBox
         ) { it != armorStand }
 
         val foundMob = possibleEntities.find {
@@ -187,18 +196,23 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         }
         
         if (foundMob != null) {
+            // In Garden, verify it's a pest (has a skull in head slot)
+            if (isGarden && foundMob is ArmorStand) {
+                val headItem = foundMob.getItemBySlot(EquipmentSlot.HEAD)
+                if (headItem.isEmpty || headItem.item != Items.SKELETON_SKULL) {
+                    if (SoTerm.debugFlags.contains("boxmobs")) {
+                        ChatUtils.modMessage("§cFound armor stand but it's not a pest (no skull)")
+                    }
+                    return
+                }
+            }
+            
             trackedMobs.add(foundMob.id)
             if (SoTerm.debugFlags.contains("boxmobs")) {
                 ChatUtils.modMessage("§aAdded mob ${foundMob.id} (${foundMob::class.simpleName}) to tracking")
             }
         } else if (SoTerm.debugFlags.contains("boxmobs")) {
-            ChatUtils.modMessage("§cNo mob found below armorStand")
-            val allEntities = armorStand.level().getEntities(armorStand, armorStand.boundingBox.move(0.0, -1.0, 0.0))
-            if (allEntities.isNotEmpty()) {
-                allEntities.forEach { ent ->
-                    ChatUtils.modMessage("§7Entity found: ${ent.id} (${ent::class.simpleName})")
-                }
-            }
+            ChatUtils.modMessage("§cNo mob found within ${searchRadius} blocks")
         }
     }
 }
