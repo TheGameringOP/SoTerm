@@ -84,11 +84,11 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
             processEntity(entity)
         }
-
+        
         register<TickEvent.Start> {
-            if (!LocationUtils.inSkyblock || mc.level == null || mc.player == null) return@register
+            if (mc.level == null || mc.player == null) return@register
             if (mc.player!!.tickCount % 20 != 0) return@register
-
+        
             mc.level!!.entitiesForRendering().forEach { entity ->
                 processEntity(entity)
             }
@@ -106,7 +106,7 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
         }
 
         register<RenderWorldEvent> {
-            if (!LocationUtils.inSkyblock || trackedMobs.isEmpty()) return@register
+            if (trackedMobs.isEmpty()) return@register
 
             for (id in trackedMobs) {
                 val entity = mc.level?.getEntity(id) ?: continue
