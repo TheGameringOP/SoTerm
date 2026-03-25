@@ -22,6 +22,7 @@ import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.location.WorldType
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderHelper.renderX
 import com.github.gameringop.utils.render.RenderHelper.renderY
@@ -160,9 +161,17 @@ object BoxMobs : Feature("Highlights custom selected mobs everywhere in Skyblock
             
             if (cachedMobNames.any { cleanName.contains(it) }) {
                 if (SoTerm.debugFlags.contains("boxmobs")) {
-                    ChatUtils.modMessage("§aMatch found for armor stand! Checking mob below...")
+                    ChatUtils.modMessage("§aMatch found for armor stand!")
                 }
-                checkMob(entity)
+                if (LocationUtils.world == WorldType.Garden) {
+                    trackedMobs.add(entity.id)
+                    checked.add(entity.id)
+                    if (SoTerm.debugFlags.contains("boxmobs")) {
+                        ChatUtils.modMessage("§aAdded garden pest (armor stand) to tracking")
+                    }
+                } else {
+                    checkMob(entity)
+                }
             }
         }
     }
