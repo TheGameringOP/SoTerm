@@ -1,10 +1,8 @@
 package com.github.gameringop.utils.render
 
 import com.github.gameringop.SoTerm
-import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
-import com.mojang.blaze3d.shaders.UniformType
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.renderer.RenderPipelines
@@ -25,8 +23,8 @@ object OPRenderPipelines {
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .build()
     )
-
-    val ROUND_RECT: RenderPipeline = RenderPipelines.register(
+	
+	    val ROUND_RECT: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, "pipeline/round_rect"))
             .withVertexShader(ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, "core/round_rect"))
@@ -36,6 +34,6 @@ object OPRenderPipelines {
             .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
             .build()
     )
-
+    
     private fun id(path: String) = ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, path)
 }
