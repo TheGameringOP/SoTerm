@@ -64,14 +64,14 @@ object Render3D {
 
         if (fill) ShapeRenderer.addChainedFilledBoxVertices(
             ctx.matrixStack,
-            ctx.consumers.getBuffer(if (phase) NoammRenderLayers.FILLED_THROUGH_WALLS else NoammRenderLayers.FILLED),
+            ctx.consumers.getBuffer(if (phase) OPRenderLayers.FILLED_THROUGH_WALLS else OPRenderLayers.FILLED),
             x1, y1, z1, x2, y2, z2,
             fillR, fillG, fillB, fillA
         )
 
         if (outline) ShapeRenderer.renderLineBox(
             ctx.matrixStack.last(),
-            ctx.consumers.getBuffer(if (phase) NoammRenderLayers.getLinesThroughWalls(adjustedLineWidth) else NoammRenderLayers.getLines(adjustedLineWidth)),
+            ctx.consumers.getBuffer(if (phase) OPRenderLayers.getLinesThroughWalls(adjustedLineWidth) else OPRenderLayers.getLines(adjustedLineWidth)),
             x1, y1, z1, x2, y2, z2,
             outlineR, outlineG, outlineB, 1f
         )
@@ -101,7 +101,7 @@ object Render3D {
         ctx.matrixStack.pushPose()
         ctx.matrixStack.translate(- cameraPos.x, - cameraPos.y, - cameraPos.z)
 
-        val buffer = ctx.consumers.getBuffer(if (phase) NoammRenderLayers.FILLED_THROUGH_WALLS else NoammRenderLayers.FILLED)
+        val buffer = ctx.consumers.getBuffer(if (phase) OPRenderLayers.FILLED_THROUGH_WALLS else OPRenderLayers.FILLED)
 
         val r = color.red / 255f
         val g = color.green / 255f
@@ -186,7 +186,7 @@ object Render3D {
 
         if (fill) ShapeRenderer.addChainedFilledBoxVertices(
             ctx.matrixStack,
-            ctx.consumers.getBuffer(if (phase) NoammRenderLayers.FILLED_THROUGH_WALLS else NoammRenderLayers.FILLED),
+            ctx.consumers.getBuffer(if (phase) OPRenderLayers.FILLED_THROUGH_WALLS else OPRenderLayers.FILLED),
             xd - hw, yd, zd - hw,
             xd + hw, yd + hd, zd + hw,
             fillColor.red / 255f, fillColor.green / 255f, fillColor.blue / 255f, fillColor.alpha / 255f
@@ -194,7 +194,7 @@ object Render3D {
 
         if (outline) ShapeRenderer.renderLineBox(
             ctx.matrixStack.last(),
-            ctx.consumers.getBuffer(if (phase) NoammRenderLayers.getLinesThroughWalls(lineWidth.toDouble()) else NoammRenderLayers.getLines(lineWidth.toDouble())),
+            ctx.consumers.getBuffer(if (phase) OPRenderLayers.getLinesThroughWalls(lineWidth.toDouble()) else OPRenderLayers.getLines(lineWidth.toDouble())),
             xd - hw, yd, zd - hw,
             xd + hw, yd + hd, zd + hw,
             outlineColor.red / 255f, outlineColor.green / 255f, outlineColor.blue / 255f, 1f
@@ -295,7 +295,7 @@ object Render3D {
         ctx.matrixStack.pushPose()
         ctx.matrixStack.translate(- ctx.camera.position.x, - ctx.camera.position.y, - ctx.camera.position.z)
 
-        val buffer = (ctx.consumers as MultiBufferSource.BufferSource).getBuffer(NoammRenderLayers.getLinesThroughWalls(2.5))
+        val buffer = (ctx.consumers as MultiBufferSource.BufferSource).getBuffer(OPRenderLayers.getLinesThroughWalls(2.5))
         val cameraPoint = ctx.camera.position.add(Vec3.directionFromRotation(ctx.camera.xRot, ctx.camera.yRot))
         val normal = point.toVector3f().sub(cameraPoint.x.toFloat(), cameraPoint.y.toFloat(), cameraPoint.z.toFloat()).normalize()
         val entry = ctx.matrixStack.last()
