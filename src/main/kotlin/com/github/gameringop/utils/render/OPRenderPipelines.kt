@@ -26,7 +26,7 @@ object OPRenderPipelines {
             .build()
     )
 	
-	    val ROUND_RECT: RenderPipeline = RenderPipelines.register(
+	val ROUND_RECT: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, "pipeline/round_rect"))
             .withVertexShader(ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, "core/round_rect"))
