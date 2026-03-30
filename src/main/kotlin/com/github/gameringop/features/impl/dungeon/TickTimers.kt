@@ -67,6 +67,8 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
     }
 
     override fun init() {
+        (hud as HudElement).shouldShowInEditor = true
+        
         register<WorldChangeEvent> { reset() }
         register<DungeonEvent.RunStatedEvent> { dungeonStartTime = System.currentTimeMillis() }
 
