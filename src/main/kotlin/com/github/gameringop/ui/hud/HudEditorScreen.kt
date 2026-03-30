@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
 object HudEditorScreen: Screen(Component.literal("HudEditor")) {
-    val enabledElements get() = FeatureManager.hudElements.filter { it.toggle }
+    val enabledElements get() = FeatureManager.hudElements.filter { it.toggle && it.shouldShowInEditor }
 
     override fun init() {
         super.init()
