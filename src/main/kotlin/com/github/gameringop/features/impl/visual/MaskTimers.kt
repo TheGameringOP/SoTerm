@@ -90,7 +90,6 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
     }
 
     override fun init() {
-        // Set shouldShowInEditor after creation
         (hud as HudElement).shouldShowInEditor = showTimers.value
         
         register<TickEvent.Server> {
