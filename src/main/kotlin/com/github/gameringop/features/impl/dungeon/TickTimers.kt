@@ -7,9 +7,6 @@ import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.hud.HudElement
-import com.github.gameringop.ui.hud.getValue
-import com.github.gameringop.ui.hud.provideDelegate
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.location.LocationUtils
@@ -50,7 +47,8 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
 
     private val hud by hudElement(
         name = "Tick Timers",
-        shouldDraw = { LocationUtils.inDungeon },
+        enabled = { LocationUtils.inDungeon },
+        shouldDraw = { true },
         centered = false
     ) { ctx, example ->
         val textToRender = if (example) "§aStart: 150"
@@ -70,8 +68,6 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
     }
 
     override fun init() {
-        hud.shouldShowInEditor = true
-        
         register<WorldChangeEvent> { reset() }
         register<DungeonEvent.RunStatedEvent> { dungeonStartTime = System.currentTimeMillis() }
 
