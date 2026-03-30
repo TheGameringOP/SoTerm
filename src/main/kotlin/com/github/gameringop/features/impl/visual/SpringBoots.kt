@@ -78,8 +78,6 @@ object SpringBoots : Feature("Spring Boots Display") {
     }
     
     override fun init() {
-        hud.shouldShowInEditor = show2DHud.value
-        
         register<MainThreadPacketReceivedEvent.Pre> {
             if (!LocationUtils.inSkyblock) return@register
             if (event.packet !is ClientboundSoundPacket) return@register
@@ -133,7 +131,6 @@ object SpringBoots : Feature("Spring Boots Display") {
                 50 
             )
             
-            
             Render3D.renderBox(
                 ctx = event.ctx,
                 x = pos.x,
@@ -146,7 +143,7 @@ object SpringBoots : Feature("Spring Boots Display") {
                 outline = mode.value.equalsOneOf(1, 2),
                 fill = mode.value.equalsOneOf(0, 2),
                 phase = boxPhase.value
-                )
+            )
         }
     }
 }
