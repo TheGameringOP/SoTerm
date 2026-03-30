@@ -68,7 +68,6 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
 
         warpCommand("arachne", "arachne")
         warpCommand("backwater", "bayou")
-        warpCommand("barn", "barn")
         warpCommand("base", "camp")
         warpCommand("bayou", "bayou")
         warpCommand("blaze", "smold")
@@ -130,7 +129,6 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         "arachne" to "arachne",
         "backwater" to "backwater bayou",
         "bayou" to "backwater bayou",
-        "barn" to "barn",
         "base" to "camp",
         "camp" to "camp",
         "tunnels" to "camp",
