@@ -80,7 +80,7 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
                     return true
                 }
                 GLFW.GLFW_KEY_DOWN -> {
-                    hoveredElement.y = (screenHeight / 2f) - (scaledH / 2f)
+                    hoveredElement.x = (screenWidth / 2f) - (scaledW / 2f)
                     return true
                 }
             }
@@ -128,20 +128,28 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
         return false
     }
 
-    override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
-        enabledElements.forEach { element ->
-            if (element.isDragging) {
-                val screenWidth = Resolution.width
-                val screenHeight = Resolution.height
-                val scaledW = element.width * element.scale
-                val scaledH = element.height * element.scale
-                val centeredOffset = if (element.centered) scaledW / 2f else 0f
-                
-                element.x = element.x.coerceIn(centeredOffset, screenWidth - scaledW + centeredOffset)
-                element.y = element.y.coerceIn(0f, screenHeight - scaledH)
-            }
-            element.isDragging = false
+    override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, deltaX: Double, deltaY: Double): Boolean {
+        val mX = Resolution.getMouseX(mouseButtonEvent.x)
+        val mY = Resolution.getMouseY(mouseButtonEvent.y)
+        
+        val draggingElement = enabledElements.find { it.isDragging }
+        if (draggingElement != null) {
+            val screenWidth = Resolution.width
+            val screenHeight = Resolution.height
+            val scaledW = draggingElement.width * draggingElement.scale
+            val scaledH = draggingElement.height * draggingElement.scale
+            val centeredOffset = if (draggingElement.centered) scaledW / 2f else 0f
+            
+            draggingElement.x = (draggingElement.x + deltaX.toFloat()).coerceIn(centeredOffset, screenWidth - scaledW + centeredOffset)
+            draggingElement.y = (draggingElement.y + deltaY.toFloat()).coerceIn(0f, screenHeight - scaledH)
+            return true
         }
+        
+        return super.mouseDragged(mouseButtonEvent, deltaX, deltaY)
+    }
+
+    override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
+        enabledElements.forEach { it.isDragging = false }
         return super.mouseReleased(mouseButtonEvent)
     }
 
