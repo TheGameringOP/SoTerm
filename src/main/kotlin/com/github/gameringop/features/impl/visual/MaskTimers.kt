@@ -10,6 +10,7 @@ import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.showIf
+import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
