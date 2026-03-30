@@ -10,9 +10,6 @@ import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.showIf
-import com.github.gameringop.ui.hud.HudElement
-import com.github.gameringop.ui.hud.getValue
-import com.github.gameringop.ui.hud.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
@@ -62,39 +59,38 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
         }
     }
 
-    private val hud by hudElement("Mask Timers") { context, example ->
-        if (!showTimers.value && !example) return@hudElement 0f to 0f
-        
-        if (onlyInDungeon.value && !LocationUtils.inDungeon && !example) return@hudElement 0f to 0f
-    
-        var maxWidth = 0f
-        var yOffset = 0f
-    
-        Mask.entries.forEach { mask ->
-            val cd = if (example) mask.cooldownTicks / 2 else mask.cdLeft
-            if (maskTimerStyle.value == 0 && cd <= 0 && !example) return@forEach
-    
-            val text = if (maskTimerStyle.value == 0) {
-                val time = if (example) mask.cooldownTicks / 40f else cd / 20f
-                if (time > 0) "${mask.color}${mask.displayName} ${mask.suffix}: &a${time.toFixed(1)}"
-                else "${mask.color}${mask.displayName} ${mask.suffix}: &aREADY"
-            }
-            else {
-                val arrow = if (mask.isWorn || example) "&a>" else "&c>"
-                if (cd > 0) "${mask.color}${mask.displayName} $arrow &e${(cd / 20.0).toFixed(2)}"
-                else "${mask.color}${mask.displayName} $arrow &aReady"
-            }
-    
-            Render2D.drawString(context, text, 0, yOffset.toInt())
-            maxWidth = maxOf(maxWidth, text.width().toFloat())
-            yOffset += 10f
-        }
-        maxWidth to yOffset
-    }
 
     override fun init() {
-        (hud as HudElement).shouldShowInEditor = showTimers.value
+        hudElement("Mask Timers") { context, example ->
+            if (!showTimers.value && !example) return@hudElement 0f to 0f
+            
+            if (onlyInDungeon.value && !LocationUtils.inDungeon && !example) return@hudElement 0f to 0f
         
+            var maxWidth = 0f
+            var yOffset = 0f
+        
+            Mask.entries.forEach { mask ->
+                val cd = if (example) mask.cooldownTicks / 2 else mask.cdLeft
+                if (maskTimerStyle.value == 0 && cd <= 0 && !example) return@forEach
+        
+                val text = if (maskTimerStyle.value == 0) {
+                    val time = if (example) mask.cooldownTicks / 40f else cd / 20f
+                    if (time > 0) "${mask.color}${mask.displayName} ${mask.suffix}: &a${time.toFixed(1)}"
+                    else "${mask.color}${mask.displayName} ${mask.suffix}: &aREADY"
+                }
+                else {
+                    val arrow = if (mask.isWorn || example) "&a>" else "&c>"
+                    if (cd > 0) "${mask.color}${mask.displayName} $arrow &e${(cd / 20.0).toFixed(2)}"
+                    else "${mask.color}${mask.displayName} $arrow &aReady"
+                }
+        
+                Render2D.drawString(context, text, 0, yOffset.toInt())
+                maxWidth = maxOf(maxWidth, text.width().toFloat())
+                yOffset += 10f
+            }
+            maxWidth to yOffset
+        }
+
         register<TickEvent.Server> {
             if (! LocationUtils.inSkyblock) return@register
             val inDungeon = LocationUtils.inDungeon
