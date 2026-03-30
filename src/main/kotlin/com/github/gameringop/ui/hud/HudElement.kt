@@ -15,6 +15,7 @@ abstract class HudElement {
     open val name = this::class.simpleName ?: this::class.jvmName
     abstract val toggle: Boolean
     open val shouldDraw = true
+    open val shouldShowInEditor = true
     open val centered = false
     var width = 0f
     var height = 0f
@@ -101,7 +102,7 @@ abstract class HudElement {
     abstract fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float>
 
     fun drawEditor(ctx: GuiGraphics, mx: Int, my: Int) {
-        if (! toggle) return
+        if (! toggle || ! shouldShowInEditor) return
 
         if (isDragging) {
             x = mx - dragX
