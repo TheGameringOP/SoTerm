@@ -66,7 +66,8 @@ object SpringBoots : Feature("Spring Boots Display") {
     private val hud by hudElement(
         name = "Spring Boots Height",
         enabled = { LocationUtils.inSkyblock },
-        shouldDraw = { show2DHud.value }
+        shouldDraw = { show2DHud.value },
+        shouldShowInEditor = { show2DHud.value }
     ) { context, demo ->
         val displayAmount = if (demo) 33.0f else blockAmount
         if (displayAmount <= 0f && !demo) return@hudElement 0f to 0f
@@ -146,5 +147,4 @@ object SpringBoots : Feature("Spring Boots Display") {
                 phase = boxPhase.value
                 )
         }
-    }
-}
+   
