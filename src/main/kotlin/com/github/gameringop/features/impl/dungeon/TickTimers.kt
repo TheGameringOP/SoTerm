@@ -77,6 +77,10 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
                         pyTriggered = true
                         pyTickTime = 95
                     }
+                    if (gyTimer.value && ! gyTriggered) {
+                        gyTriggered = true
+                        gyTickTime = 135
+                    }
                 }
 
                 "[BOSS] Storm: I should have known that I stood no chance." -> {
