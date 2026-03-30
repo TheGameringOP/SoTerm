@@ -7,8 +7,10 @@ import com.github.gameringop.ui.utils.componnents.UIButton
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
+import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
 object HudEditorScreen: Screen(Component.literal("HudEditor")) {
@@ -54,7 +56,51 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
         super.render(context, mouseX, mouseY, delta)
     }
 
+    override fun keyPressed(event: KeyEvent): Boolean {
+        val hoveredElement = enabledElements.find { it.isHovered(Resolution.getMouseX(), Resolution.getMouseY()) }
+        
+        if (hoveredElement != null) {
+            val screenWidth = Resolution.width
+            val screenHeight = Resolution.height
+            val scaledW = hoveredElement.width * hoveredElement.scale
+            val scaledH = hoveredElement.height * hoveredElement.scale
+            val centeredOffset = if (hoveredElement.centered) scaledW / 2f else 0f
+            
+            when (event.key) {
+                GLFW.GLFW_KEY_LEFT -> {
+                    hoveredElement.x = 0f + centeredOffset
+                    return true
+                }
+                GLFW.GLFW_KEY_RIGHT -> {
+                    hoveredElement.x = screenWidth - scaledW + centeredOffset
+                    return true
+                }
+                GLFW.GLFW_KEY_UP -> {
+                    hoveredElement.y = 0f
+                    return true
+                }
+                GLFW.GLFW_KEY_DOWN -> {
+                    hoveredElement.y = (screenHeight / 2f) - (scaledH / 2f)
+                    return true
+                }
+            }
+        }
+        
+        return super.keyPressed(event)
+    }
+
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
+        val mX = Resolution.getMouseX(mouseX)
+        val mY = Resolution.getMouseY(mouseY)
+        
+        val hoveredElement = enabledElements.find { it.isHovered(mX, mY) }
+        
+        if (hoveredElement != null) {
+            val increment = (vertical * 0.1).toFloat()
+            hoveredElement.scale = (hoveredElement.scale + increment).coerceIn(0.5f, 5.0f)
+            return true
+        }
+        
         enabledElements.forEach { element ->
             if (element.isDragging) {
                 val increment = (vertical * 0.1).toFloat()
@@ -62,6 +108,7 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
                 return true
             }
         }
+        
         return super.mouseScrolled(mouseX, mouseY, horizontal, vertical)
     }
 
@@ -82,7 +129,19 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
     }
 
     override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
-        enabledElements.forEach { it.isDragging = false }
+        enabledElements.forEach { element ->
+            if (element.isDragging) {
+                val screenWidth = Resolution.width
+                val screenHeight = Resolution.height
+                val scaledW = element.width * element.scale
+                val scaledH = element.height * element.scale
+                val centeredOffset = if (element.centered) scaledW / 2f else 0f
+                
+                element.x = element.x.coerceIn(centeredOffset, screenWidth - scaledW + centeredOffset)
+                element.y = element.y.coerceIn(0f, screenHeight - scaledH)
+            }
+            element.isDragging = false
+        }
         return super.mouseReleased(mouseButtonEvent)
     }
 
