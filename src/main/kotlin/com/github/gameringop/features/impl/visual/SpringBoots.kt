@@ -78,7 +78,7 @@ object SpringBoots : Feature("Spring Boots Display") {
     }
     
     override fun init() {
-        (hud as HudElement).shouldShowInEditor = show2DHud.value
+        hud.shouldShowInEditor = show2DHud.value
         
         register<MainThreadPacketReceivedEvent.Pre> {
             if (!LocationUtils.inSkyblock) return@register
