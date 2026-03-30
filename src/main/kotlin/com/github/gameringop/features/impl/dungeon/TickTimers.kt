@@ -30,13 +30,16 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
     private val goldorDeathTickTimer by ToggleSetting("Goldor Death Ticks")
     private val padTimer by ToggleSetting("Storm Pad Timer")
     private val pyTimer by ToggleSetting("Storm PY Timer")
+    private val gyTimer by ToggleSetting("Storm GY Timer")
 
     private var startTickTime = - 1
     private var goldorTickTime = - 1
     private var padTickTime = - 1
     private var pyTickTime = - 1
+    private var gyTickTime = - 1
     private var stormActive = false
     private var pyTriggered = false
+    private var gyTriggered = false
 
     private var deathTickTime = - 1
     private var secretTickTime = - 1
@@ -49,6 +52,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
                 startTickTime != - 1 -> formatTimer(startTickTime, 150, "§aStart:")
                 goldorTickTime != - 1 -> formatTimer(goldorTickTime, 60, "§7Goldor:")
                 pyTickTime != - 1 -> formatTimer(pyTickTime, 95, "§5PY:")
+                gyTickTime != - 1 -> formatTimer(gyTickTime, 135, "§5GY:")
                 padTickTime != - 1 -> formatTimer(padTickTime, 20, "§bPad:")
                 deathTickTime != - 1 -> formatTimer(deathTickTime, 40, "§cDeath:")
                 secretTickTime != - 1 -> formatTimer(secretTickTime, 20, "§dSecret:")
@@ -80,6 +84,10 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
                     if (pyTriggered) {
                         pyTriggered = false
                         pyTickTime = - 1
+                    }
+                    if (gyTriggered) {
+                        gyTriggered = false
+                        gyTickTime = - 1
                     }
                     if (stormActive) {
                         stormActive = false
@@ -133,6 +141,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
             }
 
             if (pyTimer.value && pyTickTime >= 0) pyTickTime --
+            if (gyTimer.value && gyTickTime >= 0) gyTickTime --
 
             if (goldorTickTime >= 0) {
                 goldorTickTime --
@@ -158,6 +167,8 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
         stormActive = false
         pyTickTime = - 1
         pyTriggered = false
+        gyTickTime = - 1
+        gyTriggered = false
         deathTickTime = - 1
         secretTickTime = - 1
         dungeonStartTime = 0L
