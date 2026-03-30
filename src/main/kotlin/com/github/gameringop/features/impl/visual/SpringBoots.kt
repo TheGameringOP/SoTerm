@@ -147,4 +147,5 @@ object SpringBoots : Feature("Spring Boots Display") {
                 phase = boxPhase.value
                 )
         }
-   
+    }
+}
