@@ -59,11 +59,7 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
         }
     }
 
-    private val hud by hudElement(
-        name = "Mask Timers",
-        shouldDraw = { showTimers.value },
-        shouldShowInEditor = { showTimers.value }
-    ) { context, example ->
+    private val hud by hudElement("Mask Timers") { context, example ->
         if (!showTimers.value && !example) return@hudElement 0f to 0f
         
         if (onlyInDungeon.value && !LocationUtils.inDungeon && !example) return@hudElement 0f to 0f
@@ -94,6 +90,9 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
     }
 
     override fun init() {
+        // Set shouldShowInEditor after creation
+        (hud as HudElement).shouldShowInEditor = showTimers.value
+        
         register<TickEvent.Server> {
             if (! LocationUtils.inSkyblock) return@register
             val inDungeon = LocationUtils.inDungeon
