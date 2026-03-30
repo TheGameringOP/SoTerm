@@ -45,24 +45,28 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
     private var secretTickTime = - 1
     private var dungeonStartTime = 0L
 
-    override fun init() {
-        hudElement("Tick Timers", shouldDraw = { LocationUtils.inDungeon }, centered = false) { ctx, example ->
-            val textToRender = if (example) "§aStart: 150"
-            else when {
-                startTickTime != - 1 -> formatTimer(startTickTime, 150, "§aStart:")
-                goldorTickTime != - 1 -> formatTimer(goldorTickTime, 60, "§7Goldor:")
-                pyTickTime != - 1 -> formatTimer(pyTickTime, 95, "§5PY:")
-                gyTickTime != - 1 -> formatTimer(gyTickTime, 145, "§5GY:")
-                padTickTime != - 1 -> formatTimer(padTickTime, 20, "§bPad:")
-                deathTickTime != - 1 -> formatTimer(deathTickTime, 40, "§cDeath:")
-                secretTickTime != - 1 -> formatTimer(secretTickTime, 20, "§dSecret:")
-                else -> return@hudElement 0f to 0f
-            }
-
-            Render2D.drawString(ctx, textToRender, 0, 0)
-            return@hudElement textToRender.width().toFloat() to 9F
+    private val hud by hudElement(
+        name = "Tick Timers",
+        shouldDraw = { LocationUtils.inDungeon },
+        centered = false
+    ) { ctx, example ->
+        val textToRender = if (example) "§aStart: 150"
+        else when {
+            startTickTime != - 1 -> formatTimer(startTickTime, 150, "§aStart:")
+            goldorTickTime != - 1 -> formatTimer(goldorTickTime, 60, "§7Goldor:")
+            pyTickTime != - 1 -> formatTimer(pyTickTime, 95, "§5PY:")
+            gyTickTime != - 1 -> formatTimer(gyTickTime, 145, "§5GY:")
+            padTickTime != - 1 -> formatTimer(padTickTime, 20, "§bPad:")
+            deathTickTime != - 1 -> formatTimer(deathTickTime, 40, "§cDeath:")
+            secretTickTime != - 1 -> formatTimer(secretTickTime, 20, "§dSecret:")
+            else -> return@hudElement 0f to 0f
         }
 
+        Render2D.drawString(ctx, textToRender, 0, 0)
+        return@hudElement textToRender.width().toFloat() to 9F
+    }
+
+    override fun init() {
         register<WorldChangeEvent> { reset() }
         register<DungeonEvent.RunStatedEvent> { dungeonStartTime = System.currentTimeMillis() }
 
