@@ -70,7 +70,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
             return@hudElement textToRender.width().toFloat() to 9F
         }
         
-        hudElement("GY Timer", shouldDraw = { LocationUtils.inDungeon }, enabled = {pyTimer.value}, centered = true) { ctx, example ->
+        hudElement("GY Timer", shouldDraw = { LocationUtils.inDungeon }, enabled = {gyTimer.value}, centered = true) { ctx, example ->
             val textToRender = if (example) "§GPY: 145t"
             else if (gyTickTime != - 1) formatTimer(gyTickTime, 145, "§GPY:")
             else return@hudElement 0f to 0f
