@@ -163,6 +163,13 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
         private fun recalculateValue() {
             val textValue = NumbersUtils.parseCompactNumber(input)
 
+            val textValue = try {
+                NumbersUtils.parseCompactNumber(inputField.value)
+            } catch (e: Exception) {
+                parsedValue = null
+                return
+            }
+            
             if (textValue == null) {
                 parsedValue = null
                 return
