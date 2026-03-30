@@ -15,7 +15,7 @@ abstract class HudElement {
     open val name = this::class.simpleName ?: this::class.jvmName
     abstract val toggle: Boolean
     open val shouldDraw = true
-    open val shouldShowInEditor = true
+    open var shouldShowInEditor = true
     open val centered = false
     var width = 0f
     var height = 0f
