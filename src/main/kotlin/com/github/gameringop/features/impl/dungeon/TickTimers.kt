@@ -8,6 +8,8 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.ui.hud.HudElement
+import com.github.gameringop.ui.hud.getValue
+import com.github.gameringop.ui.hud.provideDelegate
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.location.LocationUtils
