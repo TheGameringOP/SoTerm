@@ -10,6 +10,7 @@ import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.showIf
+import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
@@ -90,7 +91,7 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
     }
 
     override fun init() {
-        hud.shouldShowInEditor = showTimers.value
+        (hud as HudElement).shouldShowInEditor = showTimers.value
         
         register<TickEvent.Server> {
             if (! LocationUtils.inSkyblock) return@register
