@@ -76,7 +76,7 @@ object BloodCamp: Feature("Features for Blood Room.") {
 
                 val moveSeconds = moveTicks / 20f
                 ChatUtils.modMessage("Watcher will move in ${moveSeconds.toFixed(2)}s.")
-                ThreadUtils.scheduledTaskServer(moveTicks) {
+                ThreadUtils.scheduledTaskServer(moveTicks.toInt()) {
                     ChatUtils.showTitle("&c&lKill Mobs")
                 }
             }
