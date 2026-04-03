@@ -22,8 +22,8 @@ import kotlin.jvm.optionals.getOrNull
 
 
 object ItemUtils {
-    private val idToNameMap = mutableMapOf<String, String>()
-    private val nameToIdMap = mutableMapOf<String, String>()
+    val idToNameMap = mutableMapOf<String, String>()
+    val nameToIdMap = mutableMapOf<String, String>()
 
     fun getNameById(id: String) = idToNameMap[id]
     fun getIdByName(name: String) = nameToIdMap[name]
