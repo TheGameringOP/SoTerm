@@ -10,10 +10,11 @@ import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers
 import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.preventMissClick
 import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.core.RoomState
+import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.OPRenderLayers
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -62,10 +63,10 @@ object TicTacToeSolver {
 
     fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
         if (! inTicTacToe || ! preventMissClick.value) return
+        if (LocationUtils.inBoss) return
         if (WorldUtils.getBlockAt(event.pos) != Blocks.STONE_BUTTON) return
-        if (event.pos !in bestMoves) {
-            event.isCanceled = true
-        }
+        if (event.pos !in bestMoves) event.isCanceled = true
+
     }
 
     fun onRenderWorld(ctx: RenderContext) {
@@ -82,8 +83,10 @@ object TicTacToeSolver {
 
     private fun solveAsync() {
         ThreadUtils.scheduledTaskServer(3) {
-            val center = roomCenter ?: return@scheduledTaskServer
-            scanBoard(center)
+            ThreadUtils.async {
+                val center = roomCenter ?: return@async
+                scanBoard(center)
+            }
         }
     }
 
@@ -100,9 +103,8 @@ object TicTacToeSolver {
         val level = mc.level ?: return
         val aabb = AABB(center.x - 9.0, 65.0, center.z - 9.0, center.x + 9.0, 73.0, center.z + 9.0)
 
-        val frames = level.getEntitiesOfClass(ItemFrame::class.java, aabb).filter { frame ->
-            val stack = frame.item
-            stack.item is MapItem && stack.has(DataComponents.MAP_ID)
+        val frames = level.getEntitiesOfClass(ItemFrame::class.java, aabb).filter {
+            it.item.item is MapItem && it.item.has(DataComponents.MAP_ID)
         }
 
         if (frames.size == 8) return reset()
@@ -180,8 +182,6 @@ object TicTacToeSolver {
     }
 
     private fun renderTTTBox(ctx: RenderContext, pos: BlockPos, color: Color) {
-        val consumers = ctx.consumers ?: return
-        val matrices = ctx.matrixStack ?: return
         val rotation = rotation ?: return
         if (WorldUtils.getBlockAt(pos) != Blocks.STONE_BUTTON) return
         val cam = ctx.camera.position.reverse()
@@ -233,18 +233,18 @@ object TicTacToeSolver {
             else -> return
         }
 
-        matrices.pushPose()
-        matrices.translate(cam.x, cam.y, cam.z)
+        ctx.matrixStack.pushPose()
+        ctx.matrixStack.translate(cam.x, cam.y, cam.z)
 
         ShapeRenderer.addChainedFilledBoxVertices(
-            matrices,
-            consumers.getBuffer(OPRenderLayers.FILLED_THROUGH_WALLS),
+            ctx.matrixStack,
+            ctx.consumers.getBuffer(OPRenderLayers.FILLED_THROUGH_WALLS),
             minX, minY, minZ,
             maxX, maxY, maxZ,
             color.red / 255f, color.green / 255f, color.blue / 255f, 0.7f
         )
 
-        matrices.popPose()
+        ctx.matrixStack.popPose()
     }
 
     /**
@@ -314,4 +314,3 @@ object TicTacToeSolver {
         }
     }
 }
-
