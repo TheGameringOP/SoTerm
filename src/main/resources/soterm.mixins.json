@@ -67,6 +67,7 @@
     "MixinScreenEffectRenderer",
     "MixinSoundManager",
     "NameTagFeatureRendererMixin",
-    "PlayerRendererMixin"
+    "PlayerRendererMixin",
+    "ScreenMixin"
   ]
 }
