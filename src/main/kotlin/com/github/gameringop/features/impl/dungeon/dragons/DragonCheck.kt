@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeons.dragons
+package com.github.gameringop.features.impl.dungeon.dragons
 
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.MathUtils.xzInAABB
