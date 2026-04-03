@@ -202,6 +202,7 @@ object PartyFinder: Feature() {
 
     private suspend fun checkPlayer(name: String): List<String> {
         val reasons = mutableListOf<String>()
+        if (name.equalsOneOf("Noamm", mc.user.name)) return reasons
         val profile = ProfileUtils.getProfile(name).getOrNull() ?: return reasons
 
         val dungeons = profile.getObj("dungeons") ?: return reasons
