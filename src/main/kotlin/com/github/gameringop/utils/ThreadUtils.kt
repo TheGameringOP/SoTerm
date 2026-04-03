@@ -25,9 +25,36 @@ object ThreadUtils {
     private val serverTickCounter = AtomicLong()
     private val clientTickCounter = AtomicLong()
 
-    init {
-        register<TickEvent.Start>(EventPriority.HIGHEST) { process(clientTickTasks, clientTickCounter.incrementAndGet()) }
-        register<TickEvent.Server>(EventPriority.HIGHEST) { process(serverTickTasks, serverTickCounter.incrementAndGet()) }
+    fun init() {
+        register<TickEvent.Start>(EventPriority.HIGHEST) {
+            if (clientTickTasks.isEmpty()) return@register
+
+            clientTickTasks.removeIf { entry ->
+                if (entry.ticks <= 0) {
+                    safeRun(entry.action)
+                    true
+                }
+                else {
+                    entry.ticks --
+                    false
+                }
+            }
+        }
+
+        register<TickEvent.Server>(EventPriority.HIGHEST) {
+            if (serverTickTasks.isEmpty()) return@register
+
+            serverTickTasks.removeIf { entry ->
+                if (entry.ticks <= 0) {
+                    safeRun(entry.action)
+                    true
+                }
+                else {
+                    entry.ticks --
+                    false
+                }
+            }
+        }
     }
 
     fun runOnMcThread(block: () -> Unit) {
