@@ -7,140 +7,92 @@ import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.EventPriority
 import com.github.gameringop.event.impl.TickEvent
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
-import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
 
 object ThreadUtils {
-    private val scheduler = Executors.newSingleThreadScheduledExecutor {
-        Thread(it, "$MOD_NAME-Scheduler").apply { isDaemon = true }
-    }
+    data class TickTask(var ticks: Int, val action: () -> Unit)
 
-    private val serverTickTasks = PriorityBlockingQueue<TickTask>()
-    private val clientTickTasks = PriorityBlockingQueue<TickTask>()
-
-    private val taskOrder = AtomicLong()
-    private val serverTickCounter = AtomicLong()
-    private val clientTickCounter = AtomicLong()
-
-    fun init() {
-        register<TickEvent.Start>(EventPriority.HIGHEST) {
-            val currentTick = clientTickCounter.incrementAndGet()
-            process(clientTickTasks, currentTick)
-        }
-
-        register<TickEvent.Server>(EventPriority.HIGHEST) {
-            val currentTick = serverTickCounter.incrementAndGet()
-            process(serverTickTasks, currentTick)
-        }
-    }
+    private val scheduler = Executors.newScheduledThreadPool(1) { Thread(it, "$MOD_NAME-Scheduler").apply { isDaemon = true } }
+    private val serverTickTasks = ConcurrentLinkedQueue<TickTask>()
+    private val clientTickTasks = ConcurrentLinkedQueue<TickTask>()
 
     fun runOnMcThread(block: () -> Unit) {
         if (mc.isSameThread) safeRun(block)
         else mc.execute { safeRun(block) }
     }
 
-    fun setTimeout(delay: Number, block: () -> Unit): ScheduledFuture<*> {
-        return scheduler.schedule({ safeRun(block) }, delay.toLong(), TimeUnit.MILLISECONDS)
+    fun setTimeout(delay: Long, block: () -> Unit): ScheduledFuture<*> {
+        return scheduler.schedule({ safeRun(block) }, delay, TimeUnit.MILLISECONDS)
     }
 
-    fun async(block: () -> Unit) = scheduler.execute { safeRun(block) }
-
     fun scheduledTask(ticks: Int = 0, block: () -> Unit) {
-        enqueue(clientTickTasks, clientTickCounter, ticks.toLong(), DirectTaskAction(block))
+        clientTickTasks.add(TickTask(ticks, block))
     }
 
     fun scheduledTaskServer(ticks: Int = 0, block: () -> Unit): TickTask {
-        val scheduledTick = serverTickCounter.get() + ticks.toLong().coerceAtLeast(0L) + 1L
-        val task = TickTask(scheduledTick, taskOrder.getAndIncrement(), DirectTaskAction(block))
+        val task = TickTask(ticks, block)
         serverTickTasks.add(task)
         return task
     }
 
-    fun scheduledTask(ticks: Number = 0, block: suspend () -> Unit) {
-        enqueue(clientTickTasks, clientTickCounter, ticks, SuspendTaskAction(block))
-    }
-
-    fun scheduledTaskServer(ticks: Number = 0, block: suspend () -> Unit) {
-        enqueue(serverTickTasks, serverTickCounter, ticks, SuspendTaskAction(block))
-    }
-
-    fun loop(delayProvider: () -> Number, stopCondition: () -> Boolean = { false }, block: suspend () -> Unit) {
-        val task = object : Runnable {
+    fun loop(delayProvider: () -> Number, stopCondition: suspend () -> Boolean = { false }, block: suspend () -> Unit) {
+        val taskWrapper = object: Runnable {
             override fun run() {
                 safeRun(block)
-                if (!stopCondition()) {
+                if (! runBlocking { stopCondition() }) {
                     scheduler.schedule(this, delayProvider().toLong(), TimeUnit.MILLISECONDS)
                 }
             }
         }
-        scheduler.execute(task)
+        scheduler.execute(taskWrapper)
     }
 
-    fun loop(delay: Number, stopCondition: () -> Boolean = { false }, block: suspend () -> Unit) {
+    fun loop(delay: Number, stopCondition: suspend () -> Boolean = { false }, block: suspend () -> Unit) {
         loop({ delay }, stopCondition, block)
     }
 
-    private fun enqueue(queue: PriorityBlockingQueue<TickTask>, currentTick: AtomicLong, ticks: Number, action: TaskAction) {
-        val scheduledTick = currentTick.get() + ticks.toLong().coerceAtLeast(0L) + 1L
-        queue.add(TickTask(scheduledTick, taskOrder.getAndIncrement(), action))
-    }
+    fun init() {
+        register<TickEvent.Start>(EventPriority.HIGHEST) {
+            if (clientTickTasks.isEmpty()) return@register
 
-    private fun process(queue: PriorityBlockingQueue<TickTask>, currentTick: Long) {
-        while (true) {
-            val next = queue.peek() ?: return
-            if (next.executeAtTick > currentTick) return
+            clientTickTasks.removeIf { entry ->
+                if (entry.ticks <= 0) {
+                    safeRun(entry.action)
+                    true
+                }
+                else {
+                    entry.ticks --
+                    false
+                }
+            }
+        }
 
-            val task = queue.poll() ?: continue
-            safeRun(task.action)
+        register<TickEvent.Server>(EventPriority.HIGHEST) {
+            if (serverTickTasks.isEmpty()) return@register
+
+            serverTickTasks.removeIf { entry ->
+                if (entry.ticks <= 0) {
+                    safeRun(entry.action)
+                    true
+                }
+                else {
+                    entry.ticks --
+                    false
+                }
+            }
         }
     }
 
-    private fun safeRun(block: () -> Unit) {
+    private inline fun safeRun(crossinline block: suspend () -> Unit) {
         try {
-            block.invoke()
-        } catch (e: Throwable) {
-            logger.error("Error in ThreadUtils task", e)
+            runBlocking { block() }
         }
-    }
-
-    private fun safeRun(block: suspend () -> Unit) {
-        try {
-            runBlocking { block.invoke() }
-        } catch (e: Throwable) {
-            logger.error("Error in ThreadUtils task", e)
-        }
-    }
-
-    private fun safeRun(action: TaskAction) {
-        try {
-            action.run()
-        } catch (e: Throwable) {
-            logger.error("Error in ThreadUtils task", e)
-        }
-    }
-
-    private sealed interface TaskAction {
-        fun run()
-    }
-
-    private class DirectTaskAction(private val block: () -> Unit) : TaskAction {
-        override fun run() = block.invoke()
-    }
-
-    private class SuspendTaskAction(private val block: suspend () -> Unit) : TaskAction {
-        override fun run() = runBlocking { block.invoke() }
-    }
-
-    data class TickTask(
-        val executeAtTick: Long,
-        val order: Long,
-        val action: TaskAction
-    ) : Comparable<TickTask> {
-        override fun compareTo(other: TickTask): Int {
-            return compareValuesBy(this, other, TickTask::executeAtTick, TickTask::order)
+        catch (e: Throwable) {
+            logger.error("Error in ThreadUtils task: ${e.message}")
+            e.printStackTrace()
         }
     }
 }
