@@ -1,17 +1,17 @@
 package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.DungeonEvent
-import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.impl.dev.HypixelAPI
-import com.github.gameringop.ui.clickgui.components.*
+import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.hud.HudElement
+import com.github.gameringop.ui.clickgui.components.provideDelegate
+import com.github.gameringop.ui.clickgui.components.section
+import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
 import com.github.gameringop.utils.ChatUtils
@@ -27,7 +27,7 @@ import net.minecraft.client.gui.GuiGraphics
 import java.awt.Color
 import kotlin.math.ceil
 
-object DungeonScoreHud : Feature("Dungeon Score HUD") {
+object DungeonScoreHud: Feature("Dungeon Score HUD") {
     
     private val showInBoss by ToggleSetting("Show in Boss", true).section("Main")
     

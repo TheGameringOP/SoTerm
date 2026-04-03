@@ -4,14 +4,11 @@ import com.github.gameringop.config.PersonalBest
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.MathUtils.center
 import com.github.gameringop.utils.MathUtils.toPos
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.PlayerUtils
@@ -20,7 +17,6 @@ import com.github.gameringop.utils.dungeons.enums.WitherRelic
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render3D
-import kotlinx.coroutines.launch
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
 import net.minecraft.world.InteractionHand

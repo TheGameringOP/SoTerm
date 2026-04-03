@@ -5,25 +5,18 @@ import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.showIf
-import com.github.gameringop.ui.clickgui.components.withDescription
-import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.location.WorldType
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.Style
 import java.awt.Color
 
 object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {

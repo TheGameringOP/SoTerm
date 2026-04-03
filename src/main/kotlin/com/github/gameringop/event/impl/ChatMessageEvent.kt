@@ -2,7 +2,6 @@ package com.github.gameringop.event.impl
 
 import com.github.gameringop.event.Event
 import com.github.gameringop.utils.ChatUtils.formattedText
-import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import net.minecraft.network.chat.Component
 

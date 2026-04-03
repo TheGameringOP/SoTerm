@@ -1,8 +1,8 @@
 package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.ChatMessageEvent
-import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.CheckEntityRenderEvent
+import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.*

@@ -1,6 +1,5 @@
 package com.github.gameringop.features.impl.visual
 
-import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent

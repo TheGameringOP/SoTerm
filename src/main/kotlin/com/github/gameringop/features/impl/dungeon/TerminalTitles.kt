@@ -13,8 +13,6 @@ import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.ColorUtils
-import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width

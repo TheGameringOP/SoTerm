@@ -10,7 +10,6 @@ import com.github.gameringop.utils.ChatUtils.modMessage
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.interpolateYaw
 import com.github.gameringop.utils.MathUtils.lerp
-import com.github.gameringop.utils.Utils.containsOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener.thePlayer
 import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.items.ItemUtils.skyblockId

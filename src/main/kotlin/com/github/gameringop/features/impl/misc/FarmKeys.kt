@@ -4,16 +4,15 @@ import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.KeyboardEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
+import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.location.WorldType
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
-import net.minecraft.client.Options
 import org.lwjgl.glfw.GLFW
 
 object FarmKeys : Feature("Farm Keys") {

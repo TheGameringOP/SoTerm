@@ -1,18 +1,18 @@
 package com.github.gameringop.features.impl.visual
 
-import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
+import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.hud.HudElement
+import com.github.gameringop.ui.clickgui.components.provideDelegate
+import com.github.gameringop.ui.clickgui.components.showIf
+import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
-import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils

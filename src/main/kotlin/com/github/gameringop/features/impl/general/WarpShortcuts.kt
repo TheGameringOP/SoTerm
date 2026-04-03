@@ -3,7 +3,6 @@ package com.github.gameringop.features.impl.general
 import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandManager
 import com.github.gameringop.commands.CommandNodeBuilder
-import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
@@ -11,14 +10,11 @@ import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
-import org.apache.commons.lang3.StringUtils.center
-import javax.xml.stream.Location
 
 object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortcuts") {
     private val warpCooldown by ToggleSetting("Warp Cooldown HUD", false).section("Draw")
