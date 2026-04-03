@@ -14,7 +14,7 @@ import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.location.LocationUtils
-import com.github.gameringop.utils.render.NoammRenderLayers
+import com.github.gameringop.utils.render.OPRenderLayers
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
 import com.github.gameringop.utils.render.RenderHelper.renderVec
@@ -172,7 +172,7 @@ object BloodCamp: Feature("Features for Blood Room.") {
 
         ShapeRenderer.renderLineBox(
             matrixStack.last(),
-            consumers.getBuffer(NoammRenderLayers.getLinesThroughWalls(2.0)),
+            consumers.getBuffer(OPRenderLayers.getLinesThroughWalls(2.0)),
             aabb.minX, aabb.minY, aabb.minZ,
             aabb.maxX, aabb.maxY, aabb.maxZ,
             bboxColor.red / 255f, bboxColor.green / 255f, bboxColor.blue / 255f, 0.7f
