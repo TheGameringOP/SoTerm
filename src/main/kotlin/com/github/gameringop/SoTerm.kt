@@ -55,7 +55,6 @@ object SoTerm: ClientModInitializer {
         ActionBarParser.init()
         PartyUtils.init()
         ChatUtils.init()
-        ItemUtils.init()
         TestGround()
 
         this.initNetworkLoop()
