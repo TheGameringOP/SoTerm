@@ -27,33 +27,13 @@ object ThreadUtils {
 
     fun init() {
         register<TickEvent.Start>(EventPriority.HIGHEST) {
-            if (clientTickTasks.isEmpty()) return@register
-
-            clientTickTasks.removeIf { entry ->
-                if (entry.ticks <= 0) {
-                    safeRun(entry.action)
-                    true
-                }
-                else {
-                    entry.ticks --
-                    false
-                }
-            }
+            val currentTick = clientTickCounter.incrementAndGet()
+            process(clientTickTasks, currentTick)
         }
 
         register<TickEvent.Server>(EventPriority.HIGHEST) {
-            if (serverTickTasks.isEmpty()) return@register
-
-            serverTickTasks.removeIf { entry ->
-                if (entry.ticks <= 0) {
-                    safeRun(entry.action)
-                    true
-                }
-                else {
-                    entry.ticks --
-                    false
-                }
-            }
+            val currentTick = serverTickCounter.incrementAndGet()
+            process(serverTickTasks, currentTick)
         }
     }
 
@@ -68,6 +48,17 @@ object ThreadUtils {
 
     fun async(block: () -> Unit) = scheduler.execute { safeRun(block) }
 
+    fun scheduledTask(ticks: Int = 0, block: () -> Unit) {
+        enqueue(clientTickTasks, clientTickCounter, ticks.toLong(), DirectTaskAction(block))
+    }
+
+    fun scheduledTaskServer(ticks: Int = 0, block: () -> Unit): TickTask {
+        val scheduledTick = serverTickCounter.get() + ticks.toLong().coerceAtLeast(0L) + 1L
+        val task = TickTask(scheduledTick, taskOrder.getAndIncrement(), DirectTaskAction(block))
+        serverTickTasks.add(task)
+        return task
+    }
+
     fun scheduledTask(ticks: Number = 0, block: suspend () -> Unit) {
         enqueue(clientTickTasks, clientTickCounter, ticks, SuspendTaskAction(block))
     }
@@ -77,15 +68,14 @@ object ThreadUtils {
     }
 
     fun loop(delayProvider: () -> Number, stopCondition: () -> Boolean = { false }, block: suspend () -> Unit) {
-        val task = object: Runnable {
+        val task = object : Runnable {
             override fun run() {
                 safeRun(block)
-                if (! stopCondition()) {
+                if (!stopCondition()) {
                     scheduler.schedule(this, delayProvider().toLong(), TimeUnit.MILLISECONDS)
                 }
             }
         }
-
         scheduler.execute(task)
     }
 
@@ -111,8 +101,7 @@ object ThreadUtils {
     private fun safeRun(block: () -> Unit) {
         try {
             block.invoke()
-        }
-        catch (e: Throwable) {
+        } catch (e: Throwable) {
             logger.error("Error in ThreadUtils task", e)
         }
     }
@@ -120,8 +109,7 @@ object ThreadUtils {
     private fun safeRun(block: suspend () -> Unit) {
         try {
             runBlocking { block.invoke() }
-        }
-        catch (e: Throwable) {
+        } catch (e: Throwable) {
             logger.error("Error in ThreadUtils task", e)
         }
     }
@@ -129,8 +117,7 @@ object ThreadUtils {
     private fun safeRun(action: TaskAction) {
         try {
             action.run()
-        }
-        catch (e: Throwable) {
+        } catch (e: Throwable) {
             logger.error("Error in ThreadUtils task", e)
         }
     }
@@ -139,15 +126,19 @@ object ThreadUtils {
         fun run()
     }
 
-    private class SuspendTaskAction(private val block: suspend () -> Unit): TaskAction {
+    private class DirectTaskAction(private val block: () -> Unit) : TaskAction {
+        override fun run() = block.invoke()
+    }
+
+    private class SuspendTaskAction(private val block: suspend () -> Unit) : TaskAction {
         override fun run() = runBlocking { block.invoke() }
     }
 
-    private data class TickTask(
+    data class TickTask(
         val executeAtTick: Long,
         val order: Long,
         val action: TaskAction
-    ): Comparable<TickTask> {
+    ) : Comparable<TickTask> {
         override fun compareTo(other: TickTask): Int {
             return compareValuesBy(this, other, TickTask::executeAtTick, TickTask::order)
         }
