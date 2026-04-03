@@ -2,8 +2,6 @@
 
 [![GitHub Downloads](https://img.shields.io/badge/DOWNLOADS-1-brightgreen?style=for-the-badge&logo=github)](https://github.com/TheGameringOP/SoTerm/releases)
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1fe623d5-aba1-4bd3-8485-ef97d113f83b" />
-
 ---
 
 ## 💾 Install in 5 easy steps
