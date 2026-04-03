@@ -22,6 +22,9 @@
     "MixinPlayer",
     "MixinSkullBlock"
   ],
+  "plugin": "com.github.gameringop.init.AutoMixinDiscovery",
+  "mixins": [],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   },
