@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeons.dragons
+package com.github.gameringop.features.impl.dungeon.dragons
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
