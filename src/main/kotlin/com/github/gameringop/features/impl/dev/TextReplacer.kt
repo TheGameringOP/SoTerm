@@ -1,8 +1,8 @@
-package com.github.gameringop.features.impl.dev
+package com.github.gameringop.features.impl.dev.text
 
+import com.github.gameringop.SoTerm.mc
 import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
-import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
 import net.minecraft.network.chat.MutableComponent
@@ -10,77 +10,229 @@ import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.resources.RegistryOps
 import net.minecraft.util.FormattedCharSequence
-import java.util.concurrent.ConcurrentHashMap
+import java.util.*
 import java.util.regex.Pattern
 
 object TextReplacer {
-    val replaceMap = ConcurrentHashMap<String, String>().apply {
-        put("SoTerm", "{\"text\":\"\",\"extra\":[{\"text\":\"S\",\"color\":\"#FF0000\",\"bold\":true},{\"text\":\"o\",\"color\":\"#E40000\",\"bold\":true},{\"text\":\"T\",\"color\":\"#C20000\",\"bold\":true},{\"text\":\"e\",\"color\":\"#B20000\",\"bold\":true},{\"text\":\"r\",\"color\":\"#9B0000\",\"bold\":true},{\"text\":\"m\",\"color\":\"#840000\",\"bold\":true}]}")
+    private class Replacement(val target: String, val component: Component, val plainString: String)
+
+    private val unchanged = Any()
+    private val hexPattern = Pattern.compile("&#([A-Fa-f0-9]{6})")
+    private val stringCache = Collections.synchronizedMap(newBoundedCache<String, String>(2048))
+    private val literalCache = Collections.synchronizedMap(newBoundedCache<Style, MutableMap<String, Any>>(64))
+
+    @Volatile
+    private var replacementVersion = - 1
+
+    @Volatile
+    private var preparedReplacements = emptyList<Replacement>()
+
+    private val replacementMap = ReplacementMap(::clearCache)
+
+    fun setCustomReplacements(replacements: Map<String, String>) {
+        replacementMap.clear()
+        replacementMap.putAll(replacements)
     }
-
-    private val cache = ConcurrentHashMap<String, Component>()
-
-    private val HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})")
 
     @JvmStatic
     fun handleString(text: String): String {
         if (text.isEmpty()) return text
-        if (replaceMap.keys.none { text.contains(it) }) return text
+        val replacements = getCache()
+        if (replacements.isEmpty()) return text
 
-        var result = text
-        replaceMap.forEach { (target, replacement) ->
-            if (! result.contains(target)) return@forEach
-            val cachedComp = cache.computeIfAbsent(replacement) {
-                parseJsonToComponent(it) ?: Component.literal(applyColorCodes(it))
-            }
-
-            result = result.replace(target, applyColorCodes(cachedComp.string))
+        return synchronized(stringCache) {
+            stringCache.getOrPut(text) { replaceText(text, replacements) ?: text }
         }
-        return result
     }
 
     @JvmStatic
     fun handleComponent(component: Component): Component {
-        if (replaceMap.keys.none { component.string.contains(it) }) return component
-        return rebuildComponent(component)
+        val replacements = getCache()
+        if (replacements.isEmpty()) return component
+
+        return rebuildComponent(component, replacements) ?: component
     }
 
-    private fun rebuildComponent(comp: Component): MutableComponent {
-        val contents = comp.contents
-        val newComp = if (contents is PlainTextContents) {
-            val originalText = contents.text()
-            val target = replaceMap.keys.find { originalText.contains(it) }
+    @JvmStatic
+    fun handleCharSequence(seq: FormattedCharSequence): FormattedCharSequence {
+        val replacements = getCache()
+        if (replacements.isEmpty()) return seq
 
-            if (target != null) injectReplacement(originalText, target, replaceMap[target] !!, comp.style)
-            else (comp.copy() as MutableComponent).apply { siblings.clear() }
+        val styles = ArrayList<Style>()
+        val texts = ArrayList<String>()
+        var currentStyle = Style.EMPTY
+        val currentText = StringBuilder()
+        var hasMatch = false
+
+        fun flush() {
+            if (currentText.isEmpty()) return
+
+            val text = currentText.toString()
+            if (! hasMatch && containsTarget(text, replacements)) hasMatch = true
+            styles.add(currentStyle)
+            texts.add(text)
+            currentText.setLength(0)
         }
-        else (comp.copy() as MutableComponent).apply { siblings.clear() }
 
-        if (newComp.style.isEmpty) newComp.style = comp.style
+        seq.accept { _, style, codePoint ->
+            if (style != currentStyle) {
+                flush()
+                currentStyle = style
+            }
 
-        for (sibling in comp.siblings) newComp.append(rebuildComponent(sibling))
+            currentText.appendCodePoint(codePoint)
+            true
+        }
 
-        return newComp
+        flush()
+
+        if (! hasMatch) return seq
+
+        val rebuilt = Component.empty()
+        for (i in texts.indices) {
+            val text = texts[i]
+            val style = styles[i]
+            rebuilt.append(replaceLiteral(text, style, replacements) ?: Component.literal(text).withStyle(style))
+        }
+
+        return rebuilt.visualOrderText
     }
 
-    private fun injectReplacement(text: String, target: String, replacement: String, parentStyle: Style): MutableComponent {
-        val root = Component.literal("")
-        val parts = text.split(target, limit = 2)
-
-        if (parts[0].isNotEmpty()) root.append(Component.literal(parts[0]).withStyle(parentStyle))
-        val replacementComp = cache.computeIfAbsent(replacement) {
-            parseJsonToComponent(it) ?: Component.literal(applyColorCodes(it))
-        }.copy()
-
-        if (replacementComp.style.isEmpty) replacementComp.withStyle(parentStyle)
-        root.append(replacementComp)
-
-        if (parts.size > 1 && parts[1].isNotEmpty()) {
-            val remaining = parts[1]
-            if (remaining.contains(target)) root.append(injectReplacement(remaining, target, replacement, parentStyle))
-            else root.append(Component.literal(remaining).withStyle(parentStyle))
+    private fun rebuildComponent(component: Component, replacements: List<Replacement>): MutableComponent? {
+        val replacedLiteral = (component.contents as? PlainTextContents)?.let {
+            replaceLiteral(it.text(), component.style, replacements)
         }
-        return root
+
+        var siblingsChanged = false
+        val siblings = if (component.siblings.isEmpty()) null else ArrayList<Component>(component.siblings.size)
+
+        for (sibling in component.siblings) {
+            val rebuilt = rebuildComponent(sibling, replacements)
+            if (rebuilt != null) siblingsChanged = true
+            siblings?.add(rebuilt ?: sibling)
+        }
+
+        if (replacedLiteral == null && ! siblingsChanged) return null
+
+        val result = replacedLiteral ?: component.plainCopy().apply { style = component.style }
+        if (result.style.isEmpty) result.style = component.style
+        siblings?.forEach(result::append)
+        return result
+    }
+
+    private fun replaceLiteral(text: String, parentStyle: Style, replacements: List<Replacement>): MutableComponent? {
+        val styleCache = synchronized(literalCache) {
+            literalCache.getOrPut(parentStyle) {
+                Collections.synchronizedMap(newBoundedCache<String, Any>(128))
+            }
+        }
+
+        val cached = synchronized(styleCache) {
+            styleCache.getOrPut(text) { buildLiteralReplacement(text, parentStyle, replacements) ?: unchanged }
+        }
+
+        return when (cached) {
+            is MutableComponent -> cached.copy()
+            else -> null
+        }
+    }
+
+    private fun buildLiteralReplacement(text: String, parentStyle: Style, replacements: List<Replacement>): MutableComponent? {
+        var cursor = 0
+        var rebuilt: MutableComponent? = null
+
+        while (cursor < text.length) {
+            var bestIndex = Int.MAX_VALUE
+            var bestReplacement: Replacement? = null
+
+            for (replacement in replacements) {
+                val index = text.indexOf(replacement.target, cursor)
+                if (index == - 1 || index >= bestIndex) continue
+
+                bestIndex = index
+                bestReplacement = replacement
+
+                if (index == cursor) break
+            }
+
+            val match = bestReplacement ?: break
+            val result = rebuilt ?: Component.empty().also { rebuilt = it }
+
+            if (bestIndex > cursor) {
+                result.append(Component.literal(text.substring(cursor, bestIndex)).withStyle(parentStyle))
+            }
+
+            val replacementComp = match.component.copy()
+            if (replacementComp.style.isEmpty) replacementComp.withStyle(parentStyle)
+            result.append(replacementComp)
+
+            cursor = bestIndex + match.target.length
+        }
+
+        val result = rebuilt ?: return null
+        if (cursor < text.length) result.append(Component.literal(text.substring(cursor)).withStyle(parentStyle))
+        if (result.style.isEmpty) result.style = parentStyle
+        return result
+    }
+
+    private fun replaceText(text: String, replacements: List<Replacement>): String? {
+        var cursor = 0
+        var rebuilt: StringBuilder? = null
+
+        while (cursor < text.length) {
+            var bestIndex = Int.MAX_VALUE
+            var bestReplacement: Replacement? = null
+
+            for (replacement in replacements) {
+                val index = text.indexOf(replacement.target, cursor)
+                if (index == - 1 || index >= bestIndex) continue
+
+                bestIndex = index
+                bestReplacement = replacement
+
+                if (index == cursor) break
+            }
+
+            val match = bestReplacement ?: break
+            val result = rebuilt ?: StringBuilder(text.length).also { rebuilt = it }
+
+            if (bestIndex > cursor) {
+                result.append(text, cursor, bestIndex)
+            }
+
+            result.append(match.plainString)
+            cursor = bestIndex + match.target.length
+        }
+
+        val result = rebuilt ?: return null
+        if (cursor < text.length) result.append(text, cursor, text.length)
+        return result.toString()
+    }
+
+    private fun containsTarget(text: String, replacements: List<Replacement>): Boolean {
+        for (replacement in replacements) {
+            if (text.indexOf(replacement.target) != - 1) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun getCache(): List<Replacement> {
+        val version = replacementMap.version
+        if (replacementVersion == version) return preparedReplacements
+
+        val replacements = replacementMap.entries.asSequence()
+            .map { (target, replacement) ->
+                val component = parseJsonToComponent(replacement) ?: Component.literal(applyColorCodes(replacement))
+                Replacement(target, component, applyColorCodes(component.string))
+            }
+            .sortedWith(compareByDescending<Replacement> { it.target.length }.thenBy { it.target })
+            .toList()
+
+        preparedReplacements = replacements
+        replacementVersion = version
+        return replacements
     }
 
     private fun parseJsonToComponent(json: String): MutableComponent? {
@@ -88,60 +240,43 @@ object TextReplacer {
 
         try {
             val jsonElement = JsonParser.parseString(json)
+            val registry = mc.level?.registryAccess() ?: mc.connection?.registryAccess()
 
-            val registry = Minecraft.getInstance().level?.registryAccess()
-                ?: Minecraft.getInstance().connection?.registryAccess()
-
-            val ops = if (registry != null) RegistryOps.create(JsonOps.INSTANCE, registry)
-            else JsonOps.INSTANCE
-
-            val result = ComponentSerialization.CODEC.parse(ops, jsonElement)
-
-            return result.result().orElse(null)?.copy()
+            val ops = if (registry != null) RegistryOps.create(JsonOps.INSTANCE, registry) else JsonOps.INSTANCE
+            return ComponentSerialization.CODEC.parse(ops, jsonElement).result().orElse(null)?.copy()
         }
         catch (_: Exception) {
             return null
         }
     }
 
-    @JvmStatic
-    fun handleCharSequence(seq: FormattedCharSequence): FormattedCharSequence {
-        val sb = StringBuilder()
-        seq.accept { _, _, codePoint -> sb.append(codePoint.toChar()); true }
-        if (replaceMap.none { sb.toString().contains(it.key) }) return seq
+    private fun applyColorCodes(text: String): String {
+        if ('&' !in text) return text
 
-        val rebuilt = Component.literal("")
-        var currentStyle: Style? = null
-        val buffer = StringBuilder()
-
-        seq.accept { _, style, codePoint ->
-            if (style != currentStyle) {
-                if (buffer.isNotEmpty()) {
-                    rebuilt.append(Component.literal(buffer.toString()).withStyle(currentStyle))
-                    buffer.clear()
-                }
-                currentStyle = style
-            }
-            buffer.append(codePoint.toChar())
-            true
+        val matcher = hexPattern.matcher(text)
+        val buffer = StringBuffer()
+        while (matcher.find()) {
+            val hex = matcher.group(1)
+            val replacement = StringBuilder("\u00A7x")
+            for (char in hex) replacement.append("\u00A7").append(char)
+            matcher.appendReplacement(buffer, replacement.toString())
         }
-        if (buffer.isNotEmpty()) {
-            rebuilt.append(Component.literal(buffer.toString()).withStyle(currentStyle))
-        }
-
-        return handleComponent(rebuilt).visualOrderText
+        matcher.appendTail(buffer)
+        return buffer.toString().replace("&", "\u00A7")
     }
 
-    private fun applyColorCodes(text: String): String {
-        val m = HEX_PATTERN.matcher(text)
-        val sb = StringBuffer()
-        while (m.find()) {
-            val hex = m.group(1)
-            val r = StringBuilder("§x")
-            for (c in hex) r.append("§").append(c)
-            m.appendReplacement(sb, r.toString())
+    private fun <K, V> newBoundedCache(maxEntries: Int): LinkedHashMap<K, V> {
+        return object: LinkedHashMap<K, V>(maxEntries + 1, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean {
+                return size > maxEntries
+            }
         }
-        m.appendTail(sb)
-        return sb.toString().replace("&", "§")
+    }
+
+    private fun clearCache() {
+        synchronized(stringCache) { stringCache.clear() }
+        synchronized(literalCache) { literalCache.clear() }
+        preparedReplacements = emptyList()
+        replacementVersion = - 1
     }
 }
