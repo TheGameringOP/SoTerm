@@ -1,11 +1,16 @@
 package com.github.gameringop.utils.items
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.items.ItemRarity.Companion.PET_PATTERN
 import com.github.gameringop.utils.items.ItemRarity.Companion.RARITY_PATTERN
 import com.github.gameringop.utils.items.ItemRarity.Companion.rarityCache
+import com.github.gameringop.utils.network.WebUtils
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import net.minecraft.core.component.DataComponents
@@ -19,6 +24,26 @@ import kotlin.jvm.optionals.getOrNull
 object ItemUtils {
     val idToNameMap = mutableMapOf<String, String>()
     val nameToIdMap = mutableMapOf<String, String>()
+
+    fun getNameById(id: String) = idToNameMap[id]
+    fun getIdByName(name: String) = nameToIdMap[name]
+
+    fun init() = SoTerm.scope.launch {
+        WebUtils.get<JsonObject>("https://api.hypixel.net/v2/resources/skyblock/items")
+            .onSuccess { obj ->
+                val itemsArray = obj["items"]?.jsonArray ?: return@onSuccess
+
+                for (element in itemsArray) {
+                    val item = element.jsonObject
+                    val id = item["id"]?.jsonPrimitive?.content ?: continue
+                    val name = item["name"]?.jsonPrimitive?.content ?: continue
+
+                    idToNameMap[id] = name
+                    nameToIdMap[name] = id
+                }
+            }
+            .onFailure { SoTerm.logger.error("Error fetching Skyblock items", it) }
+    }
 
     val ItemStack.customData: CompoundTag get() = getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag()
 
