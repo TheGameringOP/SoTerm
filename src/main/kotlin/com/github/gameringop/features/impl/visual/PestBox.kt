@@ -36,7 +36,9 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
     private val pestColor by ColorSetting("Pest Color", Color(0, 255, 0), false)
         .withDescription("Color used for pest highlighting (default: green).")
 
-    private val trackedPests = CopyOnWriteArraySet<Int>()
+    private data class PestInfo(val id: Int, val oneBelow: Boolean)
+
+    private val trackedPests = CopyOnWriteArraySet<PestInfo>()
     private val checked = CopyOnWriteArraySet<Int>()
 
     override fun init() {
@@ -54,12 +56,14 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 ChatUtils.modMessage("§7ArmorStand ${entity.id}: raw='$name', clean='$cleanName'")
             }
 
+            val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly")
+
             val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis")
             if (pestNames.any { cleanName.contains(it) }) {
                 if (SoTerm.debugFlags.contains("pestbox")) {
                     ChatUtils.modMessage("§aPest detected! Adding to tracking...")
                 }
-                trackedPests.add(entity.id)
+                trackedPests.add(PestInfo(entity.id, oneBelow))
             }
         }
 
@@ -72,9 +76,10 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 if (entity is ArmorStand && !checked.contains(entity.id)) {
                     val name = entity.customName?.formattedText ?: return@forEach
                     val cleanName = name.removeFormatting().lowercase()
-                    val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis")
+                    val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly") || cleanName.contains("firefly")
+                    val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis", "field mouse")
                     if (pestNames.any { cleanName.contains(it) }) {
-                        trackedPests.add(entity.id)
+                        trackedPests.add(PestInfo(entity.id, oneBelow))
                     }
                     checked.add(entity.id)
                 }
@@ -82,7 +87,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
         }
 
         register<EntityDeathEvent> {
-            trackedPests.remove(event.entity.id)
+            trackedPests.removeIf { it.id == event.entity.id }
             checked.remove(event.entity.id)
         }
 
@@ -95,15 +100,17 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
             if (LocationUtils.world != WorldType.Garden) return@register
             if (trackedPests.isEmpty()) return@register
 
-            for (id in trackedPests) {
-                val entity = mc.level?.getEntity(id) ?: continue
+            for (pest in trackedPests) {
+                val entity = mc.level?.getEntity(pest.id) ?: continue
                 if (!entity.isAlive) continue
 
                 val boxSize = 0.7
+                val yOffset = if (pest.oneBelow) 0.5 else 1.0
+
                 Render3D.renderBox(
                     ctx = event.ctx,
                     x = entity.renderX,
-                    y = entity.renderY - 0.5,
+                    y = entity.renderY - yOffset,
                     z = entity.renderZ,
                     width = boxSize,
                     height = boxSize,
