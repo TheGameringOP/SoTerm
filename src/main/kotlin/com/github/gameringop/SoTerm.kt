@@ -12,13 +12,11 @@ import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.network.WebUtils
 import com.github.gameringop.utils.network.data.ElectionData
-import com.github.gameringop.utils.render.RoundedRect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.*
 import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import org.slf4j.LoggerFactory
@@ -64,7 +62,6 @@ object SoTerm: ClientModInitializer {
         FeatureManager.registerFeatures()
         CommandManager.registerAll()
 
-        SpecialGuiElementRegistry.register { buffer -> RoundedRect(buffer.vertexConsumers()) }
 
         EventBus.register<TickEvent.Start> {
             mc.execute {

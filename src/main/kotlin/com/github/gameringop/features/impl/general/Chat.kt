@@ -1,5 +1,6 @@
 package com.github.gameringop.features.impl.general
 
+import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.MouseClickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.interfaces.IChatComponent
@@ -8,9 +9,11 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.notification.NotificationManager
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.DataDownloader
+import com.github.gameringop.utils.NumbersUtils
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.network.chat.Component
@@ -23,6 +26,7 @@ object Chat: Feature("Useful tweaks for the chat such as Ctrl + Click to copy me
     private val ctrlClickToCopy by ToggleSetting("Ctrl Click to Copy", true).withDescription("Ctrl + Left Click a message to copy it to your clipboard.")
     private val removeUselessMessages by ToggleSetting("Remove useless messages", true).withDescription("Removes a lot of useless messages from the chat.")
 
+    private val explosiveShotRegex = Regex("^Your Explosive Shot hit (\\d+) enemies for ([\\d,.]+) damage\\.$")
     private var lastMessageBlank = false
 
     override fun init() {
@@ -37,6 +41,15 @@ object Chat: Feature("Useful tweaks for the chat such as Ctrl + Click to copy me
             NotificationManager.push("Message copied to clipboard", message)
             mc.keyboardHandler.clipboard = message
             event.isCanceled = true
+        }
+
+        register<ChatMessageEvent> {
+            if (! removeUselessMessages.value) return@register
+            val (sHits, fDamage) = explosiveShotRegex.find(event.unformattedText)?.destructured ?: return@register
+            val hits = sHits.toIntOrNull() ?: return@register
+            val totalDamage = fDamage.replace(",", "").toDoubleOrNull() ?: return@register
+            val damagePerEntity = if (hits > 0) totalDamage / hits else totalDamage
+            ChatUtils.modMessage("&aExplosive shot did &e${NumbersUtils.format(damagePerEntity.toLong())}&a damage per enemy.")
         }
     }
 
