@@ -105,7 +105,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 if (!entity.isAlive) continue
 
                 val boxSize = 0.7
-                val yOffset = if (pest.oneBelow) 0.5 else 1.0
+                val yOffset = if (pest.oneBelow) 1.0 else 0.5
 
                 Render3D.renderBox(
                     ctx = event.ctx,
