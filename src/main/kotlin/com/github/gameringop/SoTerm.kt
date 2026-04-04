@@ -57,10 +57,10 @@ object SoTerm: ClientModInitializer {
         ItemUtils.init()
 //        TestGround()
 //
-//        this.initNetworkLoop()
+        this.initNetworkLoop()
 //
 //        FeatureManager.registerFeatures()
-//        CommandManager.registerAll()
+        CommandManager.registerAll()
 
 
         EventBus.register<TickEvent.Start> {
