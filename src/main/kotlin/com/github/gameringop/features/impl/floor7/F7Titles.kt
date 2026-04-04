@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon
+package com.github.gameringop.features.impl.floor7
 
 import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.*

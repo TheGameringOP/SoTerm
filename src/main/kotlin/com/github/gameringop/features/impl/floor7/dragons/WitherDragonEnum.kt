@@ -1,10 +1,10 @@
-package com.github.gameringop.features.impl.dungeon.dragons
+package com.github.gameringop.features.impl.floor7.dragons
 
 import com.github.gameringop.SoTerm.mc
-import com.github.gameringop.features.impl.dungeon.dragons.WitherDragons.priorityDragon
-import com.github.gameringop.features.impl.dungeon.dragons.WitherDragons.sendArrowHit
-import com.github.gameringop.features.impl.dungeon.dragons.WitherDragons.sendSpray
-import com.github.gameringop.features.impl.dungeon.dragons.WitherDragons.sendTime
+import com.github.gameringop.features.impl.floor7.dragons.WitherDragons.priorityDragon
+import com.github.gameringop.features.impl.floor7.dragons.WitherDragons.sendArrowHit
+import com.github.gameringop.features.impl.floor7.dragons.WitherDragons.sendSpray
+import com.github.gameringop.features.impl.floor7.dragons.WitherDragons.sendTime
 import com.github.gameringop.utils.ChatUtils.modMessage
 import com.github.gameringop.utils.dungeons.DungeonListener
 import net.minecraft.ChatFormatting
@@ -83,7 +83,7 @@ enum class WitherDragonEnum(
         var dragonSpawnCount = 0
 
         fun reset() {
-            WitherDragonEnum.entries.forEach {
+            entries.forEach {
                 it.timeToSpawn = 100
                 it.timesSpawned = 0
                 it.state = WitherDragonState.DEAD

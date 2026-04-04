@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon.dragons
+package com.github.gameringop.features.impl.floor7.dragons
 
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.*

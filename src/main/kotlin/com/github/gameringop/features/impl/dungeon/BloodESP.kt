@@ -9,12 +9,12 @@ import com.github.gameringop.ui.clickgui.components.impl.CategorySetting
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.MathUtils.Vec3
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import java.awt.Color
@@ -64,16 +64,6 @@ object BloodESP: Feature("Highlights the blood room before dungeon start to help
                 fill = false,
                 phase = true
             )
-            /*
-                        Render3D.renderBox(
-                            event.ctx,
-                            doorX, 98.99, doorZ,
-                            3, 1,
-                            Color.CYAN.withAlpha(70),
-                            outline = false,
-                            fill = true,
-                            phase = false
-                        )*/
         }
     }
 

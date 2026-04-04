@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon.solvers.terminals
+package com.github.gameringop.features.impl.floor7.terminals
 
 import net.minecraft.world.item.Items
 import java.util.concurrent.ConcurrentLinkedQueue

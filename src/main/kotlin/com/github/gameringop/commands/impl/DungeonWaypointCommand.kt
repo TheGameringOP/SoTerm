@@ -4,7 +4,7 @@ import com.github.gameringop.SoTerm
 import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandNodeBuilder
 import com.github.gameringop.features.impl.dungeon.waypoints.DungeonWaypoints
-import com.github.gameringop.features.impl.dungeon.waypoints.WaypointEditorGui
+import com.github.gameringop.ui.gui.DungeonWaypointScreen
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.location.LocationUtils
@@ -33,7 +33,7 @@ object DungeonWaypointCommand: BaseCommand("ndw") {
 
                 val relativePos = ScanUtils.getRelativeCoord(lookingAt, roomCorner, rotation)
 
-                SoTerm.screen = WaypointEditorGui(roomName, lookingAt, relativePos)
+                SoTerm.screen = DungeonWaypointScreen(roomName, lookingAt, relativePos)
             }
         }
 
@@ -57,7 +57,7 @@ object DungeonWaypointCommand: BaseCommand("ndw") {
                 }
 
                 val relativePos = ScanUtils.getRelativeCoord(lookingAt, roomCorner, rotation)
-                SoTerm.mc.setScreen(WaypointEditorGui(roomName, lookingAt, relativePos, existing))
+                SoTerm.mc.setScreen(DungeonWaypointScreen(roomName, lookingAt, relativePos, existing))
             }
         }
 

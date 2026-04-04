@@ -9,13 +9,13 @@ import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers
 import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.removeChests
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.core.RoomState
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils.rotate
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.decoration.ArmorStand
@@ -72,6 +72,7 @@ object ThreeWeirdosSolver {
 
     fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
         if (! inThreeWeirdos) return
+        if (LocationUtils.inBoss) return
         if (event.pos == correctPos) reset()
     }
 

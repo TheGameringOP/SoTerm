@@ -38,6 +38,10 @@ object ThreadUtils {
         return task
     }
 
+    fun async(block: () -> Unit) {
+        scheduler.execute { safeRun(block) }
+    }
+
     fun loop(delayProvider: () -> Number, stopCondition: suspend () -> Boolean = { false }, block: suspend () -> Unit) {
         val taskWrapper = object: Runnable {
             override fun run() {

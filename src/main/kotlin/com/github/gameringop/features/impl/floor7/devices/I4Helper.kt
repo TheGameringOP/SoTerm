@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon.solvers.devices
+package com.github.gameringop.features.impl.floor7.devices
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature

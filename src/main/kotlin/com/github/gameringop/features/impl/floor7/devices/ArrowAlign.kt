@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon.solvers.devices
+package com.github.gameringop.features.impl.floor7.devices
 
 import com.github.gameringop.event.impl.PlayerInteractEvent
 import com.github.gameringop.event.impl.RenderWorldEvent

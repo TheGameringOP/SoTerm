@@ -25,15 +25,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
     @Shadow @Nullable public Screen screen;
-    @Shadow
-    @Nullable
-    public HitResult hitResult;
-    @Shadow
-    public LocalPlayer player;
+    @Shadow @Nullable public HitResult hitResult;
+    @Shadow public LocalPlayer player;
     @Shadow @Nullable public ClientLevel level;
 
-    @Shadow
-    public abstract void setScreen(@Nullable Screen screen);
 
     @Inject(method = "startAttack", at = @At("HEAD"))
     private void onStartAttack(CallbackInfoReturnable<Boolean> cir) {
@@ -70,25 +65,25 @@ public abstract class MixinMinecraft {
 
         if (this.hitResult == null || this.hitResult.getType() == HitResult.Type.MISS) {
             event = isLeftClick
-                ? new PlayerInteractEvent.LEFT_CLICK.AIR(itemStack)
-                : new PlayerInteractEvent.RIGHT_CLICK.AIR(itemStack);
+                    ? new PlayerInteractEvent.LEFT_CLICK.AIR(itemStack)
+                    : new PlayerInteractEvent.RIGHT_CLICK.AIR(itemStack);
         } else {
             event = switch (this.hitResult.getType()) {
                 case ENTITY -> {
                     Entity entity = ((EntityHitResult) this.hitResult).getEntity();
                     yield isLeftClick
-                        ? new PlayerInteractEvent.LEFT_CLICK.ENTITY(itemStack, entity)
-                        : new PlayerInteractEvent.RIGHT_CLICK.ENTITY(itemStack, entity);
+                            ? new PlayerInteractEvent.LEFT_CLICK.ENTITY(itemStack, entity)
+                            : new PlayerInteractEvent.RIGHT_CLICK.ENTITY(itemStack, entity);
                 }
                 case BLOCK -> {
                     BlockPos pos = ((BlockHitResult) this.hitResult).getBlockPos();
                     yield isLeftClick
-                        ? new PlayerInteractEvent.LEFT_CLICK.BLOCK(itemStack, pos)
-                        : new PlayerInteractEvent.RIGHT_CLICK.BLOCK(itemStack, pos);
+                            ? new PlayerInteractEvent.LEFT_CLICK.BLOCK(itemStack, pos)
+                            : new PlayerInteractEvent.RIGHT_CLICK.BLOCK(itemStack, pos);
                 }
                 default -> isLeftClick
-                    ? new PlayerInteractEvent.LEFT_CLICK.AIR(itemStack)
-                    : new PlayerInteractEvent.RIGHT_CLICK.AIR(itemStack);
+                        ? new PlayerInteractEvent.LEFT_CLICK.AIR(itemStack)
+                        : new PlayerInteractEvent.RIGHT_CLICK.AIR(itemStack);
             };
         }
 

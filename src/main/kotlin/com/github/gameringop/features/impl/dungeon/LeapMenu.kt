@@ -35,7 +35,7 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
     val tintDeadPlayers by ToggleSetting("Tint Dead Players", true).showIf { customLeapMenu.value }
 
     val sorting by DropdownSetting("Leap Order", 0, arrayListOf("A-Z Class", "A-Z Name", "Odin Sorting", "Custom sorting", "No Sorting"))
-        .withDescription("How to sort the leap menu. /ts leaporder to configure custom sorting.")
+        .withDescription("How to sort the leap menu. /na leaporder to configure custom sorting.")
 
     val leapKeybinds by ToggleSetting("Leap Keybinds").showIf { customLeapMenu.value }.section("Leap Keybinds")
     val key1 by KeybindSetting("Slot 1", GLFW.GLFW_KEY_1).showIf { leapKeybinds.value }
@@ -221,9 +221,9 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
     private fun inSpiritLeap(screen: Screen): Boolean {
         val title = screen.title.string.lowercase()
         return (title.contains("spirit leap") || title.contains("teleport to player"))
-            && LocationUtils.inDungeon
-            && customLeapMenu.value
-            && enabled
+                && LocationUtils.inDungeon
+                && customLeapMenu.value
+                && enabled
     }
 
     fun updateLeapMenu() {
@@ -283,8 +283,9 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
 
         for (player in teammates) {
             val preferredIndex = neededSorting.indexOf(player.clazz)
-
-            if (preferredIndex != - 1) quadrants[preferredIndex] = player
+            if (preferredIndex != - 1 && preferredIndex < 4 && quadrants[preferredIndex] == null) {
+                quadrants[preferredIndex] = player
+            }
             else secondRound.add(player)
         }
 

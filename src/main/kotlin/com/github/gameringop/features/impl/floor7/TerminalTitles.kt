@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon
+package com.github.gameringop.features.impl.floor7
 
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.TickEvent
@@ -35,7 +35,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
 
     private val hud = object: HudElement() {
         override val name = "Terminal Titles"
-        override val toggle get() = TerminalTitles.enabled
+        override val toggle get() = enabled
         override val shouldDraw get() = titleStr.isNotBlank() && titleMode.value == 0
 
         override fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float> {

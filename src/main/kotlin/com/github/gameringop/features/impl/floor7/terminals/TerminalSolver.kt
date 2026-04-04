@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.dungeon.solvers.terminals
+package com.github.gameringop.features.impl.floor7.terminals
 
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.ContainerEvent

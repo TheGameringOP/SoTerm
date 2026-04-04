@@ -1,29 +1,20 @@
 package com.github.gameringop.features.impl.dungeon
 
+import com.github.gameringop.event.impl.CheckEntityGlowEvent
 import com.github.gameringop.event.impl.EntityDeathEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
-import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
-import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.location.LocationUtils.dungeonFloorNumber
 import com.github.gameringop.utils.location.LocationUtils.inBoss
-import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.render.RenderHelper.renderX
-import com.github.gameringop.utils.render.RenderHelper.renderY
-import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -34,19 +25,17 @@ import net.minecraft.world.entity.monster.EnderMan
 import net.minecraft.world.entity.player.Player
 import java.awt.Color
 
-object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
-    private val dungeonMobRegex = Regex("^.+❤$")
+object BoxStarMobs: Feature("Highlights all starred mobs in a dungeon.") {
+
+    private val espBats by ToggleSetting("Highlight Bats", true).withDescription("Highlights Bats in Dungeons.")
+    private val espFels by ToggleSetting("Highlight Fels", false).withDescription("Highlights Fels, even when they are invisible.")
+
+    private val starMobColor by ColorSetting("Star Mob Color", Color.YELLOW, false).section("General Colors").withDescription("Default color for all Starred mobs.")
+    private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.").showIf { espBats.value }
+    private val felColor by ColorSetting("Fel Color", Color.PINK, false).withDescription("The color used for fels.").showIf { espFels.value }
 
     private val starMobs = HashSet<Int>()
     private val checked = HashSet<Int>()
-
-    private val mode by DropdownSetting("Render Mode", 1, listOf("Fill", "Outline", "Filled Outline"))
-    
-    private val boxPhase by ToggleSetting("See Through Walls")
-
-    private val starMobColor by ColorSetting("Star Mob Color", Color.GREEN, false).section("General Colors").withDescription("Default color for all Starred mobs.")
-    private val batColor by ColorSetting("Bat Color", Color.GREEN, false).withDescription("The color used for highlighted bats.")
-    private val felColor by ColorSetting("Fel Color", Color.GREEN, false).withDescription("The color used for fels.")
 
     override fun init() {
         register<MainThreadPacketReceivedEvent.Post> {
@@ -55,7 +44,7 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
             val entity = mc.level?.getEntity(event.packet.id) ?: return@register
             if (entity is ArmorStand) {
                 val name = entity.customName?.formattedText ?: return@register
-                if (name.matches(dungeonMobRegex) && name.contains("✯")) {
+                if (name.endsWith("§c❤") && name.contains("✯")) {
                     checkStarMob(entity, name)
                 }
             }
@@ -78,44 +67,23 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
             checked.clear()
         }
 
-        register<RenderWorldEvent> {
-            if (!LocationUtils.inDungeon || inBoss) return@register
-            if (starMobs.isEmpty()) return@register
+        register<CheckEntityGlowEvent> {
+            if (! LocationUtils.inDungeon || inBoss) return@register
 
-            for (id in starMobs) {
-                val entity = mc.level?.getEntity(id) ?: continue
-                if (!entity.isAlive) continue
+            if (event.entity.id in starMobs) {
+                event.color = starMobColor.value
+                return@register
+            }
 
-                val renderX = entity.renderX
-                val renderY = entity.renderY
-                val renderZ = entity.renderZ
-                
-                val bb = entity.boundingBox
-                val width = bb.xsize
-                val height = bb.ysize
-                
-                val color = getColor(entity) ?: starMobColor.value
-
-                Render3D.renderBox(
-                    ctx = event.ctx,
-                    x = renderX,
-                    y = renderY,
-                    z = renderZ,
-                    width = width,
-                    height = height,
-                    outlineColor = color,
-                    fillColor = color.withAlpha(50),
-                    outline = mode.value.equalsOneOf(1, 2),
-                    fill = mode.value.equalsOneOf(0, 2),
-                    phase = boxPhase.value
-                )
+            getColor(event.entity)?.let {
+                event.color = it
             }
         }
     }
 
     private fun getColor(entity: Entity): Color? {
-        if (entity is Bat) return if (! entity.isPassenger) batColor.value else null
-        if (entity is EnderMan) return if (entity.name.unformattedText == "Dinnerbone") felColor.value else null
+        if (entity is Bat) return if (espBats.value && ! entity.isInvisible && ! entity.isPassenger) batColor.value else null
+        if (entity is EnderMan) return if (espFels.value && entity.name.unformattedText == "Dinnerbone") felColor.value else null
         if (entity is Player) {
             val name = entity.name.unformattedText.takeUnless { it.isBlank() } ?: return null
             if (name.contains("Shadow Assassin")) return starMobColor.value
@@ -137,13 +105,12 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
     private fun checkStarMob(armorStand: Entity, name: String) {
         if (! checked.add(armorStand.id)) return
         val name = name.removeFormatting().uppercase()
-        // withermancers are always -3 to real entity the -1 and -2 are the wither skulls that they shoot
-        val id = if (name.contains("WITHERMANCER")) 3 else 1
-        val realEntityId = armorStand.id - id
+        val offset = if (name.contains("WITHERMANCER")) 3 else 1
+        val id = armorStand.id - offset
 
-        val mob = armorStand.level().getEntity(realEntityId)
-        if (mob !is ArmorStand && realEntityId !in starMobs && mob != null) {
-            starMobs.add(realEntityId)
+        val mob = armorStand.level().getEntity(id)
+        if (mob !is ArmorStand && id !in starMobs && mob != null) {
+            starMobs.add(id)
             return
         }
 
