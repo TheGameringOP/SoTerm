@@ -32,6 +32,7 @@ object SoTerm: ClientModInitializer {
 
     @JvmField
     val mc = Minecraft.getInstance()
+    @JvmStatic
     val logger = LoggerFactory.getLogger(MOD_NAME)
 
     @JvmField
