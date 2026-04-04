@@ -27,7 +27,7 @@ public class MixinGlDevice {
     @Unique private static boolean lastFullBright = false;
 
     @WrapOperation(method = "compileShader", at = @At(value = "INVOKE", target = "Ljava/util/function/BiFunction;apply(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object noammaddons$fullbright(BiFunction<ResourceLocation, ShaderType, String> instance, Object id, Object type, Operation<String> original) {
+    private Object soterm$fullbright(BiFunction<ResourceLocation, ShaderType, String> instance, Object id, Object type, Operation<String> original) {
         if (!Camera.INSTANCE.enabled || !Camera.getFullBright().getValue()) return original.call(instance, id, type);
         if (type != ShaderType.FRAGMENT || id != RenderPipelines.LIGHTMAP.getFragmentShader()) return original.call(instance, id, type);
 
@@ -44,7 +44,7 @@ public class MixinGlDevice {
     }
 
     @Inject(method = "getOrCompilePipeline", at = @At("HEAD"))
-    private void noammaddons$checkFullBrightToggle(RenderPipeline pipeline, CallbackInfoReturnable<GlRenderPipeline> cir) {
+    private void soterm$checkFullBrightToggle(RenderPipeline pipeline, CallbackInfoReturnable<GlRenderPipeline> cir) {
         boolean current = Camera.INSTANCE.enabled && Camera.getFullBright().getValue();
         if (current == lastFullBright) return;
         lastFullBright = current;

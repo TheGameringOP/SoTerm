@@ -137,7 +137,6 @@ object Render2D {
         pose.rotate(- angle)
         pose.translate(- fx, - (fy + fh))
     }
-
     /**
      * Draws a gradient from Color1 (Top) to Color2 (Bottom)
      */
