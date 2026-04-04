@@ -5,22 +5,22 @@ import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import com.github.gameringop.utils.MathUtils
 import com.github.gameringop.utils.MathUtils.add
 import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
+import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.render.Render3D
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import net.minecraft.world.entity.ambient.Bat
 import java.awt.Color
 
+@Suppress("unused")
 class TestGround {
     private var lastServerTime = - 1L
     private var lastRealTime = - 1L
@@ -28,11 +28,9 @@ class TestGround {
     companion object {
         val experimental get() = SoTerm.debugFlags.contains("tick")
         val rotation get() = SoTerm.debugFlags.contains("rotation")
-        val norotate get() = SoTerm.debugFlags.contains("norotate")
         val bat get() = SoTerm.debugFlags.contains("bat")
+        val slot get() = SoTerm.debugFlags.contains("slot")
     }
-
-    private var oldRot = MathUtils.Rotation(0f, 0f)
 
     init {
         EventBus.register<WorldChangeEvent> {
@@ -88,23 +86,6 @@ class TestGround {
             }
         }
 
-
-        EventBus.register<MainThreadPacketReceivedEvent.Pre> {
-            if (! norotate) return@register
-            if (event.packet is ClientboundPlayerPositionPacket) {
-                oldRot.yaw = mc.player !!.yRot
-                oldRot.pitch = mc.player !!.xRot
-            }
-        }
-
-        EventBus.register<MainThreadPacketReceivedEvent.Post> {
-            if (! norotate) return@register
-            if (event.packet is ClientboundPlayerPositionPacket) {
-                mc.player !!.yRot = oldRot.yaw
-                mc.player !!.xRot = oldRot.pitch
-            }
-        }
-
         EventBus.register<MainThreadPacketReceivedEvent.Post> {
             if (! bat) return@register
             if (event.packet is ClientboundAddEntityPacket) {
@@ -112,26 +93,14 @@ class TestGround {
                 val room = ScanUtils.getRoomFromPos(bat.position()) ?: return@register
                 ThreadUtils.scheduledTask(5) {
                     ChatUtils.modMessage("bat hp: ${bat.maxHealth}. (${room.name})")
-
                 }
             }
         }
-    }
-}
-/*
-    fun onPacket(event: PacketReceivedEvent) {
-        when (val packet = event.packet) {
-            is ClientboundPingPacket -> {
-                if (lastPingParameter == packet.id) return
-                lastPingParameter = packet.id
 
-                totalServerTicks++
-                ServerTickEvent.post()
-            }
+        EventBus.register<ContainerEvent.SlotClick> {
+            if (! slot) return@register
+            val stack = event.screen.menu.getSlot(event.slotId).item
+            ChatUtils.modMessage(stack.skyblockId)
         }
     }
-
-    private var lastPingParameter = 0
-        var totalServerTicks: Long = 0L
-        private set
- */
+}
