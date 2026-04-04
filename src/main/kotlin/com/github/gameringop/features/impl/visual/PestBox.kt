@@ -56,14 +56,14 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 ChatUtils.modMessage("§7ArmorStand ${entity.id}: raw='$name', clean='$cleanName'")
             }
 
-            val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly")
-
+            val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly") || cleanName.contains("firefly")
             val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis")
             if (pestNames.any { cleanName.contains(it) }) {
                 if (SoTerm.debugFlags.contains("pestbox")) {
                     ChatUtils.modMessage("§aPest detected! Adding to tracking...")
                 }
                 trackedPests.add(PestInfo(entity.id, oneBelow))
+                checked.add(entity.id)
             }
         }
 

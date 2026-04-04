@@ -130,7 +130,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         ThreadUtils.async {
             try {
                 val url = withApiKey("https://api.hypixel.net/v2/player?name=Hypixel")
-
                 val response = runBlocking { WebUtils.getString(url) }
 
                 response.onSuccess { responseBody ->
@@ -139,17 +138,40 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     val cause = jsonResponse["cause"]?.jsonPrimitive?.contentOrNull
 
                     if (cause?.contains("You have already looked up this name recently") == true) {
-                        ChatUtils.modMessage("§aAPI key is valid! (Rate limited - key works)")
+                        ChatUtils.modMessage("§aAPI key is valid! (Rate limit reached)")
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§7$responseBody")
+                        }
                         return@onSuccess
                     }
 
                     if (success) {
                         ChatUtils.modMessage("§aAPI key is valid!")
                     } else {
-                        ChatUtils.modMessage("§cAPI key is invalid! $cause")
+                        ChatUtils.modMessage("§cAPI key is invalid!")
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§7$responseBody")
+                        }
                     }
                 }.onFailure { error ->
-                    ChatUtils.modMessage("§cFailed to test API key: ${error.message}")
+                    val message = error.message ?: ""
+                    when {
+                        message.contains("HTTP 403") -> {
+                            ChatUtils.modMessage("§cAPI key is invalid!")
+                            if (SoTerm.debugFlags.contains("spirit")) {
+                                ChatUtils.modMessage("§7$message")
+                            }
+                        }
+                        message.contains("HTTP 429") -> {
+                            ChatUtils.modMessage("§aAPI key is valid! (Rate limit reached)")
+                            if (SoTerm.debugFlags.contains("spirit")) {
+                                ChatUtils.modMessage("§7$message")
+                            }
+                        }
+                        else -> {
+                            ChatUtils.modMessage("§cFailed to test API key: ${error.message}")
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 ChatUtils.modMessage("§cFailed to test API key: ${e.message}")
