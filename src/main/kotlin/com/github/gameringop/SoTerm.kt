@@ -59,7 +59,7 @@ object SoTerm: ClientModInitializer {
 //
         this.initNetworkLoop()
 //
-//        FeatureManager.registerFeatures()
+        FeatureManager.registerFeatures()
         CommandManager.registerAll()
 
 
