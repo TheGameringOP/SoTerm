@@ -80,8 +80,8 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                     val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis", "field mouse")
                     if (pestNames.any { cleanName.contains(it) }) {
                         trackedPests.add(PestInfo(entity.id, oneBelow))
+                        checked.add(entity.id)
                     }
-                    checked.add(entity.id)
                 }
             }
         }
