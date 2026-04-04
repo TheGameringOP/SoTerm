@@ -80,7 +80,11 @@ object HudEditorScreen: Screen(Component.literal("HudEditor")) {
                     return true
                 }
                 GLFW.GLFW_KEY_DOWN -> {
-                    hoveredElement.x = screenWidth / 2f
+                    if (hoveredElement.centered) {
+                        hoveredElement.x = screenWidth / 2f
+                    } else {
+                        hoveredElement.x = (screenWidth / 2f) - (scaledW / 2f)
+                    }
                     return true
                 }
             }
