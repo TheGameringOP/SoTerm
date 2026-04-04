@@ -13,6 +13,10 @@ import com.github.gameringop.utils.network.WebUtils
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import java.util.concurrent.ConcurrentHashMap
 
 object HypixelAPI : Feature("Hypixel API Integration") {
@@ -130,9 +134,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 val response = runBlocking { WebUtils.getString(url) }
 
                 response.onSuccess { responseBody ->
-                    val jsonResponse = json.decodeFromString<Map<String, Any>>(responseBody)
-                    val success = jsonResponse["success"] as? Boolean ?: false
-                    val cause = jsonResponse["cause"] as? String
+                    val jsonResponse = json.decodeFromString<JsonObject>(responseBody)
+                    val success = jsonResponse["success"]?.jsonPrimitive?.booleanOrNull ?: false
+                    val cause = jsonResponse["cause"]?.jsonPrimitive?.contentOrNull
 
                     if (cause?.contains("You have already looked up this name recently") == true) {
                         ChatUtils.modMessage("§aAPI key is valid! (Rate limited - key works)")
