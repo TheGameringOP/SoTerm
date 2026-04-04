@@ -59,8 +59,10 @@ object SoTerm: ClientModInitializer {
 
         this.initNetworkLoop()
 
-        FeatureManager.registerFeatures()
-        CommandManager.registerAll()
+        ThreadUtils.scheduledTask(1) {
+            FeatureManager.registerFeatures()
+            CommandManager.registerAll()
+        }
 
 
         EventBus.register<TickEvent.Start> {
