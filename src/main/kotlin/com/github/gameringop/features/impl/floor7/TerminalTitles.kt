@@ -37,6 +37,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
         override val name = "Terminal Titles"
         override val toggle get() = enabled
         override val shouldDraw get() = titleStr.isNotBlank() && titleMode.value == 0
+        override val centered = true
 
         override fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float> {
             val str = if (example) handleTitle(mc.user.name, "terminal", 6, 7) else titleStr
