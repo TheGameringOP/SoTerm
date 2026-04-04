@@ -31,21 +31,22 @@ object FeatureManager {
             var loadedCount = 0
             featureClasses.forEach { classInfo ->
                 try {
-                    SoTerm.logger.debug("Loading feature class: ${classInfo.name}")
+                    println("Loading feature class: ${classInfo.name}")
                     val clazz = classInfo.loadClass()
                     val instance = clazz.getDeclaredField("INSTANCE").get(null) as? Feature
 
                     instance?.let { feature ->
-                        SoTerm.logger.debug("Initializing feature instance: ${feature::class.simpleName}")
+                        println("Initializing feature instance: ${feature::class.simpleName}")
                         feature.initialize()
                         hudElements.addAll(feature.hudElements)
                         features.add(feature)
                         loadedCount++
-                        SoTerm.logger.info("Successfully loaded feature: ${feature::class.simpleName}")
+                        println("Successfully loaded feature: ${feature::class.simpleName}")
                     } ?: run {
                         SoTerm.logger.warn("Could not get INSTANCE from ${classInfo.name}")
                     }
                 } catch (e: Exception) {
+                    println("Error while loading feature class: ${classInfo.name}")
                     SoTerm.logger.error("Failed to load feature class: ${classInfo.name}", e)
                     throw e
                 }
