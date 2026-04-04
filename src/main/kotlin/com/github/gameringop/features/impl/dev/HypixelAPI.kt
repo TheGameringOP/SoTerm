@@ -70,7 +70,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     )
 
     @Serializable
-    data class HypixelKeyResponse(
+    data class HypixelErrorResponse(
         val success: Boolean,
         val cause: String? = null
     )
@@ -112,6 +112,11 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                             (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST"))
     }
 
+    private fun withApiKey(url: String): String {
+        val separator = if (url.contains("?")) "&" else "?"
+        return "$url${separator}key=${apiKey.value}"
+    }
+
     private fun testApiKey() {
         if (apiKey.value.isBlank()) {
             ChatUtils.modMessage("§cPlease enter an API key first!")
@@ -120,8 +125,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
 
         ThreadUtils.async {
             try {
-                val url = "https://api.hypixel.net/v2/player?name=Hypixel"
-                val request = buildHypixelRequest(url)
+                val url = withApiKey("https://api.hypixel.net/v2/player?name=Hypixel")
 
                 val response = runBlocking { WebUtils.getString(url) }
 
@@ -130,11 +134,13 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     val success = jsonResponse["success"] as? Boolean ?: false
                     val cause = jsonResponse["cause"] as? String
 
+                    if (cause?.contains("You have already looked up this name recently") == true) {
+                        ChatUtils.modMessage("§aAPI key is valid! (Rate limited - key works)")
+                        return@onSuccess
+                    }
+
                     if (success) {
                         ChatUtils.modMessage("§aAPI key is valid!")
-                    } else if (cause?.contains("rate", ignoreCase = true) == true ||
-                        cause?.contains("limit", ignoreCase = true) == true) {
-                        ChatUtils.modMessage("§aAPI key is valid! (Rate limited - key works)")
                     } else {
                         ChatUtils.modMessage("§cAPI key is invalid! $cause")
                     }
@@ -163,7 +169,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     return@async
                 }
 
-                val url = "https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid"
+                val url = withApiKey("https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid")
 
                 val response = runBlocking { WebUtils.getString(url) }
 
@@ -243,7 +249,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 return true
             }
 
-            val url = "https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid"
+            val url = withApiKey("https://api.hypixel.net/v2/skyblock/profiles?uuid=$uuid")
             val response = runBlocking { WebUtils.getString(url) }
 
             response.onSuccess { responseBody ->
@@ -298,10 +304,6 @@ object HypixelAPI : Feature("Hypixel API Integration") {
 
         spiritCache[username] = true
         return true
-    }
-
-    private fun buildHypixelRequest(url: String): String {
-        return url
     }
 
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
