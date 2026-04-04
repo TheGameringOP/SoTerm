@@ -1,6 +1,7 @@
 package com.github.gameringop
 
 import com.github.gameringop.commands.CommandManager
+import com.github.gameringop.config.Config
 import com.github.gameringop.config.PogObject
 import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.EventDispatcher
@@ -56,14 +57,15 @@ object SoTerm: ClientModInitializer {
         ChatUtils.init()
         ItemUtils.init()
         TestGround()
-
         this.initNetworkLoop()
+
+        Config.load()
 
         ThreadUtils.scheduledTask(1) {
             FeatureManager.registerFeatures()
-            CommandManager.registerAll()
         }
 
+        CommandManager.registerAll()
 
         EventBus.register<TickEvent.Start> {
             mc.execute {
