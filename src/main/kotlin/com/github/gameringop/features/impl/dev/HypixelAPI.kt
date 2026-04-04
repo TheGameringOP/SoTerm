@@ -59,7 +59,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         get() = apiKey.value.isNotBlank()
 
     private val json = Json { ignoreUnknownKeys = true }
-
+    
     private val uuidCache = ConcurrentHashMap<String, String>()
     private val spiritCache = ConcurrentHashMap<String, Boolean>()
 
