@@ -55,10 +55,10 @@ object SoTerm: ClientModInitializer {
         PartyUtils.init()
         ChatUtils.init()
         ItemUtils.init()
-//        TestGround()
-//
+        TestGround()
+
         this.initNetworkLoop()
-//
+
         FeatureManager.registerFeatures()
         CommandManager.registerAll()
 
