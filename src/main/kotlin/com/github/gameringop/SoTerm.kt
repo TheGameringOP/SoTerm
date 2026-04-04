@@ -55,12 +55,12 @@ object SoTerm: ClientModInitializer {
         PartyUtils.init()
         ChatUtils.init()
         ItemUtils.init()
-        TestGround()
-
-        this.initNetworkLoop()
-
-        FeatureManager.registerFeatures()
-        CommandManager.registerAll()
+//        TestGround()
+//
+//        this.initNetworkLoop()
+//
+//        FeatureManager.registerFeatures()
+//        CommandManager.registerAll()
 
 
         EventBus.register<TickEvent.Start> {
