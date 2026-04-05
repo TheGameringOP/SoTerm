@@ -23,7 +23,6 @@ import com.github.gameringop.utils.render.RenderHelper.renderZ
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.player.Player
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -38,8 +37,12 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
     private val pestColor by ColorSetting("Pest Color", Color(0, 255, 0), false)
         .withDescription("Color used for pest highlighting (default: green).")
 
-    private val trackedPests = CopyOnWriteArraySet<Int>()
-    private val checkedNameStands = CopyOnWriteArraySet<Int>()
+    private data class PestInfo(val id: Int, val oneBelow: Boolean)
+
+    private val trackedPests = CopyOnWriteArraySet<PestInfo>()
+    private val checked = CopyOnWriteArraySet<Int>()
+
+    private val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis", "field mouse")
 
     override fun init() {
         register<MainThreadPacketReceivedEvent.Post> {
@@ -61,31 +64,34 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
         }
 
         register<EntityDeathEvent> {
-            trackedPests.remove(event.entity.id)
-            checkedNameStands.remove(event.entity.id)
+            trackedPests.removeIf { it.id == event.entity.id }
+            checked.remove(event.entity.id)
         }
 
         register<WorldChangeEvent> {
             trackedPests.clear()
-            checkedNameStands.clear()
+            checked.clear()
         }
 
         register<RenderWorldEvent> {
             if (LocationUtils.world != WorldType.Garden) return@register
             if (trackedPests.isEmpty()) return@register
 
-            for (id in trackedPests) {
-                val entity = mc.level?.getEntity(id) ?: continue
+            for (pest in trackedPests) {
+                val entity = mc.level?.getEntity(pest.id) ?: continue
                 if (!entity.isAlive) continue
 
-                val yOffset = 0.5
+                val boxSize = 0.7
+
+                val yOffset = if (pest.oneBelow) 1.0 else 0.5
+
                 Render3D.renderBox(
                     ctx = event.ctx,
                     x = entity.renderX,
                     y = entity.renderY - yOffset,
                     z = entity.renderZ,
-                    width = entity.boundingBox.xsize,
-                    height = entity.boundingBox.ysize,
+                    width = boxSize,
+                    height = boxSize,
                     outlineColor = pestColor.value,
                     fillColor = pestColor.value.withAlpha(50),
                     outline = mode.value.equalsOneOf(1, 2),
@@ -98,27 +104,21 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
 
     private fun processEntity(entity: Entity) {
         if (entity !is ArmorStand) return
-        if (checkedNameStands.contains(entity.id)) return
+
+        if (checked.contains(entity.id)) return
 
         val name = entity.customName?.formattedText ?: return
         val cleanName = name.removeFormatting().lowercase()
 
-        val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis", "field mouse")
-        if (!pestNames.any { cleanName.contains(it) }) return
+        val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly") || cleanName.contains("firefly")
 
-        checkedNameStands.add(entity.id)
-
-        val possiblePests = entity.level().getEntities(
-            entity,
-            entity.boundingBox.move(0.0, -1.0, 0.0)
-        ) { it !is ArmorStand && it !is Player }
-
-        val actualPest = possiblePests.find { !trackedPests.contains(it.id) }
-        if (actualPest != null) {
-            trackedPests.add(actualPest.id)
+        if (pestNames.any { cleanName.contains(it) }) {
             if (SoTerm.debugFlags.contains("pestbox")) {
-                ChatUtils.modMessage("§aPest detected! Tracking entity ${actualPest.id}")
+                ChatUtils.modMessage("§aCached Nametag ArmorStand: ${entity.id} ($cleanName)")
             }
+
+            trackedPests.add(PestInfo(entity.id, oneBelow))
+            checked.add(entity.id)
         }
     }
 }
