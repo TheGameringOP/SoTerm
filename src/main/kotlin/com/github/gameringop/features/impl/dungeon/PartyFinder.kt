@@ -16,10 +16,12 @@ import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.JsonUtils.getDouble
 import com.github.gameringop.utils.JsonUtils.getInt
 import com.github.gameringop.utils.JsonUtils.getObj
+import com.github.gameringop.utils.NumbersUtils
 import com.github.gameringop.utils.NumbersUtils.romanToDecimal
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.PartyUtils
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.lore
 import com.github.gameringop.utils.network.ApiUtils
 import com.github.gameringop.utils.network.ProfileUtils
@@ -292,16 +294,5 @@ object PartyFinder: Feature() {
         else -> "§7"
     }
 
-    private fun formatTime(milliseconds: Number): String {
-        val totalSecs = milliseconds.toLong() / 1000
-        val h = totalSecs / 3600
-        val m = (totalSecs % 3600) / 60
-        val s = totalSecs % 60
-
-        return buildList {
-            if (h > 0) add(h)
-            if (m > 0) add(m)
-            if (s > 0) add(s)
-        }.joinToString(":")
-    }
+    private fun formatTime(milliseconds: Number) = NumbersUtils.formatTime(milliseconds, ":", false)
 }
