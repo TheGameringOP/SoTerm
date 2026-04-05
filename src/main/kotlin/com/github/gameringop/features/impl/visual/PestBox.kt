@@ -56,7 +56,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 ChatUtils.modMessage("§7ArmorStand ${entity.id}: raw='$name', clean='$cleanName'")
             }
 
-            val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly")
+            val oneBelow = cleanName.contains("moth") || cleanName.contains("fly") || cleanName.contains("mosquito")
 
             val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis")
             if (pestNames.any { cleanName.contains(it) }) {
@@ -76,7 +76,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 if (entity is ArmorStand && !checked.contains(entity.id)) {
                     val name = entity.customName?.formattedText ?: return@forEach
                     val cleanName = name.removeFormatting().lowercase()
-                    val oneBelow = cleanName.contains("moth") || cleanName.contains("dragonfly") || cleanName.contains("firefly")
+                    val oneBelow = cleanName.contains("moth") || cleanName.contains("fly") || cleanName.contains("mosquito")
                     val pestNames = listOf("mite", "cricket", "beetle", "slug", "fly", "moth", "mosquito", "locust", "earthworm", "dragonfly", "firefly", "rat", "praying mantis", "field mouse")
                     if (pestNames.any { cleanName.contains(it) }) {
                         trackedPests.add(PestInfo(entity.id, oneBelow))
@@ -105,7 +105,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
                 if (!entity.isAlive) continue
 
                 val boxSize = 0.7
-                val yOffset = if (pest.oneBelow) 1.0 else 0.5
+                val yOffset = if (pest.oneBelow) 1.0 else 0.45
 
                 Render3D.renderBox(
                     ctx = event.ctx,
