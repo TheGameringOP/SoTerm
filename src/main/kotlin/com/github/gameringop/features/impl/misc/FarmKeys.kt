@@ -26,13 +26,16 @@ object FarmKeys: Feature("Farm Keys") {
     private val isAuto by DropdownSetting("Attack Mode", 0, listOf("Hold", "Auto"))
     private val toggleKey by KeybindSetting("Toggle key", InputConstants.UNKNOWN.value)
     private val autoDirectionToggle by ToggleSetting("Auto Direction", false)
-    private val alwaysRightKey by KeybindSetting("Always Right Key", InputConstants.UNKNOWN.value)
-        .showIf { autoDirectionToggle.value }
-    private val alwaysLeftKey by KeybindSetting("Always Left Key", InputConstants.UNKNOWN.value)
-        .showIf { autoDirectionToggle.value }
+
+    private val alwaysRightKey by KeybindSetting("Always Right Key", InputConstants.UNKNOWN.value).showIf { autoDirectionToggle.value }
+    private val alwaysLeftKey by KeybindSetting("Always Left Key", InputConstants.UNKNOWN.value).showIf { autoDirectionToggle.value }
+    private val alwaysForwardKey by KeybindSetting("Always Forward Key", InputConstants.UNKNOWN.value).showIf { autoDirectionToggle.value }
+    private val alwaysBackwardKey by KeybindSetting("Always Backward Key", InputConstants.UNKNOWN.value).showIf { autoDirectionToggle.value }
 
     private var autoMoveRight = false
     private var autoMoveLeft = false
+    private var autoMoveForward = false
+    private var autoMoveBackward = false
 
     private var active = false
     private var previousAttackToggled = false
@@ -45,43 +48,21 @@ object FarmKeys: Feature("Farm Keys") {
             if (event.action != GLFW.GLFW_PRESS) return@register
             if (mc.screen != null) return@register
 
-            if (SoTerm.debugFlags.contains("farm")) {
-                ChatUtils.modMessage("§7Key pressed: ${event.keyEvent.key}, toggleKey value: ${toggleKey.value}")
-            }
-
             if (event.keyEvent.key == toggleKey.value) {
                 active = !active
 
-                if (SoTerm.debugFlags.contains("farm")) {
-                    ChatUtils.modMessage("§eFarm mode toggled: ${if (active) "ON" else "OFF"}")
-                }
-
                 if (active) {
-                    if (SoTerm.debugFlags.contains("farm")) {
-                        ChatUtils.modMessage("§aApplying farm keybinds...")
-                    }
                     updateKeyBinding(mc.options.keyAttack, blockBreakKey.value)
                     updateKeyBinding(mc.options.keyJump, jumpKey.value)
-
                     previousAttackToggled = mc.options.toggleAttack().get()
-                    val wantToggle = (isAuto.value == 1)
-                    mc.options.toggleAttack().set(wantToggle)
-
+                    mc.options.toggleAttack().set(isAuto.value == 1)
                 } else {
-                    if (SoTerm.debugFlags.contains("farm")) {
-                        ChatUtils.modMessage("§cRestoring original keybinds...")
-                    }
+                    resetAllMovement()
                     mc.options.keyAttack.setKey(InputConstants.Type.MOUSE.getOrCreate(0))
                     mc.options.keyJump.setKey(InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_SPACE))
-
                     val internalSens = (previousSensitivity.value as Number).toDouble() / 200.0
                     mc.options.sensitivity().set(internalSens)
                     mc.options.toggleAttack().set(previousAttackToggled)
-
-                    autoMoveRight = false
-                    autoMoveLeft = false
-                    mc.options.keyRight.setDown(false)
-                    mc.options.keyLeft.setDown(false)
                 }
 
                 mc.options.save()
@@ -91,24 +72,19 @@ object FarmKeys: Feature("Farm Keys") {
         }
 
         register<KeyboardEvent.KeyPressed> {
-            if (!autoDirectionToggle.value) return@register
-            if (LocationUtils.world != WorldType.Garden) return@register
-            if (event.action != GLFW.GLFW_PRESS) return@register
-            if (mc.screen != null) return@register
+            if (!autoDirectionToggle.value || LocationUtils.world != WorldType.Garden) return@register
+            if (event.action != GLFW.GLFW_PRESS || mc.screen != null) return@register
 
             val key = event.keyEvent.key
 
-            if (autoMoveRight || autoMoveLeft) {
+            if (autoMoveRight || autoMoveLeft || autoMoveForward || autoMoveBackward) {
                 val isMovementKey = mc.options.keyUp.matches(event.keyEvent) ||
                         mc.options.keyDown.matches(event.keyEvent) ||
                         mc.options.keyLeft.matches(event.keyEvent) ||
                         mc.options.keyRight.matches(event.keyEvent)
 
                 if (isMovementKey) {
-                    autoMoveRight = false
-                    autoMoveLeft = false
-                    mc.options.keyRight.setDown(false)
-                    mc.options.keyLeft.setDown(false)
+                    resetAllMovement()
                     if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§cAuto direction stopped by manual movement")
                     return@register
                 }
@@ -116,30 +92,35 @@ object FarmKeys: Feature("Farm Keys") {
 
             when {
                 key == alwaysRightKey.value -> {
-                    if (autoMoveRight) {
-                        autoMoveRight = false
-                        mc.options.keyRight.setDown(false)
-                        if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§cAuto Move Right OFF")
-                    } else {
-                        autoMoveLeft = false
-                        mc.options.keyLeft.setDown(false)
-                        autoMoveRight = true
-                        if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§aAuto Move Right ON")
-                    }
+                    autoMoveLeft = false
+                    mc.options.keyLeft.setDown(false)
+                    autoMoveRight = !autoMoveRight
+                    mc.options.keyRight.setDown(autoMoveRight)
+                    if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Right: ${if (autoMoveRight) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                 }
-
                 key == alwaysLeftKey.value -> {
-                    if (autoMoveLeft) {
-                        autoMoveLeft = false
-                        mc.options.keyLeft.setDown(false)
-                        if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§cAuto Move Left OFF")
-                    } else {
-                        autoMoveRight = false
-                        mc.options.keyRight.setDown(false)
-                        autoMoveLeft = true
-                        if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§aAuto Move Left ON")
-                    }
+                    autoMoveRight = false
+                    mc.options.keyRight.setDown(false)
+                    autoMoveLeft = !autoMoveLeft
+                    mc.options.keyLeft.setDown(autoMoveLeft)
+                    if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Left: ${if (autoMoveLeft) "§aON" else "§cOFF"}")
+                    event.isCanceled = true
+                }
+                key == alwaysForwardKey.value -> {
+                    autoMoveBackward = false
+                    mc.options.keyDown.setDown(false)
+                    autoMoveForward = !autoMoveForward
+                    mc.options.keyUp.setDown(autoMoveForward)
+                    if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Forward: ${if (autoMoveForward) "§aON" else "§cOFF"}")
+                    event.isCanceled = true
+                }
+                key == alwaysBackwardKey.value -> {
+                    autoMoveForward = false
+                    mc.options.keyUp.setDown(false)
+                    autoMoveBackward = !autoMoveBackward
+                    mc.options.keyDown.setDown(autoMoveBackward)
+                    if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Backward: ${if (autoMoveBackward) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                 }
             }
@@ -149,25 +130,28 @@ object FarmKeys: Feature("Farm Keys") {
             if (mc.player == null) return@register
 
             if (!autoDirectionToggle.value || mc.screen != null || LocationUtils.world != WorldType.Garden) {
-                if (autoMoveRight || autoMoveLeft) {
-                    autoMoveRight = false
-                    autoMoveLeft = false
-                    mc.options.keyRight.setDown(false)
-                    mc.options.keyLeft.setDown(false)
-
-                    if (SoTerm.debugFlags.contains("farm") && mc.screen != null) {
-                        ChatUtils.modMessage("§cAuto direction disabled (Screen or World Change)")
-                    }
+                if (autoMoveRight || autoMoveLeft || autoMoveForward || autoMoveBackward) {
+                    resetAllMovement()
                 }
                 return@register
             }
 
-            if (autoMoveRight) {
-                mc.options.keyRight.setDown(true)
-            } else if (autoMoveLeft) {
-                mc.options.keyLeft.setDown(true)
-            }
+            if (autoMoveRight) mc.options.keyRight.setDown(true)
+            if (autoMoveLeft) mc.options.keyLeft.setDown(true)
+            if (autoMoveForward) mc.options.keyUp.setDown(true)
+            if (autoMoveBackward) mc.options.keyDown.setDown(true)
         }
+    }
+
+    private fun resetAllMovement() {
+        autoMoveRight = false
+        autoMoveLeft = false
+        autoMoveForward = false
+        autoMoveBackward = false
+        mc.options.keyRight.setDown(false)
+        mc.options.keyLeft.setDown(false)
+        mc.options.keyUp.setDown(false)
+        mc.options.keyDown.setDown(false)
     }
 
     private fun updateKeyBinding(keyMapping: KeyMapping, bindValue: Int) {
