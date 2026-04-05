@@ -1,6 +1,5 @@
 package com.github.gameringop.mixin;
 
-import com.github.gameringop.SoTerm;
 import com.github.gameringop.features.impl.misc.ArrowFix;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.github.gameringop.SoTerm.mc;
+
 @Mixin(Player.class)
 public abstract class MixinPlayer extends LivingEntity {
     protected MixinPlayer(EntityType<? extends LivingEntity> entityType, Level level) {
@@ -21,8 +22,7 @@ public abstract class MixinPlayer extends LivingEntity {
     @Inject(method = "tick", at = @At("HEAD"))
     private void fixPullBack(CallbackInfo ci) {
         if (!ArrowFix.INSTANCE.enabled) return;
-        if ((Player) (Object) this != SoTerm.mc.player) return;
-        if (useItem.isEmpty()) return;
+        if ((Player) (Object) this != mc.player) return;
         if (ArrowFix.isShortbow(useItem)) {
             useItem = ItemStack.EMPTY;
             useItemRemaining = 0;
