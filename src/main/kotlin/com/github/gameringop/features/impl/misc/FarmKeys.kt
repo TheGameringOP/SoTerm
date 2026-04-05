@@ -18,7 +18,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
-object FarmKeys : Feature("Farm Keys") {
+object FarmKeys: Feature("Farm Keys") {
 
     private val blockBreakKey by KeybindSetting("Block break key", InputConstants.UNKNOWN.value)
     private val jumpKey by KeybindSetting("Jump key", InputConstants.UNKNOWN.value)
@@ -97,8 +97,25 @@ object FarmKeys : Feature("Farm Keys") {
             if (mc.screen != null) return@register
 
             val key = event.keyEvent.key
-            when (key) {
-                alwaysRightKey.value -> {
+
+            if (autoMoveRight || autoMoveLeft) {
+                val isMovementKey = mc.options.keyUp.matches(event.keyEvent) ||
+                        mc.options.keyDown.matches(event.keyEvent) ||
+                        mc.options.keyLeft.matches(event.keyEvent) ||
+                        mc.options.keyRight.matches(event.keyEvent)
+
+                if (isMovementKey) {
+                    autoMoveRight = false
+                    autoMoveLeft = false
+                    mc.options.keyRight.setDown(false)
+                    mc.options.keyLeft.setDown(false)
+                    if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§cAuto direction stopped by manual movement")
+                    return@register
+                }
+            }
+
+            when {
+                key == alwaysRightKey.value -> {
                     if (autoMoveRight) {
                         autoMoveRight = false
                         mc.options.keyRight.setDown(false)
@@ -111,7 +128,8 @@ object FarmKeys : Feature("Farm Keys") {
                     }
                     event.isCanceled = true
                 }
-                alwaysLeftKey.value -> {
+
+                key == alwaysLeftKey.value -> {
                     if (autoMoveLeft) {
                         autoMoveLeft = false
                         mc.options.keyLeft.setDown(false)
@@ -130,14 +148,15 @@ object FarmKeys : Feature("Farm Keys") {
         register<TickEvent.Start> {
             if (mc.player == null) return@register
 
-            if (!autoDirectionToggle.value || mc.screen != null) {
+            if (!autoDirectionToggle.value || mc.screen != null || LocationUtils.world != WorldType.Garden) {
                 if (autoMoveRight || autoMoveLeft) {
                     autoMoveRight = false
                     autoMoveLeft = false
                     mc.options.keyRight.setDown(false)
                     mc.options.keyLeft.setDown(false)
+
                     if (SoTerm.debugFlags.contains("farm") && mc.screen != null) {
-                        ChatUtils.modMessage("§cAuto direction disabled due to screen open")
+                        ChatUtils.modMessage("§cAuto direction disabled (Screen or World Change)")
                     }
                 }
                 return@register
