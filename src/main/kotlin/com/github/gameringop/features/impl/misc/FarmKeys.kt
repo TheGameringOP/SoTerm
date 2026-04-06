@@ -92,33 +92,33 @@ object FarmKeys: Feature("Farm Keys") {
 
             when {
                 key == alwaysRightKey.value -> {
-                    autoMoveLeft = false
-                    mc.options.keyLeft.setDown(false)
-                    autoMoveRight = !autoMoveRight
+                    val newState = !autoMoveRight
+                    resetAllMovement()
+                    autoMoveRight = newState
                     mc.options.keyRight.setDown(autoMoveRight)
                     if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Right: ${if (autoMoveRight) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                 }
                 key == alwaysLeftKey.value -> {
-                    autoMoveRight = false
-                    mc.options.keyRight.setDown(false)
-                    autoMoveLeft = !autoMoveLeft
+                    val newState = !autoMoveLeft
+                    resetAllMovement()
+                    autoMoveLeft = newState
                     mc.options.keyLeft.setDown(autoMoveLeft)
                     if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Left: ${if (autoMoveLeft) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                 }
                 key == alwaysForwardKey.value -> {
-                    autoMoveBackward = false
-                    mc.options.keyDown.setDown(false)
-                    autoMoveForward = !autoMoveForward
+                    val newState = !autoMoveForward
+                    resetAllMovement()
+                    autoMoveForward = newState
                     mc.options.keyUp.setDown(autoMoveForward)
                     if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Forward: ${if (autoMoveForward) "§aON" else "§cOFF"}")
                     event.isCanceled = true
                 }
                 key == alwaysBackwardKey.value -> {
-                    autoMoveForward = false
-                    mc.options.keyUp.setDown(false)
-                    autoMoveBackward = !autoMoveBackward
+                    val newState = !autoMoveBackward
+                    resetAllMovement()
+                    autoMoveBackward = newState
                     mc.options.keyDown.setDown(autoMoveBackward)
                     if (SoTerm.debugFlags.contains("farm")) ChatUtils.modMessage("§eAuto Backward: ${if (autoMoveBackward) "§aON" else "§cOFF"}")
                     event.isCanceled = true
