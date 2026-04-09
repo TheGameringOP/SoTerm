@@ -88,6 +88,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         warpCommand("forge", "forge")
         warpCommand("galatea", "galatea")
         warpCommand("garden", "garden")
+        warpCommand("glowing", "glowing")
         warpCommand("gold", "gold")
         warpCommand("h", "hub")
         warpCommand("howl", "howl")
@@ -152,6 +153,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         "forge" to "forge",
         "galatea" to "galatea",
         "garden" to "garden",
+        "glowing" to "glowing",
         "gold" to "gold mines",
         "howl" to "howling cave",
         "wolf" to "howling cave",

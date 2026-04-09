@@ -45,57 +45,72 @@ object TerminalHitboxes: Feature() {
             if (LocationUtils.dungeonFloorNumber != 7 || LocationUtils.F7Phase != 3) return@register
             val packet = event.packet as? ClientboundSetEntityDataPacket ?: return@register
             val entity = mc.level?.getEntity(packet.id) as? ArmorStand ?: return@register
-            if (entity.customName?.unformattedText == "Terminal Active") return@register
+            val name = entity.customName?.unformattedText
 
-            for ((section, posList) in terminalPositions.withIndex()) {
-                if (posList.none { entity.distanceToSqr(it) <= 1.5 }) continue
-                cachedTerminals.getOrPut(section + 1) { mutableSetOf() }.add(entity)
+            if (name == "Inactive Terminal") {
+                for ((section, posList) in terminalPositions.withIndex()) {
+                    if (posList.none { entity.distanceToSqr(it) <= 1.5 }) continue
+                    cachedTerminals.getOrPut(section + 1) { mutableSetOf() }.add(entity)
+                }
+            }
+            else if (name == "Terminal Active") {
+                for (i in terminalPositions.indices) {
+                    cachedTerminals[i + 1]?.remove(entity)
+                }
             }
         }
 
         register<RenderWorldEvent> {
             if (! LocationUtils.inDungeon || LocationUtils.F7Phase != 3) return@register
             val section = LocationUtils.P3Section ?: return@register
-            val terminalsToRender = cachedTerminals[section] ?: return@register
-            terminalsToRender.removeIf { it.isRemoved || it.customName?.unformattedText == "Terminal Active" }
-            if (terminalsToRender.isEmpty()) return@register
-            val consumers = event.ctx.consumers
-            val matrices = event.ctx.matrixStack
-            val cam = event.ctx.camera.position
+            val terminalsToRender = cachedTerminals[section]?.takeUnless { it.isEmpty() } ?: return@register
+
+            val ctx = event.ctx
+            val consumers = ctx.consumers
+            val matrices = ctx.matrixStack
+            val cam = ctx.camera.position
 
             val drawFill = mode.value == 1 || mode.value == 2
             val drawOutline = mode.value == 0 || mode.value == 2
 
-            val fillBuffer = if (drawFill) consumers.getBuffer(if (phase.value) OPRenderLayers.FILLED_THROUGH_WALLS else OPRenderLayers.FILLED) else null
-            val outlineBuffer = if (drawOutline) consumers.getBuffer(if (phase.value) OPRenderLayers.getLinesThroughWalls(2.0) else OPRenderLayers.getLines(2.0)) else null
-
             matrices.pushPose()
             matrices.translate(- cam.x, - cam.y, - cam.z)
 
-            for (entity in terminalsToRender) {
-                val hw = entity.bbWidth / 2.0
-                val hd = entity.bbHeight.toDouble()
+            val fColor = fillColor.value
+            val fR = fColor.red / 255f
+            val fG = fColor.green / 255f
+            val fB = fColor.blue / 255f
+            val fA = fColor.alpha / 255f
 
-                val minX = entity.renderX - hw
-                val minY = entity.renderY
-                val minZ = entity.renderZ - hw
-                val maxX = entity.renderX + hw
-                val maxY = entity.renderY + hd
-                val maxZ = entity.renderZ + hw
+            val oColor = outlineColor.value
+            val oR = oColor.red / 255f
+            val oG = oColor.green / 255f
+            val oB = oColor.blue / 255f
 
-                if (drawFill && fillBuffer != null) {
+            if (drawFill) {
+                val fillBuffer = consumers.getBuffer(if (phase.value) OPRenderLayers.FILLED_THROUGH_WALLS else OPRenderLayers.FILLED)
+                for (entity in terminalsToRender) {
+                    val hw = entity.bbWidth / 2.0
+                    val h = entity.bbHeight.toDouble()
                     ShapeRenderer.addChainedFilledBoxVertices(
                         matrices, fillBuffer,
-                        minX, minY, minZ, maxX, maxY, maxZ,
-                        fillColor.value.red / 255f, fillColor.value.green / 255f, fillColor.value.blue / 255f, fillColor.value.alpha / 255f
+                        entity.renderX - hw, entity.renderY, entity.renderZ - hw,
+                        entity.renderX + hw, entity.renderY + h, entity.renderZ + hw,
+                        fR, fG, fB, fA
                     )
                 }
+            }
 
-                if (drawOutline && outlineBuffer != null) {
+            if (drawOutline) {
+                val outlineBuffer = consumers.getBuffer(if (phase.value) OPRenderLayers.getLinesThroughWalls(2.0) else OPRenderLayers.getLines(2.0))
+                for (entity in terminalsToRender) {
+                    val hw = entity.bbWidth / 2.0
+                    val h = entity.bbHeight.toDouble()
                     ShapeRenderer.renderLineBox(
                         matrices.last(), outlineBuffer,
-                        minX, minY, minZ, maxX, maxY, maxZ,
-                        outlineColor.value.red / 255f, outlineColor.value.green / 255f, outlineColor.value.blue / 255f, 1f
+                        entity.renderX - hw, entity.renderY, entity.renderZ - hw,
+                        entity.renderX + hw, entity.renderY + h, entity.renderZ + hw,
+                        oR, oG, oB, 1f
                     )
                 }
             }
