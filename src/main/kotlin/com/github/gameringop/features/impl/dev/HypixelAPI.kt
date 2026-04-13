@@ -8,6 +8,7 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.network.ProfileUtils
 import com.github.gameringop.utils.network.WebApi
@@ -57,7 +58,6 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
 
     private val uuidCache = ConcurrentHashMap<String, String>()
     private val spiritCache = ConcurrentHashMap<String, Boolean>()
-    private val pendingUuidRequests = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     @Serializable
     data class MojangProfile(
@@ -117,31 +117,25 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
         } else {
             ChatUtils.modMessage("§c$username does NOT have a Legendary Spirit pet")
         }
-
-        spiritCache[username] = hasSpirit
     }
 
     private fun getUUIDFromUsername(username: String): String? {
         uuidCache[username]?.let { return it }
 
-        if (pendingUuidRequests.contains(username)) return null
+        try {
+            val url = "https://api.mojang.com/users/profiles/minecraft/$username"
+            val response = runBlocking { WebApi.getString(url) }
 
-        pendingUuidRequests.add(username)
-        ThreadUtils.async(Runnable {
-            try {
-                val url = "https://api.mojang.com/users/profiles/minecraft/$username"
-                val response = runBlocking { WebApi.getString(url) }
-
-                response.onSuccess { responseBody ->
-                    val profile = json.decodeFromString<MojangProfile>(responseBody)
-                    uuidCache[username] = profile.id
-                }.onFailure {
-                }
-            } catch (e: Exception) {
-            } finally {
-                pendingUuidRequests.remove(username)
+            response.onSuccess { responseBody ->
+                val profile = json.decodeFromString<MojangProfile>(responseBody)
+                uuidCache[username] = profile.id
+                return profile.id
+            }.onFailure {
+                return null
             }
-        })
+        } catch (e: Exception) {
+            return null
+        }
 
         return null
     }
@@ -149,14 +143,18 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
     fun checkSpiritPet(username: String): Boolean {
         spiritCache[username]?.let { return it }
 
-        if (getUUIDFromUsername(username) == null) {
-            ChatUtils.modMessage("§eUsername for $username, is not found")
-            return false
-        }
-
         ThreadUtils.async(Runnable {
             try {
-                val cleanName = username.lowercase().trim()
+                val uuid = getUUIDFromUsername(username)
+                if (uuid == null) {
+                    if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§eUUID for $username is not found")
+                    }
+                    spiritCache[username] = false
+                    return@Runnable
+                }
+
+                val cleanName = username.removeFormatting()
                 val profileData = runBlocking { ProfileUtils.getProfile(cleanName).getOrNull() }
                 if (profileData == null) {
                     if (SoTerm.debugFlags.contains("spirit")) {
@@ -167,27 +165,23 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
                 }
 
                 val petsArray = profileData["pets"]?.jsonArray
-                if (petsArray == null) {
-                    if (SoTerm.debugFlags.contains("spirit")) {
-                        ChatUtils.modMessage("§eNo pets array in profile for $username, assuming Spirit")
-                    }
-                    spiritCache[username] = true
-                    return@Runnable
-                }
+
 
                 var hasSpirit = false
-                for (petElement in petsArray) {
-                    val petObj = petElement.jsonObject
-                    val type = petObj["type"]?.jsonPrimitive?.contentOrNull ?: continue
-                    val tier = petObj["tier"]?.jsonPrimitive?.contentOrNull ?: continue
-                    val heldItem = petObj["heldItem"]?.jsonPrimitive?.contentOrNull
+                if (petsArray != null) {
+                    for (petElement in petsArray) {
+                        val petObj = petElement.jsonObject
+                        val type = petObj["type"]?.jsonPrimitive?.contentOrNull ?: continue
+                        val tier = petObj["tier"]?.jsonPrimitive?.contentOrNull ?: continue
+                        val heldItem = petObj["heldItem"]?.jsonPrimitive?.contentOrNull
 
-                    if (type.equals("SPIRIT", ignoreCase = true)) {
-                        if (tier.equals("LEGENDARY", ignoreCase = true) ||
-                            (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST")
-                        ) {
-                            hasSpirit = true
-                            break
+                        if (type.equals("SPIRIT", ignoreCase = true)) {
+                            if (tier.equals("LEGENDARY", ignoreCase = true) ||
+                                (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST")
+                            ) {
+                                hasSpirit = true
+                                break
+                            }
                         }
                     }
                 }
@@ -208,7 +202,6 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
                 spiritCache[username] = true
             }
         })
-
         spiritCache[username] = true
         return true
     }
