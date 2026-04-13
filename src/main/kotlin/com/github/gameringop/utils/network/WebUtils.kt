@@ -1,7 +1,6 @@
 package com.github.gameringop.utils.network
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.MOD_VERSION
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.StringUtils.decodeBase64
@@ -14,12 +13,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 object WebUtils {
-    private val link = "aHR0cHM6Ly9ub2FtbS5vcmc=".decodeBase64()
     private val mname = "Tm9hbW1BZGRvbnM=".decodeBase64()
-    private val ver = "MS4xLjc=".decodeBase64()
 
     private const val PRIVATE_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    private val USER_AGENT = "${mname}/$ver${if (SoTerm.isDev) "-dev" else ""} (+${link})"
+    private val USER_AGENT = "${mname}/"
     private val SUCCESS_RANGE = 200 .. 299
     private const val TIMEOUT = 10_000
 

@@ -69,7 +69,7 @@ object PartyFinder: Feature() {
     private val levelRequiredRegex = Regex("§7Dungeon Level Required: §b(\\d+)")
     private val selectedClassRegex = Regex("Currently Selected: (.+)")
     private val selectDungeonClassRegex = Regex("§7View and select a dungeon class\\.")
-    private val classNames = listOf("&4&lArcher", "&a&lTank", "&6&lBerserk", "&5&lHealer", "&b&lMage")
+    private val classNames = listOf("&aArcher", "&aTank", "&aBerserk", "&aHealer", "&aMage")
     private var selectedClass: String? = null
     private var inPartyFinder = false
 
