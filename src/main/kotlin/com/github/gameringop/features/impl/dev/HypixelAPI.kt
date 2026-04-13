@@ -103,8 +103,13 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
 
     private fun withApiKey(url: String): String {
-        val separator = if (url.contains("?")) "&" else "?"
-        return "$url${separator}key=${apiKey.value}"
+
+        ChatUtils.modMessage("§7[Debug] Key raw: '${apiKey.value}' (length: ${apiKey.value.length})")
+
+        val base = url.trim()
+        val key = apiKey.value.trim()
+        val separator = if (base.contains('?')) '&' else '?'
+        return "$base$separator$key"
     }
 
     private fun testApiKey() {
@@ -115,10 +120,13 @@ object HypixelAPI : Feature("Hypixel API Integration") {
 
         ThreadUtils.async(Runnable {
             try {
-                val url = withApiKey("https://api.hypixel.net/v2/player?name=Hypixel")
-                ChatUtils.modMessage("§7[Debug] Sending request to $url")
+                val baseUrl = "https://api.hypixel.net/v2/player?name=Hypixel"
+                val key = apiKey.value.trim()
+                val fullUrl = if (baseUrl.contains('?')) "$baseUrl&key=$key" else "$baseUrl?key=$key"
 
-                val result = runBlocking { WebUtils.getAs<JsonObject>(url) }
+                ChatUtils.modMessage("§7[Debug] Full URL: $fullUrl")
+
+                val result = runBlocking { WebUtils.getAs<JsonObject>(fullUrl) }
 
                 result.onSuccess { jsonResponse ->
                     val success = jsonResponse["success"]?.jsonPrimitive?.booleanOrNull ?: false
