@@ -9,6 +9,7 @@ import com.github.gameringop.features.FeatureManager
 import com.github.gameringop.utils.*
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.dungeons.DungeonListener
+import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.items.ItemUtils.idToNameMap
 import com.github.gameringop.utils.items.ItemUtils.nameToIdMap
 import com.github.gameringop.utils.network.WebUtils
