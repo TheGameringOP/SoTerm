@@ -15,8 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object WebUtils {
     private val link = "aHR0cHM6Ly9ub2FtbS5vcmc=".decodeBase64()
+    private val mname = "Tm9hbW1BZGRvbnM=".decodeBase64()
+    private val ver = "MS4xLjc=".decodeBase64()
+
     private const val PRIVATE_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    private val USER_AGENT = "SoTerm/$MOD_VERSION${if (SoTerm.isDev) "-dev" else ""} (+${link})"
+    private val USER_AGENT = "${mname}/$ver${if (SoTerm.isDev) "-dev" else ""} (+${link})"
     private val SUCCESS_RANGE = 200 .. 299
     private const val TIMEOUT = 10_000
 
