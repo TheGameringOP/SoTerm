@@ -14,7 +14,7 @@ import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.world.item.Items
 
 object MelodyAlert: Feature() {
-    private val msg by TextInputSetting("Melody Message", "I ❤ Melody")
+    private val msg by TextInputSetting("Melody Message", "Melody")
     private val mode by DropdownSetting("Progress Mode", 0, listOf("1/4", "25%"))
 
     private val progressSlots = intArrayOf(25, 34, 43)

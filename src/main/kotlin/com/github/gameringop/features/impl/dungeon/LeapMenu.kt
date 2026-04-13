@@ -44,7 +44,7 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
     val key4 by KeybindSetting("Slot 4", GLFW.GLFW_KEY_4).showIf { leapKeybinds.value }
 
     private val announceSpiritLeaps by ToggleSetting("Announce Leap", true).section("Extras")
-    private val leapMsg by TextInputSetting("Leap Message", "ILY ❤ {name}")
+    private val leapMsg by TextInputSetting("Leap Message", "Leaped to {name}!")
         .withDescription("replaces {name} with the player name")
         .showIf { announceSpiritLeaps.value }
 

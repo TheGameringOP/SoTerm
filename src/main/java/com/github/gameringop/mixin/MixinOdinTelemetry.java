@@ -1,6 +1,5 @@
 package com.github.gameringop.mixin;
 
-import com.github.gameringop.SoTerm;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -14,7 +13,6 @@ public class MixinOdinTelemetry {
     @Dynamic
     @Inject(method = "invokeSuspend", at = @At(value = "HEAD"), cancellable = true, require = 0)
     private void stopTelemetry(Object result, CallbackInfoReturnable ci) {
-        SoTerm.getLogger().info("Blocked Odin Telemetry");
         ci.cancel();
     }
 }
