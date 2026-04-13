@@ -23,6 +23,7 @@ import com.github.gameringop.utils.dungeons.map.handlers.ScoreCalculation
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
+import kotlinx.coroutines.runBlocking
 import net.minecraft.client.gui.GuiGraphics
 import java.awt.Color
 import kotlin.math.ceil
@@ -387,7 +388,7 @@ object DungeonScoreHud: Feature("Dungeon Score HUD") {
                 if (spiritTracking.value == 2 && !checkedSpiritForFirstDeath) {
                     checkedSpiritForFirstDeath = true
 
-                    val hasSpirit = HypixelAPI.checkSpiritPet(event.name)
+                    val hasSpirit = runBlocking { HypixelAPI.checkSpiritPet(event.name) }
 
                     if (hasSpirit) {
                         firstDeathHadSpirit = true

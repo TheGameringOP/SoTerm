@@ -108,10 +108,10 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
                             (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST"))
     }
 
-    suspend fun checkSpecificPlayer(username: String) {
+    private fun checkSpecificPlayer(username: String) {
         ChatUtils.modMessage("§eChecking Spirit pet for §f$username§e...")
 
-            val hasSpirit = checkSpiritPet(username)
+            val hasSpirit = runBlocking { checkSpiritPet(username) }
             if (hasSpirit) {
                 ChatUtils.modMessage("§a$username has a Legendary Spirit pet! §7(§6Spirit§7)")
             } else {
