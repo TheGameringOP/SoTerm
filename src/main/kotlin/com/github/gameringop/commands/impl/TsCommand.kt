@@ -78,7 +78,7 @@ object TsCommand: BaseCommand("ts") {
 
         literal("sim") {
             runs {
-                ChatUtils.modMessage("§cInvalid Usage: §f/na sim <message>")
+                ChatUtils.modMessage("§cInvalid Usage: §f/ts sim <message>")
             }
 
             argument("message", StringArgumentType.greedyString()) {
