@@ -6,6 +6,7 @@ import com.github.gameringop.SoTerm.scope
 import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.JsonUtils.getObj
 import com.github.gameringop.utils.JsonUtils.getString
+import com.github.gameringop.utils.StringUtils.decodeBase64
 import com.github.gameringop.utils.Utils.containsOneOf
 import com.github.gameringop.utils.network.cache.ProfileCache
 import com.github.gameringop.utils.network.cache.SecretCache
@@ -29,10 +30,6 @@ object ProfileUtils {
         "https://api.minecraftservices.com/minecraft/profile/lookup/name/",
         "https://api.mojang.com/users/profiles/minecraft/",
     )
-
-    fun String.decodeBase64(): String {
-        return String(Base64.getDecoder().decode(this))
-    }
 
     private val sharedRequests = ConcurrentHashMap<String, Deferred<*>>()
     private val apiCooldowns = ConcurrentHashMap<String, Long>()
