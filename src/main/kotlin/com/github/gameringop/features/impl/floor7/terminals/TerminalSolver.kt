@@ -17,6 +17,7 @@ import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
+import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.Utils.uppercaseFirst
 import com.github.gameringop.utils.items.ItemUtils.hasGlint
@@ -308,10 +309,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 
                 if (delayMs > 0) {
                     val delayTicks = (delayMs / 50).toInt()
-                    
-                    Scheduler.schedule(delayMs.toInt(), delayTicks) {
+
+                    ThreadUtils.scheduledTaskServer(delayTicks) {
                         isMelodyWaiting = false
                     }
+
                 } else {
                     isMelodyWaiting = false 
                 }
@@ -353,8 +355,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         sendClickPacket(click.slotId, click.btn)
 
         val initialWindowId = TerminalListener.lastWindowId
-        Scheduler.schedule(resyncTimeout.value.toInt(), resyncTimeout.value.toInt() / 50) {
-            if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@schedule
+        ThreadUtils.setTimeout(resyncTimeout.value) {
+            if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@setTimeout
 
             if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Resync Timeout Triggered")
 

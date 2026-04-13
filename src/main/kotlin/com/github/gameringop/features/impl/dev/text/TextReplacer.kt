@@ -10,11 +10,8 @@ import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.resources.RegistryOps
 import net.minecraft.util.FormattedCharSequence
-import java.util.ArrayList
-import java.util.Collections
-import java.util.LinkedHashMap
+import java.util.*
 import java.util.regex.Pattern
-import kotlin.text.iterator
 
 object TextReplacer {
     private data class Match(val startIndex: Int, val replacement: Replacement)

@@ -1,6 +1,8 @@
 package com.github.gameringop.utils.render
 
 import com.github.gameringop.SoTerm
+import com.github.gameringop.utils.render.iris.IrisCompatibility
+import com.github.gameringop.utils.render.iris.IrisShaderType
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
@@ -23,6 +25,11 @@ object OPRenderPipelines {
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .build()
     )
+
+    fun init() {
+        IrisCompatibility.registerPipeline(LINES_THROUGH_WALLS, IrisShaderType.LINES)
+        IrisCompatibility.registerPipeline(FILLED_THROUGH_WALLS, IrisShaderType.BASIC)
+    }
 
     private fun id(path: String) = ResourceLocation.fromNamespaceAndPath(SoTerm.MOD_ID, path)
 }
