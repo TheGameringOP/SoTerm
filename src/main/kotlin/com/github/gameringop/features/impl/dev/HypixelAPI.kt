@@ -8,8 +8,6 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
-import com.github.gameringop.utils.ChatUtils.removeFormatting
-import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.network.ProfileUtils
 import com.github.gameringop.utils.network.WebApi
 import kotlinx.coroutines.runBlocking
