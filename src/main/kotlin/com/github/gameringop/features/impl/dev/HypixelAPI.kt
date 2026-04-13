@@ -8,6 +8,7 @@ import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.network.ProfileUtils
 import com.github.gameringop.utils.network.WebApi
 import kotlinx.coroutines.runBlocking
@@ -56,6 +57,7 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
 
     private val uuidCache = ConcurrentHashMap<String, String>()
     private val spiritCache = ConcurrentHashMap<String, Boolean>()
+    private val pendingUuidRequests = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     @Serializable
     data class MojangProfile(
@@ -122,20 +124,24 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
     private fun getUUIDFromUsername(username: String): String? {
         uuidCache[username]?.let { return it }
 
-        try {
-            val url = "https://api.mojang.com/users/profiles/minecraft/$username"
-            val response = runBlocking { WebApi.getString(url) }
+        if (pendingUuidRequests.contains(username)) return null
 
-            response.onSuccess { responseBody ->
-                val profile = json.decodeFromString<MojangProfile>(responseBody)
-                uuidCache[username] = profile.id
-                return profile.id
-            }.onFailure {
-                return null
+        pendingUuidRequests.add(username)
+        ThreadUtils.async(Runnable {
+            try {
+                val url = "https://api.mojang.com/users/profiles/minecraft/$username"
+                val response = runBlocking { WebApi.getString(url) }
+
+                response.onSuccess { responseBody ->
+                    val profile = json.decodeFromString<MojangProfile>(responseBody)
+                    uuidCache[username] = profile.id
+                }.onFailure {
+                }
+            } catch (e: Exception) {
+            } finally {
+                pendingUuidRequests.remove(username)
             }
-        } catch (e: Exception) {
-            return null
-        }
+        })
 
         return null
     }
@@ -143,60 +149,68 @@ object `HypixelAPI` : Feature("Hypixel API Integration") {
     fun checkSpiritPet(username: String): Boolean {
         spiritCache[username]?.let { return it }
 
-        try {
-            val cleanName = username.lowercase().trim()
-            val profileData = runBlocking { ProfileUtils.getProfile(cleanName).getOrNull() }
-            if (profileData == null) {
-                if (SoTerm.debugFlags.contains("spirit")) {
-                    ChatUtils.modMessage("§eProfile fetch failed for $username, assuming Spirit")
+        if (getUUIDFromUsername(username) == null) {
+            ChatUtils.modMessage("§eUsername for $username, is not found")
+            return false
+        }
+
+        ThreadUtils.async(Runnable {
+            try {
+                val cleanName = username.lowercase().trim()
+                val profileData = runBlocking { ProfileUtils.getProfile(cleanName).getOrNull() }
+                if (profileData == null) {
+                    if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§eProfile fetch failed for $username, assuming Spirit")
+                    }
+                    spiritCache[username] = true
+                    return@Runnable
                 }
-                spiritCache[username] = true
-                return true
-            }
 
-            val petsArray = profileData["pets"]?.jsonArray ?: run {
-                if (SoTerm.debugFlags.contains("spirit")) {
-                    ChatUtils.modMessage("§eNo pets array in profile for $username, assuming Spirit")
+                val petsArray = profileData["pets"]?.jsonArray
+                if (petsArray == null) {
+                    if (SoTerm.debugFlags.contains("spirit")) {
+                        ChatUtils.modMessage("§eNo pets array in profile for $username, assuming Spirit")
+                    }
+                    spiritCache[username] = true
+                    return@Runnable
                 }
-                spiritCache[username] = true
-                return true
-            }
 
-            var hasSpirit = false
-            for (petElement in petsArray) {
-                val petObj = petElement.jsonObject
-                val type = petObj["type"]?.jsonPrimitive?.contentOrNull ?: continue
-                val tier = petObj["tier"]?.jsonPrimitive?.contentOrNull ?: continue
-                val heldItem = petObj["heldItem"]?.jsonPrimitive?.contentOrNull
+                var hasSpirit = false
+                for (petElement in petsArray) {
+                    val petObj = petElement.jsonObject
+                    val type = petObj["type"]?.jsonPrimitive?.contentOrNull ?: continue
+                    val tier = petObj["tier"]?.jsonPrimitive?.contentOrNull ?: continue
+                    val heldItem = petObj["heldItem"]?.jsonPrimitive?.contentOrNull
 
-                if (type.equals("SPIRIT", ignoreCase = true)) {
-                    if (tier.equals("LEGENDARY", ignoreCase = true) ||
-                        (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST")
-                    ) {
-                        hasSpirit = true
-                        break
+                    if (type.equals("SPIRIT", ignoreCase = true)) {
+                        if (tier.equals("LEGENDARY", ignoreCase = true) ||
+                            (tier.equals("EPIC", ignoreCase = true) && heldItem == "PET_ITEM_TIER_BOOST")
+                        ) {
+                            hasSpirit = true
+                            break
+                        }
                     }
                 }
-            }
 
-            if (SoTerm.debugFlags.contains("spirit")) {
-                if (hasSpirit) {
-                    ChatUtils.modMessage("§a$username has Legendary Spirit pet")
-                } else {
-                    ChatUtils.modMessage("§c$username does NOT have Legendary Spirit pet")
+                if (SoTerm.debugFlags.contains("spirit")) {
+                    if (hasSpirit) {
+                        ChatUtils.modMessage("§a$username has Legendary Spirit pet")
+                    } else {
+                        ChatUtils.modMessage("§c$username does NOT have Legendary Spirit pet")
+                    }
                 }
-            }
 
-            spiritCache[username] = hasSpirit
-            return hasSpirit
-
-        } catch (e: Exception) {
-            if (SoTerm.debugFlags.contains("spirit")) {
-                ChatUtils.modMessage("§eException for $username: ${e.message}, assuming Spirit")
+                spiritCache[username] = hasSpirit
+            } catch (e: Exception) {
+                if (SoTerm.debugFlags.contains("spirit")) {
+                    ChatUtils.modMessage("§eException for $username: ${e.message}, assuming Spirit")
+                }
+                spiritCache[username] = true
             }
-            spiritCache[username] = true
-            return true
-        }
+        })
+
+        spiritCache[username] = true
+        return true
     }
 
     fun getSpiritStatus(username: String): Boolean? = spiritCache[username]
