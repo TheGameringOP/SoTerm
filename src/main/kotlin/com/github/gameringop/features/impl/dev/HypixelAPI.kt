@@ -113,9 +113,11 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             return
         }
 
-        ThreadUtils.async {
+        ThreadUtils.async(Runnable {
             try {
                 val url = withApiKey("https://api.hypixel.net/v2/player?name=Hypixel")
+                ChatUtils.modMessage("§7[Debug] Sending request to $url")
+
                 val result = runBlocking { WebUtils.getAs<JsonObject>(url) }
 
                 result.onSuccess { jsonResponse ->
@@ -167,7 +169,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                     e.printStackTrace()
                 }
             }
-        }
+        })
     }
 
     private fun checkSpecificPlayer(username: String) {
