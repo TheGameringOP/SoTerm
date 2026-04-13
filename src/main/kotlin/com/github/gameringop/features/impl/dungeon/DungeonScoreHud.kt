@@ -4,7 +4,7 @@ import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.features.impl.dev.`HypixelAPI`
+import com.github.gameringop.features.impl.dev.HypixelAPI
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
@@ -387,7 +387,7 @@ object DungeonScoreHud: Feature("Dungeon Score HUD") {
                 if (spiritTracking.value == 2 && !checkedSpiritForFirstDeath) {
                     checkedSpiritForFirstDeath = true
 
-                    val hasSpirit = `HypixelAPI`.checkSpiritPet(event.name)
+                    val hasSpirit = HypixelAPI.checkSpiritPet(event.name)
 
                     if (hasSpirit) {
                         firstDeathHadSpirit = true
