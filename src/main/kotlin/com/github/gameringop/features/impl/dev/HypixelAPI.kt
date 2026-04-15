@@ -12,11 +12,7 @@ import com.github.gameringop.utils.network.ProfileUtils
 import com.github.gameringop.utils.network.WebApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import java.util.concurrent.ConcurrentHashMap
 
 object `HypixelAPI` : Feature("Hypixel API Integration") {

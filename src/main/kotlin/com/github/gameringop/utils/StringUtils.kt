@@ -1,6 +1,6 @@
 package com.github.gameringop.utils
 
-import java.util.Base64
+import java.util.*
 
 object StringUtils {
     fun String.encodeBase64(): String {
