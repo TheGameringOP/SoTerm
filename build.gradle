@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom-remap'
     id 'maven-publish'
     id "org.jetbrains.kotlin.jvm" version "2.3.0"
     id "org.jetbrains.kotlin.plugin.serialization" version "2.3.0"
@@ -14,6 +14,10 @@ archives_base_name = project.archives_base_name
 
 base {
     archivesName = archives_base_name
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/soterm.accesswidener")
 }
 
 repositories {

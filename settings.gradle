@@ -6,10 +6,15 @@ pluginManagement {
             name = "Fabric"
             url = "https://maven.fabricmc.net/"
         }
-
         maven {
             name = "JitPack"
             url = "https://jitpack.io"
         }
     }
+
+    plugins {
+        id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    }
 }
+
+rootProject.name = 'SoTerm'
