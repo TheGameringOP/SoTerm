@@ -14,7 +14,8 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.customgui.CustomGui
 import com.github.gameringop.ui.customgui.customGui
-import com.github.gameringop.ui.customgui.restoreCoords
+import com.github.gameringop.ui.customgui.setSlotX
+import com.github.gameringop.ui.customgui.setSlotY
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ThreadUtils
@@ -34,7 +35,8 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import java.awt.Color
 import java.io.File
-import java.util.*
+import java.util.SortedMap
+import java.util.TreeMap
 
 data class StoragePageSlot(val index: Int) : Comparable<StoragePageSlot> {
     val isEnderChest get() = index < 9
@@ -116,28 +118,14 @@ class StorageOverlayCustom(
     }
 
     override fun moveSlot(slot: Slot) {
-        // Check if this slot belongs to the player's own inventory
-        val isPlayerInventory = slot.container is Inventory
-
-        if (isPlayerInventory) {
-            // Option A: If your custom GUI is the same size/position as the default chest,
-            // just restore the original coordinates so it sits perfectly at the bottom.
-            slot.restoreCoords()
-
-            // Option B: If your custom GUI window is bigger/custom-sized, you will need
-            // to manually set the X and Y to place it at the bottom.
-            // val slotIndex = slot.index // (0-26 for main, 27-35 for hotbar)
-            // val xPos = ... calculate your custom bottom X
-            // val yPos = ... calculate your custom bottom Y
-            // slot.setSlotX(xPos)
-            // slot.setSlotY(yPos)
+        if (slot.container is Inventory) {
+            val (x, y) = overview.getPlayerInventorySlotPosition(slot.containerSlot)
+            val accessor = screen as IAbstractContainerScreen
+            slot.setSlotX(x - accessor.leftPos)
+            slot.setSlotY(y - accessor.topPos)
         } else {
-            // This is a Backpack/Chest slot!
-            // Put your existing math here to move these to the top/left/pages.
-            // val xPos = ...
-            // val yPos = ...
-            // slot.setSlotX(xPos)
-            // slot.setSlotY(yPos)
+            slot.setSlotX(-100000)
+            slot.setSlotY(-100000)
         }
     }
 

@@ -1,11 +1,15 @@
 package com.github.gameringop.features.impl.general.storageoverlay
 
 import com.github.gameringop.SoTerm
-import net.minecraft.nbt.*
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.ListTag
+import net.minecraft.nbt.NbtAccounter
+import net.minecraft.nbt.NbtIo
+import net.minecraft.nbt.NbtOps
 import net.minecraft.world.item.ItemStack
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Base64
 
 /**
  * Adapted from Firmament's VirtualInventory.kt
