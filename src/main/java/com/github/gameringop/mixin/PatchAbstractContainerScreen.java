@@ -1,19 +1,19 @@
 package com.github.gameringop.mixin;
 
+import com.github.gameringop.ui.customgui.CustomGui;
+import com.github.gameringop.ui.customgui.ICoordRememberingSlot;
+import com.github.gameringop.ui.customgui.IHasCustomGui;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.github.gameringop.ui.customgui.ICoordRememberingSlot;
-import com.github.gameringop.ui.customgui.IHasCustomGui;
-import com.github.gameringop.ui.customgui.CustomGui;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Source: https://github.com/nea89o/Firmament/blob/master/src/main/java/moe/nea/firmament/mixins/customgui/PatchHandledScreen.java
  */
 
-@Mixin(value = AbstractContainerScreen.class, priority = 500)
+@Mixin(value = AbstractContainerScreen.class, priority = 2000)
 public class PatchAbstractContainerScreen<T extends AbstractContainerMenu> extends Screen implements IHasCustomGui {
     @Shadow @Final protected T menu;
     @Shadow protected int leftPos;
