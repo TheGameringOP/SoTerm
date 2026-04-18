@@ -2,6 +2,9 @@ package com.github.gameringop.features.impl.general.storageoverlay
 
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.mixin.IAbstractContainerScreen
+import com.github.gameringop.ui.customgui.setSlotX
+import com.github.gameringop.ui.customgui.setSlotY
+import com.github.gameringop.features.impl.misc.ScrollableTooltip
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
@@ -12,6 +15,7 @@ import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.inventory.Slot
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
+import kotlin.math.sign
 
 class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
 
@@ -88,7 +92,10 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
                     overActive = true
                 }
             }
-            if (overActive) return false
+            if (overActive) {
+                ScrollableTooltip.scrollAmountY += sign(verticalAmount).toFloat() * ScrollableTooltip.scrollSpeed.value.toFloat()
+                return true
+            }
         }
         coerceScroll(StorageOverlay.adjustScrollSpeed(verticalAmount).toFloat())
         return true
