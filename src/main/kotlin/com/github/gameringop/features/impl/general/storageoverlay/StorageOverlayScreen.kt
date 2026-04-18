@@ -2,14 +2,18 @@ package com.github.gameringop.features.impl.general.storageoverlay
 
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.mixin.IAbstractContainerScreen
-import com.github.gameringop.ui.customgui.setSlotX
-import com.github.gameringop.ui.customgui.setSlotY
 import com.github.gameringop.features.impl.misc.ScrollableTooltip
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.components.Button
+import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.input.CharacterEvent
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.inventory.Slot
@@ -30,6 +34,7 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         const val PLAYER_WIDTH = PLAYER_SLOTS_WIDTH + 6
         const val PLAYER_HEIGHT = SLOT_SIZE * 4 + 18
         const val PLAYER_Y_INSET = 3
+        const val CONTROL_WIDTH = 90   // width for search field and button
 
         var scroll: Float = 0f
         var lastRenderedInnerHeight = 0
@@ -54,6 +59,12 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
     private val cachedSlotCellBg = slotCellColor.rgb
     private val cachedSlotCellBorder = slotCellBorder.rgb
 
+    // Search & button widgets
+    private lateinit var searchField: EditBox
+    private lateinit var editButton: Button
+    private var searchCache = ""
+    private var filteredPagesCache: Set<StoragePageSlot>? = null
+
     inner class Measurements {
         val innerScrollPanelWidth = PAGE_WIDTH * pageWidthCount + (pageWidthCount - 1) * PADDING
         val overviewWidth = innerScrollPanelWidth + 3 * PADDING + SCROLL_BAR_WIDTH
@@ -65,6 +76,7 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         val playerY = y + overviewHeight + 2
         val totalWidth = overviewWidth
         val totalHeight = overviewHeight - PLAYER_Y_INSET + PLAYER_HEIGHT
+        val controlX = x - CONTROL_WIDTH - 8   // position for search & button (left of player inventory)
     }
 
     var measurements = Measurements()
@@ -75,44 +87,34 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         val scrollPct = if (oldMax > 0) scroll / oldMax else 0f
         pageWidthCount = StorageOverlay.columns.coerceAtMost((width - PADDING) / (PAGE_WIDTH + PADDING)).coerceAtLeast(1)
         measurements = Measurements()
+
+        // --- Search field ---
+        val searchWidth = CONTROL_WIDTH - 10
+        val searchX = measurements.controlX
+        val searchY = measurements.playerY + 8
+        searchField = EditBox(font, searchX, searchY, searchWidth, 14, Component.literal("Search..."))
+        searchField.setMaxLength(50)
+        searchField.setResponder { text ->
+            scroll = 0f
+            searchCache = ""
+            filteredPagesCache = null
+        }
+        addWidget(searchField)
+
+        // --- Edit Pages button ---
+        val buttonWidth = CONTROL_WIDTH - 10
+        val buttonX = searchX
+        val buttonY = searchY + 18
+        editButton = Button.builder(Component.literal("Edit Pages")) { _ ->
+            ChatUtils.sendCommand("storage")   // opens the storage overview
+        }.bounds(buttonX, buttonY, buttonWidth, 14).build()
+        addWidget(editButton)
+
         val newMax = getMaxScroll()
         scroll = (scrollPct * newMax).coerceAtMost(newMax).coerceAtLeast(0f)
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
-        return mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount, null)
-    }
-
-    fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double, activePage: StoragePageSlot?): Boolean {
-        if (activePage != null && StorageOverlay.lockScrollOnActive) {
-            val data = StorageOverlay.storageData
-            var overActive = false
-            layoutedForEach(data) { x, y, pw, ph, page, _ ->
-                if (page == activePage && mouseX >= x && mouseX < x + pw && mouseY >= y && mouseY < y + ph) {
-                    overActive = true
-                }
-            }
-            if (overActive) {
-                ScrollableTooltip.scrollAmountY += sign(verticalAmount).toFloat() * ScrollableTooltip.scrollSpeed.value.toFloat()
-                return true
-            }
-        }
-        coerceScroll(StorageOverlay.adjustScrollSpeed(verticalAmount).toFloat())
-        return true
-    }
-
-    fun coerceScroll(offset: Float) { scroll = (scroll + offset).coerceAtMost(getMaxScroll()).coerceAtLeast(0f) }
-
-    fun getMaxScroll() = (lastRenderedInnerHeight.toFloat() + 6 - measurements.innerScrollPanelHeight).coerceAtLeast(0f)
-
-    override fun onClose() {
-        isExiting = true
-        resetScroll()
-        super.onClose()
-    }
-
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
         drawOverlay(context, mouseX, mouseY, delta)
     }
 
@@ -122,6 +124,9 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         drawPages(context, mouseX, mouseY, delta, null, null)
         drawScrollBar(context)
         drawPlayerInventory(context, mouseX, mouseY)
+        // Render widgets on top
+        searchField.render(context, mouseX, mouseY, delta)
+        editButton.render(context, mouseX, mouseY, delta)
     }
 
     fun getScrollPanelInner(): IntArray {
@@ -230,10 +235,12 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         data: StorageData,
         func: (x: Int, y: Int, pageWidth: Int, pageHeight: Int, page: StoragePageSlot, inventory: StorageData.StorageInventory) -> Unit
     ) {
+        val filtered = getFilteredPages(data)
         var yOffset = -scroll.toInt()
         var xOffset = 0
         var maxHeight = 0
         for ((page, inventory) in data.storageInventories.entries) {
+            if (page !in filtered) continue
             val currentHeight = inventory.inventory?.let { it.rows * SLOT_SIZE + 6 + font.lineHeight } ?: 18
             maxHeight = maxOf(maxHeight, currentHeight)
             val rectX = measurements.x + PADDING + (PAGE_WIDTH + PADDING) * xOffset
@@ -321,6 +328,11 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
             context.renderItem(displayStack, slotX, slotY)
             context.renderItemDecorations(font, displayStack, slotX, slotY)
 
+            // Highlight search results in active page
+            if (isActive && searchField.value.isNotBlank() && matchesSearch(displayStack, searchField.value)) {
+                context.fill(slotX, slotY, slotX + 16, slotY + 16, Color(0, 176, 0, 100).rgb)
+            }
+
             if (hoveredStack == null && mouseX >= slotX && mouseY >= slotY && mouseX <= slotX + 16 && mouseY <= slotY + 16 && mouseX >= panelX && mouseY >= panelY && mouseX < panelX + panelW && mouseY < panelY + panelH) {
                 hoveredStack = displayStack
                 hoveredX = mouseX
@@ -373,7 +385,11 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         return true
     }
 
-    override fun mouseClicked(click: MouseButtonEvent, doubled: Boolean) = mouseClicked(click, doubled, null)
+    override fun mouseClicked(click: MouseButtonEvent, doubled: Boolean): Boolean {
+        // Let the screen handle children (search field and button) automatically
+        if (super.mouseClicked(click, doubled)) return true
+        return mouseClicked(click, doubled, null)
+    }
 
     fun mouseClicked(click: MouseButtonEvent, doubled: Boolean, activePage: StoragePageSlot?): Boolean {
         val mouseX = click.x()
@@ -418,5 +434,82 @@ class StorageOverlayScreen : Screen(Component.literal("Storage Overlay")) {
         return super.mouseDragged(click, offsetX, offsetY)
     }
 
+    override fun keyPressed(event: KeyEvent): Boolean {
+        if (searchField.keyPressed(event)) return true
+        return super.keyPressed(event)
+    }
+
+    override fun charTyped(event: CharacterEvent): Boolean {
+        if (searchField.charTyped(event)) return true
+        return super.charTyped(event)
+    }
+
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
+        return mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount, null)
+    }
+
+    fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double, activePage: StoragePageSlot?): Boolean {
+        if (activePage != null && StorageOverlay.lockScrollOnActive) {
+            val data = StorageOverlay.storageData
+            var overActive = false
+            layoutedForEach(data) { x, y, pw, ph, page, _ ->
+                if (page == activePage && mouseX >= x && mouseX < x + pw && mouseY >= y && mouseY < y + ph) {
+                    overActive = true
+                }
+            }
+            if (overActive) {
+                ScrollableTooltip.scrollAmountY += sign(verticalAmount).toFloat() * ScrollableTooltip.scrollSpeed.value.toFloat()
+                return true
+            }
+        }
+        coerceScroll(StorageOverlay.adjustScrollSpeed(verticalAmount).toFloat())
+        return true
+    }
+
+    fun coerceScroll(offset: Float) { scroll = (scroll + offset).coerceAtMost(getMaxScroll()).coerceAtLeast(0f) }
+
+    fun getMaxScroll() = (lastRenderedInnerHeight.toFloat() + 6 - measurements.innerScrollPanelHeight).coerceAtLeast(0f)
+
+    override fun onClose() {
+        isExiting = true
+        resetScroll()
+        super.onClose()
+    }
+
     override fun shouldCloseOnEsc(): Boolean = this === mc.screen
+
+    // ----------------------------------------------------------------------
+    // Search & filtering
+    // ----------------------------------------------------------------------
+
+    private fun matchesSearch(stack: net.minecraft.world.item.ItemStack, search: String): Boolean {
+        if (search.isBlank()) return true
+        val searchLower = search.lowercase()
+        // Check display name
+        if (stack.displayName.string.lowercase().contains(searchLower)) return true
+        // Check lore components
+        val loreComponent = stack.get(DataComponents.LORE)
+        if (loreComponent != null) {
+            for (line in loreComponent.lines()) {
+                if (line.string.lowercase().contains(searchLower)) return true
+            }
+        }
+        return false
+    }
+
+    private fun getFilteredPages(data: StorageData): Set<StoragePageSlot> {
+        val search = searchField.value
+        if (searchCache == search) return filteredPagesCache ?: emptySet()
+        searchCache = search
+        val result = data.storageInventories.entries.asSequence()
+            .filter { (_, inventory) ->
+                if (search.isBlank()) return@filter true
+                // Check if any item in the inventory matches the search
+                inventory.inventory?.stacks?.any { matchesSearch(it, search) } ?: true
+            }
+            .map { it.key }
+            .toSet()
+        filteredPagesCache = result
+        return result
+    }
 }
