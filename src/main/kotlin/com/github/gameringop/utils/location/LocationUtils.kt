@@ -4,12 +4,21 @@ import com.github.gameringop.SoTerm
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.EventPriority
-import com.github.gameringop.event.impl.*
+import com.github.gameringop.event.impl.DungeonEvent
+import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
+import com.github.gameringop.event.impl.TickEvent
+import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.MathUtils
+import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.Utils.remove
 import com.github.gameringop.utils.Utils.startsWithOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
+import com.github.gameringop.utils.dungeons.map.DungeonInfo
+import com.github.gameringop.utils.dungeons.map.core.Room
+import com.github.gameringop.utils.dungeons.map.core.RoomType
+import com.github.gameringop.websocket.WebSocket
+import com.github.gameringop.websocket.packets.C2SPacketDungeonStart
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket
@@ -47,14 +56,16 @@ object LocationUtils {
     @JvmField
     var F7Phase: Int? = null
 
-    var lobbyId: String? = null
-        private set
+    @JvmField
+    var serverId: String? = null
 
     private val lobbyRegex = Regex("\\d\\d/\\d\\d/\\d\\d (\\w{0,6}) *")
 
     init {
+        LocrawListener.init()
+
         EventBus.register<MainThreadPacketReceivedEvent.Post>(EventPriority.HIGHEST) {
-            if (SoTerm.debugFlags.contains("dev")) return@register setDevModeValues()
+            if (SoTerm.isDev) return@register setDevModeValues()
             if (! onHypixel) return@register
 
             if (event.packet is ClientboundPlayerInfoUpdatePacket) {
@@ -67,12 +78,22 @@ object LocationUtils {
             else if (event.packet is ClientboundSetPlayerTeamPacket) {
                 val prams = event.packet.parameters.getOrNull() ?: return@register
                 val text = (prams.playerPrefix.string + prams.playerSuffix.string).removeFormatting()
-                lobbyRegex.find(text)?.groupValues?.get(1)?.let { lobbyId = it }
+                lobbyRegex.find(text)?.groupValues?.get(1)?.let { serverId = it }
 
                 if (! inDungeon && text.contains("The Catacombs (") && ! text.contains("Queue")) {
                     inDungeon = true
                     dungeonFloor = text.substringAfter("(").substringBefore(")")
                     dungeonFloorNumber = dungeonFloor?.lastOrNull()?.digitToIntOrNull() ?: 0
+
+                    ThreadUtils.scheduledTaskServer(30) ws@{
+                        if (DungeonListener.dungeonTeammatesNoSelf.isEmpty()) return@ws
+                        val serverId = LocrawListener.server.ifEmpty { serverId } ?: return@ws
+                        val floor = dungeonFloor ?: return@ws
+                        val team = DungeonListener.dungeonTeammates.map { it.name }.ifEmpty { return@ws }
+                        val entrance = (DungeonInfo.dungeonList.find { (it as? Room)?.data?.type == RoomType.ENTRANCE } as? Room)?.getArrayPosition() ?: return@ws
+
+                        WebSocket.send(C2SPacketDungeonStart(serverId, floor, team, entrance))
+                    }
                 }
             }
             else if (event.packet is ClientboundSetObjectivePacket) {
@@ -83,7 +104,7 @@ object LocationUtils {
         EventBus.register<TickEvent.Start>(EventPriority.HIGHEST) {
             inBoss = isInBossRoom()
             if (inBoss && DungeonListener.bossEntryTime == null) {
-                DungeonListener.bossEntryTime = DungeonListener.currentTime
+                DungeonListener.bossEntryTime = DungeonListener.DualTime(DungeonListener.currentTime)
                 EventBus.post(DungeonEvent.BossEnterEvent)
             }
             F7Phase = getPhase()
@@ -91,7 +112,6 @@ object LocationUtils {
         }
 
         EventBus.register<WorldChangeEvent>(EventPriority.HIGHEST) { reset() }
-        EventBus.register<ServerEvent.Disconnect>(EventPriority.HIGHEST) { reset() }
     }
 
     private fun reset() {
@@ -103,6 +123,8 @@ object LocationUtils {
         P3Section = null
         F7Phase = null
         world = null
+        serverId = null
+        WebSocket.send(mapOf("type" to "reset"))
     }
 
     private fun setDevModeValues() {
@@ -153,7 +175,7 @@ object LocationUtils {
         6 to Pair(BlockPos(- 40, 51, - 8), BlockPos(22, 110, 134)),
         5 to Pair(BlockPos(- 40, 112, - 8), BlockPos(50, 53, 118)),
         4 to Pair(BlockPos(- 40, 112, - 40), BlockPos(50, 53, 47)),
-        3 to Pair(BlockPos(- 40, 118, - 40), BlockPos(42, 64, 31)),
+        3 to Pair(BlockPos(- 40, 118, - 40), BlockPos(42, 64, 37)),
         2 to Pair(BlockPos(- 40, 99, - 40), BlockPos(24, 54, 59)),
         1 to Pair(BlockPos(- 14, 55, 49), BlockPos(- 72, 146, - 40))
     )

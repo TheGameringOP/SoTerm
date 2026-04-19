@@ -1,10 +1,15 @@
 package com.github.gameringop.utils
 
 import com.github.gameringop.SoTerm
+import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.Blessing
 import com.github.gameringop.utils.dungeons.enums.Puzzle
 import com.github.gameringop.utils.dungeons.map.core.RoomState
+import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner.roomSize
+import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner.startX
+import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner.startZ
+import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphics
@@ -15,6 +20,7 @@ object DebugHUD {
     fun render(guiGraphics: GuiGraphics) {
         renderDungeonDebug(guiGraphics)
         renderLocationDebug(guiGraphics)
+        renderPartyDebug(guiGraphics)
     }
 
 
@@ -43,11 +49,11 @@ object DebugHUD {
             val display = time?.let { "§f${it}t §8(${it / 20}s)" } ?: "§7N/A"
             draw("$name: $display")
         }
-        formatTS("Start", DungeonListener.dungeonStartTime)
-        formatTS("Blood Open", DungeonListener.bloodOpenTime)
+        formatTS("Start", DungeonListener.dungeonStartTime?.ticks)
+        formatTS("Blood Open", DungeonListener.bloodOpenTime?.ticks)
         formatTS("Watcher Spawn", DungeonListener.watcherFinishSpawnTime)
-        formatTS("Watcher Clear", DungeonListener.watcherClearTime)
-        formatTS("Boss Entry", DungeonListener.bossEntryTime)
+        formatTS("Watcher Clear", DungeonListener.watcherClearTime?.ticks)
+        formatTS("Boss Entry", DungeonListener.bossEntryTime?.ticks)
         formatTS("Run End", DungeonListener.dungeonEndTime)
 
         y += 5
@@ -88,6 +94,16 @@ object DebugHUD {
             }
         }
         if (! foundBlessing) draw(" §7No blessings active")
+
+        draw("CORE: ${
+            mc.player?.position()?.let {
+                ScanUtils.getRoomGraf(it).let {
+                    val x = startX + it.first * (roomSize shr 1)
+                    val y = startZ + it.second * (roomSize shr 1)
+                    ScanUtils.getCore(x, y)
+                }
+            }
+        }")
     }
 
     private fun renderLocationDebug(graphics: GuiGraphics) {
@@ -140,5 +156,37 @@ object DebugHUD {
             draw("P3 Section: $sectionName")
         }
 
+    }
+
+    private fun renderPartyDebug(graphics: GuiGraphics) {
+        if (! SoTerm.debugFlags.contains("party")) return
+        var y = 20
+        val x = 350
+
+        fun draw(text: String, color: Int = 0xFFFFFF) {
+            Render2D.drawString(graphics, text, x, y, color = Color(color))
+            y += 10
+        }
+
+        draw("§d§lPARTY DEBUGGER", 0xFF55FF)
+        draw("In Party: ${if (PartyUtils.isInParty) "§aYES" else "§cNO"}")
+        draw("Is Leader: ${if (PartyUtils.isLeader()) "§aYES" else "§cNO"}")
+
+        val leaderName = PartyUtils.partyLeader
+        val selfName = SoTerm.mc.player?.gameProfile?.name
+        draw("Party Leader: ${leaderName?.let { "§f$it" } ?: "§7None"}")
+
+        y += 5
+        draw("§b§lMEMBERS (${PartyUtils.members.size})", 0x55FFFF)
+        if (PartyUtils.members.isEmpty()) draw(" §7No members detected...")
+        else PartyUtils.members.forEach { member ->
+            val tags = buildList {
+                if (member == leaderName) add("§6[LEADER]")
+                if (member == selfName) add("§d(YOU)")
+            }.joinToString(" ")
+
+            val tagText = if (tags.isNotEmpty()) " $tags" else ""
+            draw(" §f$member$tagText")
+        }
     }
 }
