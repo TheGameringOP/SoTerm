@@ -34,8 +34,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import java.awt.Color
 import java.io.File
-import java.util.SortedMap
-import java.util.TreeMap
+import java.util.*
 
 data class StoragePageSlot(val index: Int) : Comparable<StoragePageSlot> {
     val isEnderChest get() = index < 9

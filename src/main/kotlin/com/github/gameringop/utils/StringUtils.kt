@@ -1,7 +1,7 @@
 package com.github.gameringop.utils
 
-import java.util.Base64
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 object StringUtils {
 

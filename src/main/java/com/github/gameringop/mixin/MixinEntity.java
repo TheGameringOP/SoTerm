@@ -13,8 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.gameringop.SoTerm.mc;
-
 @Mixin(Entity.class)
 public abstract class MixinEntity {
     @Unique private int customGlowColor = 0xFFFFFF;

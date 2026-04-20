@@ -1,10 +1,14 @@
 package com.github.gameringop.utils.dungeons.map.handlers
 
 import com.github.gameringop.utils.MathUtils.Vec3
+import com.github.gameringop.utils.WorldUtils
+import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.core.*
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
-import com.github.gameringop.utils.world.WorldUtils
+import com.github.gameringop.websocket.WebSocket
+import com.github.gameringop.websocket.packets.S2CPacketDungeonDoor
+import com.github.gameringop.websocket.packets.S2CPacketDungeonRoom
 import net.minecraft.world.level.block.Blocks
 
 object DungeonScanner {
@@ -47,8 +51,17 @@ object DungeonScanner {
                 val roomInGrid = DungeonInfo.dungeonList[x + z * 11]
                 if (roomInGrid !is Unknown && (roomInGrid as? Room)?.data?.name != "Unknown") continue
 
-                scanRoom(wX, wZ, z, x, roofHeight)?.let {
-                    DungeonInfo.dungeonList[z * 11 + x] = it
+                scanRoom(wX, wZ, z, x, roofHeight)?.let { room ->
+                    DungeonInfo.dungeonList[z * 11 + x] = room
+                    if (DungeonListener.dungeonTeammatesNoSelf.isEmpty()) return@let
+
+                    if (room is Room && room.data.name != "Unknown") {
+                        WebSocket.send(S2CPacketDungeonRoom(room.data.name, wX, wZ, x, z, room.core, room.isSeparator))
+                    }
+
+                    if (room is Door) {
+                        WebSocket.send(S2CPacketDungeonDoor(wX, wZ, x, z, room.type))
+                    }
                 }
             }
         }
@@ -74,9 +87,7 @@ object DungeonScanner {
                     it.key == roomName && it.value.data.trappedChests < trappedCount
                 }
 
-                if (roomEntry != null) {
-                    return roomEntry.value
-                }
+                if (roomEntry != null) return roomEntry.value
             }
 
         return null
