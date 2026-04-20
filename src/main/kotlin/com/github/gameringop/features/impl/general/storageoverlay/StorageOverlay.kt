@@ -6,7 +6,6 @@ import com.github.gameringop.event.impl.ScreenChangeEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.features.annotations.AlwaysActive
 import com.github.gameringop.mixin.IAbstractContainerScreen
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
@@ -35,7 +34,8 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import java.awt.Color
 import java.io.File
-import java.util.*
+import java.util.SortedMap
+import java.util.TreeMap
 
 data class StoragePageSlot(val index: Int) : Comparable<StoragePageSlot> {
     val isEnderChest get() = index < 9
@@ -95,7 +95,7 @@ class StorageOverlayCustom(
         val accessor = screen as IAbstractContainerScreen
         accessor.setLeftPos(overview.measurements.x)
         accessor.setTopPos(overview.measurements.y)
-        accessor.setImageWidth(overview.measurements.totalWidth)
+        accessor.setImageWidth(overview.measurements.overviewWidth)
         accessor.setImageHeight(overview.measurements.totalHeight)
     }
 
@@ -131,7 +131,6 @@ class StorageOverlayCustom(
     override fun isClickOutsideBounds(mouseX: Double, mouseY: Double) = false
 }
 
-@AlwaysActive
 object StorageOverlay : Feature(
     description = "Shows all storage pages in an overlay when opening storage.",
     name = "Storage Overlay",
@@ -170,12 +169,9 @@ object StorageOverlay : Feature(
     @Volatile private var handlingScreenChange = false
 
     override fun init() {
-        register<ScreenChangeEvent> { if (enabled) onScreenChange(event) }
+        register<ScreenChangeEvent> { onScreenChange(event) }
         register<WorldChangeEvent> { ensureDataLoaded() }
-        register<TickEvent.Start> {
-            if (!enabled) return@register
-            currentHandler?.let { rememberContent(it) }
-        }
+        register<TickEvent.Start> { currentHandler?.let { rememberContent(it) } }
         ThreadUtils.addShutdownHook { saveData() }
     }
 
@@ -277,48 +273,40 @@ object StorageOverlay : Feature(
     private fun saveData() {
         if (!dirty) return
         dirty = false
-        try {
-            val file = getDataFile()
-            val root = CompoundTag()
-            for ((slot, inv) in storageData.storageInventories) {
-                val prefix = slot.index.toString()
-                root.putString("${prefix}_title", inv.title)
-                inv.inventory?.let { root.putString("${prefix}_inv", it.serialize()) }
-            }
-            NbtIo.writeCompressed(root, file.toPath())
-        } catch (e: Exception) {
-            SoTerm.logger.error("Failed to save storage data", e)
+        val file = getDataFile()
+        val root = CompoundTag()
+        for ((slot, inv) in storageData.storageInventories) {
+            val prefix = slot.index.toString()
+            root.putString("${prefix}_title", inv.title)
+            inv.inventory?.let { root.putString("${prefix}_inv", it.serialize()) }
         }
+        NbtIo.writeCompressed(root, file.toPath())
     }
 
     @Synchronized
     private fun loadData() {
         storageData = StorageData()
-        try {
-            val file = getDataFile()
-            if (!file.exists()) {
-                val oldFile = File("config/${SoTerm.MOD_NAME}/storage_data.nbt")
-                if (oldFile.exists()) {
-                    oldFile.copyTo(file, overwrite = false)
-                    oldFile.delete()
-                }
+        val file = getDataFile()
+        if (!file.exists()) {
+            val oldFile = File("config/${SoTerm.MOD_NAME}/storage_data.nbt")
+            if (oldFile.exists()) {
+                oldFile.copyTo(file, overwrite = false)
+                oldFile.delete()
             }
-            if (!file.exists()) return
-            val root = NbtIo.readCompressed(file.toPath(), NbtAccounter.unlimitedHeap())
-            val data = StorageData()
-            for (i in 0 until 27) {
-                val titleKey = "${i}_title"
-                val invKey = "${i}_inv"
-                if (!root.contains(titleKey)) continue
-                val title = root.getString(titleKey).orElse("")
-                if (title.isEmpty()) continue
-                val slot = StoragePageSlot(i)
-                val inventory = if (root.contains(invKey)) VirtualInventory.deserialize(root.getString(invKey).orElse("")) else null
-                data.storageInventories[slot] = StorageData.StorageInventory(title, slot, inventory)
-            }
-            storageData = data
-        } catch (e: Exception) {
-            SoTerm.logger.error("Failed to load storage data", e)
         }
+        if (!file.exists()) return
+        val root = NbtIo.readCompressed(file.toPath(), NbtAccounter.unlimitedHeap())
+        val data = StorageData()
+        for (i in 0 until 27) {
+            val titleKey = "${i}_title"
+            val invKey = "${i}_inv"
+            if (!root.contains(titleKey)) continue
+            val title = root.getString(titleKey).orElse("")
+            if (title.isEmpty()) continue
+            val slot = StoragePageSlot(i)
+            val inventory = if (root.contains(invKey)) VirtualInventory.deserialize(root.getString(invKey).orElse("")) else null
+            data.storageInventories[slot] = StorageData.StorageInventory(title, slot, inventory)
+        }
+        storageData = data
     }
 }

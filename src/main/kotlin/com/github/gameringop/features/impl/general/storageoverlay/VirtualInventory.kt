@@ -1,17 +1,20 @@
 package com.github.gameringop.features.impl.general.storageoverlay
 
 import com.github.gameringop.SoTerm
-import net.minecraft.nbt.*
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.ListTag
+import net.minecraft.nbt.NbtAccounter
+import net.minecraft.nbt.NbtIo
+import net.minecraft.nbt.NbtOps
 import net.minecraft.world.item.ItemStack
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.*
+import java.util.Base64
 
 /**
  * Adapted from Firmament's VirtualInventory.kt
  * Source: https://github.com/nea89o/Firmament/blob/master/src/main/kotlin/features/inventory/storageoverlay/VirtualInventory.kt
  */
-
 data class VirtualInventory(val stacks: List<ItemStack>) {
     val rows = stacks.size / 9
 
