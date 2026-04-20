@@ -3,13 +3,14 @@
   "id": "soterm",
   "version": "${version}",
   "name": "SoTerm",
-  "description": "1.21.10 port of the greatest skyblock mod ever made!",
+  "description": "ok vro ok",
   "authors": [
     "TheGameringOP"
   ],
   "contact": {
     "homepage": "https://github.com/TheGameringOP",
-    "sources": "https://github.com/TheGameringOP/SoTerm-1.21.10"
+    "sources": "https://github.com/TheGameringOP/SoTerm",
+    "issues": "https://github.com/TheGameringOP/SoTerm/issues"
   },
   "license": "CC0-1.0",
   "icon": "assets/soterm/icon.png",
@@ -18,7 +19,7 @@
   "modmenu": [
     {
       "adapter": "kotlin",
-      "value": "com.github.gameringop.ui.clickgui.ModMenuIntegration"
+      "value": "com.github.gameringop.ui.clickgui.modmenu.ModMenuIntegration"
     }
   ],
   "client": [
