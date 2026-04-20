@@ -14,6 +14,7 @@ import com.github.gameringop.utils.items.ItemUtils.nameToIdMap
 import com.github.gameringop.utils.network.WebUtils
 import com.github.gameringop.utils.network.data.ElectionData
 import com.github.gameringop.utils.render.OPRenderPipelines
+import com.github.gameringop.websocket.WebSocket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -68,6 +69,7 @@ object SoTerm: ClientModInitializer {
 
         FeatureManager.registerFeatures()
         CommandManager.registerAll()
+        WebSocket.init()
 
         EventBus.register<TickEvent.Start> {
             mc.execute {
@@ -100,7 +102,8 @@ object SoTerm: ClientModInitializer {
                     ElectionData.Perk(minister?.get("perk")?.jsonObject["name"]?.jsonPrimitive?.content.orEmpty(), minister?.get("perk")?.jsonObject["description"]?.jsonPrimitive?.content?.removeFormatting().orEmpty())
                 )
             )
-        }.onFailure {
+        }
+        .onFailure {
             logger.error("Error while making a web request", it)
             it.printStackTrace()
         }
@@ -109,7 +112,8 @@ object SoTerm: ClientModInitializer {
             priceData.putAll(WebUtils.getAs<Map<String, Double>>("https://lb.tricked.dev/lowestbins").getOrThrow().map {
                 it.key to it.value.toLong()
             })
-        }.onFailure {
+        }
+        .onFailure {
             logger.error("Error while making a web request", it)
             it.printStackTrace()
         }
@@ -124,7 +128,8 @@ object SoTerm: ClientModInitializer {
 
                 priceData[productId] = buyPrice
             }
-        }.onFailure {
+        }
+        .onFailure {
             logger.error("Error while making a web request", it)
             it.printStackTrace()
         }
@@ -140,8 +145,9 @@ object SoTerm: ClientModInitializer {
                 idToNameMap[id] = name
                 nameToIdMap[name] = id
             }
-        }.onFailure {
-            logger.error("Error fetching Skyblock items", it)
+        }
+        .onFailure {
+            logger.error("Error while making a web request", it)
             it.printStackTrace()
         }
     }

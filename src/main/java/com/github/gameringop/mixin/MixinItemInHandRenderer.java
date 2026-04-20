@@ -41,9 +41,9 @@ public abstract class MixinItemInHandRenderer {
         float sign = interactionHand == InteractionHand.MAIN_HAND ? 1.0f : -1.0f;
 
         poseStack.translate(
-            Animations.INSTANCE.getMainHandX().getValue().floatValue() * sign,
-            Animations.INSTANCE.getMainHandY().getValue().floatValue(),
-            Animations.INSTANCE.getMainHandZ().getValue().floatValue()
+                Animations.INSTANCE.getMainHandX().getValue().floatValue() * sign,
+                Animations.INSTANCE.getMainHandY().getValue().floatValue(),
+                Animations.INSTANCE.getMainHandZ().getValue().floatValue()
         );
     }
 
@@ -102,9 +102,9 @@ public abstract class MixinItemInHandRenderer {
     }
 
     @ModifyVariable(
-        method = "renderArmWithItem",
-        at = @At("HEAD"),
-        argsOnly = true
+            method = "renderArmWithItem",
+            at = @At("HEAD"),
+            argsOnly = true
     )
     private ItemStack revertAxe(ItemStack original) {
         if (original == null || original.isEmpty()) return original;
@@ -112,4 +112,3 @@ public abstract class MixinItemInHandRenderer {
         return Objects.requireNonNullElse(replacement, original);
     }
 }
-
