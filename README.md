@@ -7,7 +7,7 @@
 ## 💾 Install in 5 easy steps
 
 1. Install **[Fabric for Minecraft](https://fabricmc.net/use/installer/)**
-2. Install **[Fabric API](https://cdn.modrinth.com/data/P7dR8mSH/versions)** and **[Fabric Kotlin Language](https://cdn.modrinth.com/data/Ha28R6CL/versions)**
+2. Install **[Fabric API](https://modrinth.com/mod/fabric-api)** and **[Fabric Kotlin Language](https://modrinth.com/mod/fabric-language-kotlin)**
 3. Download the latest mod file from the   [**Releases page**](https://github.com/TheGameringOP/SoTerm/releases)
 4. Put the downloaded `.jar` files into your `.minecraft/mods` folder
 5. Launch Minecraft using the **Fabric** profile
