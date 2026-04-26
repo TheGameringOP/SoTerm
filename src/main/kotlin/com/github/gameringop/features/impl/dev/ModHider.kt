@@ -3,7 +3,7 @@ package com.github.gameringop.features.impl.dev
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.mixin.ILanguage
 import com.github.gameringop.mixin.ILanguageManager
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.resources.language.ClientLanguage

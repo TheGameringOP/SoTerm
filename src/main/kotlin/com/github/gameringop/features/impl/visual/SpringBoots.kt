@@ -15,7 +15,7 @@ import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.ColorUtils
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.NumbersUtils.toFixed
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D

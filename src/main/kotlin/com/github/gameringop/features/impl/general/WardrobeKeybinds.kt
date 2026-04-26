@@ -10,10 +10,9 @@ import com.github.gameringop.ui.clickgui.components.hideIf
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.utils.ButtonType
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.GuiUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
 import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
@@ -71,7 +70,7 @@ object WardrobeKeybinds: Feature("Make it possible to bind armor slots to your k
 
             if (isSlotEquipped(slot) && preventUnequip.value) return@register
 
-            GuiUtils.clickSlot(slot, ButtonType.LEFT)
+            GuiUtils.clickSlot(slot, GuiUtils.ButtonType.LEFT)
 
             lastClick = System.currentTimeMillis()
             if (closeAfterUse.value) mc.player !!.closeContainer()

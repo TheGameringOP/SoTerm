@@ -2,7 +2,6 @@ package com.github.gameringop.utils.dungeons.map.handlers
 
 import com.github.gameringop.mixin.IMapState
 import com.github.gameringop.utils.MathUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.DungeonListener.dungeonTeammatesNoSelf
 import com.github.gameringop.utils.dungeons.DungeonPlayer
@@ -12,6 +11,7 @@ import com.github.gameringop.utils.dungeons.map.utils.LegacyRegistry
 import com.github.gameringop.utils.dungeons.map.utils.MapUtils.mapX
 import com.github.gameringop.utils.dungeons.map.utils.MapUtils.mapZ
 import com.github.gameringop.utils.dungeons.map.utils.MapUtils.yaw
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.world.WorldUtils
 import kotlinx.coroutines.*

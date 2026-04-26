@@ -14,14 +14,13 @@ import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.utils.ChatUtils
-import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.ThreadUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
-import com.github.gameringop.utils.Utils.uppercaseFirst
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.hasGlint
 import com.github.gameringop.utils.render.Render2D
+import com.github.gameringop.utils.uppercaseFirst
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.item.ItemStack
@@ -409,11 +408,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             TerminalType.STARTWITH -> {
                 val match = TerminalType.startwithRegex.matchEntire(TerminalListener.currentTitle)
                 val letter = match?.groupValues?.get(1)?.lowercase() ?: return
-                currentItems.forEach { (slot, item) ->
-                    val name = item.hoverName.string.removeFormatting().lowercase()
-                    if (name.startsWith(letter) && ! item.hasGlint() && slot !in TerminalType.clickedStartWithSlots) {
-                        solution.add(TerminalClick(slot))
-                    }
+                currentItems.filterNot { it.key in TerminalType.clickedStartWithSlots }.forEach { (slot, item) ->
+                    if (! item.hoverName.unformattedText.lowercase().startsWith(letter)) return@forEach
+                    if (item.hasGlint()) return@forEach
+                    solution.add(TerminalClick(slot))
                 }
             }
             TerminalType.COLORS -> {

@@ -10,7 +10,7 @@ import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.NumbersUtils
-import com.github.gameringop.utils.Utils.containsOneOf
+import com.github.gameringop.utils.containsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket

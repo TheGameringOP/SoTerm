@@ -6,6 +6,6 @@ import com.terraformersmc.modmenu.api.ModMenuApi
 
 class ModMenuIntegration : ModMenuApi {
     override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {
-        return ConfigScreenFactory { parent -> ClickGuiScreen }
+        return ConfigScreenFactory { ClickGuiScreen }
     }
 }

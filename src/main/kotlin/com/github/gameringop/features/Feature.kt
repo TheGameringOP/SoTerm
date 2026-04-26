@@ -8,15 +8,15 @@ import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.EventPriority
 import com.github.gameringop.features.annotations.AlwaysActive
 import com.github.gameringop.features.annotations.Dev
-import com.github.gameringop.ui.clickgui.CategoryType
 import com.github.gameringop.ui.clickgui.components.Setting
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.SoundSetting
 import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.clickgui.components.withDescription
+import com.github.gameringop.ui.clickgui.enums.CategoryType
 import com.github.gameringop.ui.hud.HudElement
-import com.github.gameringop.utils.Utils.spaceCaps
+import com.github.gameringop.utils.spaceCaps
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.sounds.SoundEvent

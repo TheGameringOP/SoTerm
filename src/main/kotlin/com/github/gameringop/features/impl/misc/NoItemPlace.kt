@@ -2,12 +2,12 @@ package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.Utils.endsWithOneOf
-import com.github.gameringop.utils.Utils.equalsOneOf
-import com.github.gameringop.utils.Utils.startsWithOneOf
 import com.github.gameringop.utils.dungeons.enums.WitherRelic
+import com.github.gameringop.utils.endsWithOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.startsWithOneOf
 import net.minecraft.world.item.context.BlockPlaceContext
 
 /**

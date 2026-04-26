@@ -13,8 +13,8 @@ import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.enums.SecretType
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.network.PacketUtils.send
 import com.github.gameringop.utils.render.Render2D

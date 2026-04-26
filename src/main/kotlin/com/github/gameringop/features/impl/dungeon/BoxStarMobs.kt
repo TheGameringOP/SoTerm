@@ -16,7 +16,7 @@ import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.location.LocationUtils.dungeonFloorNumber
 import com.github.gameringop.utils.location.LocationUtils.inBoss

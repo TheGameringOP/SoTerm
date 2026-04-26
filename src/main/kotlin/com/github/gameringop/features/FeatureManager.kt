@@ -5,7 +5,7 @@ import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.config.Config
 import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.impl.RenderOverlayEvent
-import com.github.gameringop.ui.clickgui.CategoryType
+import com.github.gameringop.ui.clickgui.enums.CategoryType
 import com.github.gameringop.ui.hud.HudEditorScreen
 import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.utils.Resolution

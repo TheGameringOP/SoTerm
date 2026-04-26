@@ -8,9 +8,9 @@ import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ThreadUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.DungeonClass
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils
 

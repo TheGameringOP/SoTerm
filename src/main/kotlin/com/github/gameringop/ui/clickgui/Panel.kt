@@ -5,6 +5,7 @@ import com.github.gameringop.features.FeatureManager
 import com.github.gameringop.features.impl.dev.ClickGui
 import com.github.gameringop.features.impl.misc.sound.SoundManager
 import com.github.gameringop.ui.clickgui.components.Style
+import com.github.gameringop.ui.clickgui.enums.CategoryType
 import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.render.Render2D
@@ -79,7 +80,7 @@ class Panel(val category: CategoryType, var x: Int, var y: Int) {
 
                     Render2D.drawCenteredString(context, feature.name, x + width / 2, currentY + 4)
 
-                    if (isHovered && ClickGuiScreen.selectedFeature == null) {
+                    if (isHovered && ! ClickGuiScreen.isMouseOverConfigWindow(mouseX, mouseY)) {
                         TooltipManager.hover(feature.description, mouseX, mouseY)
                     }
                 }
@@ -120,8 +121,6 @@ class Panel(val category: CategoryType, var x: Int, var y: Int) {
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int) {
-        if (ClickGuiScreen.selectedFeature != null) return
-
         if (isMouseOverHeader(mouseX, mouseY)) {
             if (button == 0) {
                 dragging = true
@@ -153,10 +152,10 @@ class Panel(val category: CategoryType, var x: Int, var y: Int) {
                 }
                 else if (button == 1 && feature.configSettings.isNotEmpty()) {
                     if (feature is SoundManager) {
-                        ClickGuiScreen.selectFeature(null)
+                        ClickGuiScreen.selectedFeature = null
                         SoundManager.btn.action.invoke()
                     }
-                    else ClickGuiScreen.selectFeature(feature)
+                    else ClickGuiScreen.openFeatureWindow(feature, mouseX.toFloat() + 12f, mouseY.toFloat() - 12f)
                     return
                 }
             }
@@ -164,7 +163,7 @@ class Panel(val category: CategoryType, var x: Int, var y: Int) {
         }
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int) {
+    fun mouseReleased(button: Int) {
         if (button == 0) dragging = false
     }
 

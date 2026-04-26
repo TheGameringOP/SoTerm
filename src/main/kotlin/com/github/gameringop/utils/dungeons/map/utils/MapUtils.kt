@@ -1,9 +1,9 @@
 package com.github.gameringop.utils.dungeons.map.utils
 
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
 import com.github.gameringop.utils.dungeons.map.handlers.HotbarMapColorParser
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.world.level.saveddata.maps.MapDecoration
 import net.minecraft.world.phys.Vec3

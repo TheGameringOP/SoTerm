@@ -9,9 +9,9 @@ import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers
 import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.predictionColor
 import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.preventMissClick
 import com.github.gameringop.utils.ThreadUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.core.RoomState
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.OPRenderLayers
 import com.github.gameringop.utils.render.RenderContext

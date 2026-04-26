@@ -6,9 +6,9 @@ import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.map.core.RoomType
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.world.WorldUtils

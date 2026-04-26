@@ -5,7 +5,6 @@ import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.EventPriority
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.utils.ChatUtils.formattedText
-import com.github.gameringop.utils.Utils.remove
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.core.Room

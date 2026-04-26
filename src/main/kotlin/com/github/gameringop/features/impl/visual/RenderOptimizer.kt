@@ -7,7 +7,7 @@ import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils.formattedText
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.core.particles.ParticleTypes

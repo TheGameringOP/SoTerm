@@ -12,8 +12,8 @@ import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.MathUtils.toVec
 import com.github.gameringop.utils.PlayerUtils
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.client.resources.sounds.SimpleSoundInstance

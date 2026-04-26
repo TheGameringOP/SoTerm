@@ -11,7 +11,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents

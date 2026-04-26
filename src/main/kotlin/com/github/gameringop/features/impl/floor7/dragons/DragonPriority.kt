@@ -1,9 +1,9 @@
 package com.github.gameringop.features.impl.floor7.dragons
 
-import com.github.gameringop.utils.Utils.equalsOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.Blessing
 import com.github.gameringop.utils.dungeons.enums.DungeonClass
+import com.github.gameringop.utils.equalsOneOf
 
 object DragonPriority {
     fun findPriority(spawningDragons: MutableList<WitherDragonEnum>): WitherDragonEnum {

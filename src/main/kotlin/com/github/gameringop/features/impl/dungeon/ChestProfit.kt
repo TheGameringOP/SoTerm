@@ -9,16 +9,12 @@ import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.section
+import com.github.gameringop.utils.*
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import com.github.gameringop.utils.DataDownloader
-import com.github.gameringop.utils.NumbersUtils
 import com.github.gameringop.utils.NumbersUtils.romanToDecimal
-import com.github.gameringop.utils.Utils.equalsOneOf
-import com.github.gameringop.utils.Utils.remove
-import com.github.gameringop.utils.Utils.startsWithOneOf
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.items.ItemUtils.lore
 import com.github.gameringop.utils.items.ItemUtils.skyblockId

@@ -12,9 +12,9 @@ import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.Utils.remove
 import com.github.gameringop.utils.items.ItemUtils.lore
 import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.remove
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.height
 import com.github.gameringop.utils.render.Render2D.width

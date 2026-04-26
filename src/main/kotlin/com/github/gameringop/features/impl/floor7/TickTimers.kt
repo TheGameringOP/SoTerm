@@ -63,7 +63,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
 
         hudElement("PY Timer", shouldDraw = { LocationUtils.inDungeon }, enabled = {pyTimer.value}, centered = true) { ctx, example ->
             val textToRender = if (example) "§bPY: §a95t"
-            else if (pyTickTime != - 1) formatTimer(pyTickTime, 95, "§bPY:§a")
+            else if (pyTickTime != - 1) formatTimer(pyTickTime, 72, "§bPY:§a")
             else return@hudElement 0f to 0f
 
             Render2D.drawCenteredString(ctx, textToRender, 0f, 0f)
@@ -72,7 +72,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
         
         hudElement("GY Timer", shouldDraw = { LocationUtils.inDungeon }, enabled = {gyTimer.value}, centered = true) { ctx, example ->
             val textToRender = if (example) "§bGY: §a145t"
-            else if (gyTickTime != - 1) formatTimer(gyTickTime, 145, "§bGY:§a")
+            else if (gyTickTime != - 1) formatTimer(gyTickTime, 122, "§bGY:§a")
             else return@hudElement 0f to 0f
 
             Render2D.drawCenteredString(ctx, textToRender, 0f, 0f)
@@ -92,11 +92,11 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
                 "[BOSS] Storm: ENERGY HEED MY CALL!", "[BOSS] Storm: THUNDER LET ME BE YOUR CATALYST!" -> {
                     if (pyTimer.value && ! pyTriggered) {
                         pyTriggered = true
-                        pyTickTime = 95
+                        pyTickTime = 72
                     }
                     if (gyTimer.value && ! gyTriggered) {
                         gyTriggered = true
-                        gyTickTime = 145
+                        gyTickTime = 122
                     }
                 }
 

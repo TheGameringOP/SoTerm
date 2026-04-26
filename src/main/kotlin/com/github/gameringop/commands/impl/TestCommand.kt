@@ -53,7 +53,7 @@ object TestCommand: BaseCommand("test") {
         }
 
         runs {
-            ChatUtils.chat("${mc.player?.mainHandItem.skyblockId}: ${priceData[mc.player?.mainHandItem.skyblockId]}")
+            ChatUtils.chat("${mc.player?.mainHandItem?.skyblockId}: ${priceData[mc.player?.mainHandItem?.skyblockId]}")
         }
     }
 }

@@ -3,7 +3,7 @@ package com.github.gameringop.utils.dungeons
 import com.github.gameringop.SoTerm.electionData
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.features.impl.dungeon.ScoreCalculator
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.network.data.ElectionData
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks

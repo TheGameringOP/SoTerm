@@ -1,13 +1,11 @@
 package com.github.gameringop.utils.network
 
 import com.github.gameringop.utils.ChatUtils.removeFormatting
-import com.github.gameringop.utils.JsonUtils.getArray
-import com.github.gameringop.utils.JsonUtils.getBoolean
 import com.github.gameringop.utils.items.ItemRarity
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.items.ItemUtils.lore
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
-import kotlinx.serialization.json.JsonObject
+import com.github.gameringop.utils.network.data.DungeonStats
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.NbtAccounter
 import net.minecraft.nbt.NbtIo
@@ -46,7 +44,7 @@ object ApiUtils {
         return lastLevelInList + levelsAboveLastLevel
     }
 
-    fun getMagicalPower(talismanBag: Collection<ItemStack>, profileInfo: JsonObject): Int {
+    fun getMagicalPower(talismanBag: Collection<ItemStack>, profileInfo: DungeonStats): Int {
         return talismanBag.map {
             val itemId = it.skyblockId.let { id -> if (id.startsWith("PARTY_HAT_")) "PARTY_HAT" else id }
             val unusable = it.lore.any { line -> requiredRegex.matches(line.removeFormatting()) }
@@ -67,11 +65,7 @@ object ApiUtils {
 
             val bonus = when (itemId) {
                 "HEGEMONY_ARTIFACT" -> mp
-                "ABICASE" -> {
-                    val contacts = profileInfo.getArray("abiphone_contacts")?.size ?: 0
-                    floor(contacts / 2.0).toInt()
-                }
-
+                "ABICASE" -> floor(profileInfo.abiphoneContacts.size / 2.0).toInt()
                 else -> 0
             }
 
@@ -81,7 +75,7 @@ object ApiUtils {
         }.values.fold(0) { acc, pair ->
             acc + pair.second
         }.let {
-            if (profileInfo.getBoolean("consumed_rift_prism") == true) it + 11 else it
+            if (profileInfo.consumedRiftPrism) it + 11 else it
         }
     }
 

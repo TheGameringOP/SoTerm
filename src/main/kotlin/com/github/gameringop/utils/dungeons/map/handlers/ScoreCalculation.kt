@@ -8,11 +8,11 @@ import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.Utils.containsOneOf
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.containsOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.DungeonUtils
 import com.github.gameringop.utils.dungeons.map.core.RoomState
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.websocket.WebSocket
 import com.github.gameringop.websocket.packets.S2CPacketDungeonMimic

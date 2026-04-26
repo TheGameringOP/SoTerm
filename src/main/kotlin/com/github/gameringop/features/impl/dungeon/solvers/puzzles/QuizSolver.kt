@@ -9,13 +9,13 @@ import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.DataDownloader
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.ThreadUtils
-import com.github.gameringop.utils.Utils.startsWithOneOf
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
+import com.github.gameringop.utils.startsWithOneOf
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.core.BlockPos
 

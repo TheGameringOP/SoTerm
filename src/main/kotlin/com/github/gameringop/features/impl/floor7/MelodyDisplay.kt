@@ -12,7 +12,7 @@ import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
-import com.github.gameringop.utils.Utils.containsOneOf
+import com.github.gameringop.utils.containsOneOf
 import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D

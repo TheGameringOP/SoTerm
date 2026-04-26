@@ -12,10 +12,10 @@ import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.utils.componnents.UIButton
 import com.github.gameringop.ui.utils.componnents.UISearchBox
 import com.github.gameringop.utils.NumbersUtils
-import com.github.gameringop.utils.Utils.uppercaseFirst
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.network.PacketUtils.send
 import com.github.gameringop.utils.render.Render2D
+import com.github.gameringop.utils.uppercaseFirst
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen

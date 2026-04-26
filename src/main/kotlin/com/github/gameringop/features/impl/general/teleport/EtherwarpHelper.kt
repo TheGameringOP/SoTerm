@@ -2,7 +2,7 @@ package com.github.gameringop.features.impl.general.teleport
 
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.MathUtils.add
-import com.github.gameringop.utils.Utils.equalsOneOf
+import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.customData
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import net.minecraft.core.BlockPos
