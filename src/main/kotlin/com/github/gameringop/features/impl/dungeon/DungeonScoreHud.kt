@@ -35,7 +35,7 @@ object DungeonScoreHud: Feature("Dungeon Score HUD") {
     private val spiritTracking by DropdownSetting("Spirit Tracking", 1, listOf(
         "Off",
         "Assume Yes",
-        "Auto (Requires API Key)"
+        "Auto (Making API Requests)"
     )).section("Spirit Tracking")
 
     private val showDungeonStatus by ToggleSetting("Show Dungeon Status", true).section("Sections")
