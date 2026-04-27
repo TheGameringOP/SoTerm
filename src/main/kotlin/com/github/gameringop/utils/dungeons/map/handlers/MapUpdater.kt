@@ -2,6 +2,7 @@ package com.github.gameringop.utils.dungeons.map.handlers
 
 import com.github.gameringop.mixin.IMapState
 import com.github.gameringop.utils.MathUtils
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.DungeonListener.dungeonTeammatesNoSelf
 import com.github.gameringop.utils.dungeons.DungeonPlayer
@@ -13,7 +14,6 @@ import com.github.gameringop.utils.dungeons.map.utils.MapUtils.mapZ
 import com.github.gameringop.utils.dungeons.map.utils.MapUtils.yaw
 import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
-import com.github.gameringop.utils.world.WorldUtils
 import kotlinx.coroutines.*
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes
 import java.util.concurrent.ConcurrentHashMap
@@ -110,6 +110,7 @@ object MapUpdater {
 
                 if (room is Unknown) {
                     DungeonInfo.dungeonList[idx] = mapTile
+                    DungeonPathFinder.clearCache()
                     if (mapTile is Room) {
                         val connected = HotbarMapColorParser.getConnected(x, z)
                         connected.firstOrNull { it.data.name != "Unknown" }?.let {

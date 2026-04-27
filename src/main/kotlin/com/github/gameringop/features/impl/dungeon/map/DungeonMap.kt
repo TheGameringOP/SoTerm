@@ -7,19 +7,16 @@ import com.github.gameringop.ui.clickgui.components.impl.CategorySetting
 import com.github.gameringop.ui.clickgui.components.impl.SeparatorSetting
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.PlayerUtils
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.core.Door
 import com.github.gameringop.utils.dungeons.map.core.DoorType
 import com.github.gameringop.utils.dungeons.map.core.RoomState
-import com.github.gameringop.utils.dungeons.map.handlers.ClearInfoUpdater
-import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
-import com.github.gameringop.utils.dungeons.map.handlers.MapUpdater
-import com.github.gameringop.utils.dungeons.map.handlers.ScoreCalculation
+import com.github.gameringop.utils.dungeons.map.handlers.*
 import com.github.gameringop.utils.dungeons.map.utils.MapUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket
 
@@ -73,6 +70,7 @@ object DungeonMap: Feature() {
 
         register<WorldChangeEvent> {
             DungeonInfo.reset()
+            DungeonPathFinder.clearCache()
             DungeonScanner.hasScanned = false
             MapUtils.reset()
             MapUpdater.onPlayerDeath()
@@ -88,8 +86,12 @@ object DungeonMap: Feature() {
 
             for (tile in DungeonInfo.dungeonList) {
                 if (tile !is Door) continue
-                if (tile.opened || tile.type == DoorType.ENTRANCE || tile.type == DoorType.NORMAL) continue
-                if (shouldHideUndiscovered && tile.state == RoomState.UNDISCOVERED) continue
+                if (tile.type == DoorType.ENTRANCE || tile.type == DoorType.NORMAL) continue
+                if (tile.opened) continue
+
+                val isFairy = DungeonPathFinder.isFairy(tile)
+
+                if (shouldHideUndiscovered && tile.state == RoomState.UNDISCOVERED && ! isFairy) continue
 
                 Render3D.renderBox(
                     event.ctx,
