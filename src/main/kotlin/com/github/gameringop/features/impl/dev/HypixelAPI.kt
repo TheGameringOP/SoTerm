@@ -106,6 +106,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         ThreadUtils.async {
             try {
                 val url = "$PROXY_BASE/v2/player?name=Hypixel"
+                if (SoTerm.debugFlags.contains("spirit")) {
+                    ChatUtils.modMessage("§7Sending request to: $url")
+                }
                 val response = runBlocking { WebApi.getString(url) }
 
                 response.onSuccess { responseBody ->
@@ -130,7 +133,16 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                         }
                     }
                 }.onFailure { error ->
-                    ChatUtils.modMessage("§cFailed to connect to proxy: ${error.message}")
+                    val message = error.message ?: ""
+                    if (message.contains("HTTP 429") || message.contains("You have already looked up this name recently")) {
+                        ChatUtils.modMessage("§aProxy is working!")
+                        if (SoTerm.debugFlags.contains("spirit")) {
+                            ChatUtils.modMessage("§aProxy is working! (Rate limited - still good)")
+                            ChatUtils.modMessage("§7$message")
+                        }
+                    } else {
+                        ChatUtils.modMessage("§cFailed to connect to proxy: ${error.message}")
+                    }
                 }
             } catch (e: Exception) {
                 ChatUtils.modMessage("§cFailed to test proxy: ${e.message}")
@@ -150,6 +162,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 }
 
                 val url = "$PROXY_BASE/v2/skyblock/profiles?uuid=$uuid"
+                if (SoTerm.debugFlags.contains("spirit")) {
+                    ChatUtils.modMessage("§7Sending request to: $url")
+                }
                 val response = runBlocking { WebApi.getString(url) }
 
                 response.onSuccess { responseBody ->
@@ -220,6 +235,9 @@ object HypixelAPI : Feature("Hypixel API Integration") {
             }
 
             val url = "$PROXY_BASE/v2/skyblock/profiles?uuid=$uuid"
+            if (SoTerm.debugFlags.contains("spirit")) {
+                ChatUtils.modMessage("§7Sending request to: $url")
+            }
             val response = runBlocking { WebApi.getString(url) }
 
             response.onSuccess { responseBody ->
