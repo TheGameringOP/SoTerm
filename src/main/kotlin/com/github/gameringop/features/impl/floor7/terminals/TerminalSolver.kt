@@ -59,7 +59,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val melodyWrongColor by ColorSetting("Melody: Wrong", Color(255, 0, 0, 255)).showIf { melody.value }
     val melodyBlock by ToggleSetting("Melody: Block Wrong Clicks").showIf { melody.value }
     val offsetPacket by SliderSetting<Long>("Offset Packet", 500, 0, 1000, 1).showIf { melodyBlock.value }
-    val clickGraceMs by SliderSetting("Click Grace (ms)", 50, 0, 100, 1).showIf { melodyBlock.value }
+    val paneUpdateIntervalMs by SliderSetting("Pane Update Interval (ms)", 50, 20, 100, 1).showIf { melodyBlock.value }
+    val blockBeforeChangeMs by SliderSetting("Block Before Change (ms)", 5, 0, 20, 1).showIf { melodyBlock.value }
     val showNoSafeButton by ToggleSetting("Show NoSafe Button").showIf { melodyBlock.value }
 
     val melody by ToggleSetting("Melody", true).section("Toggles")
@@ -274,6 +275,17 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         if (isMelodyWaiting) return
 
+        if (lastPaneSwitchTimeMs > 0) {
+            val elapsed = System.currentTimeMillis() - lastPaneSwitchTimeMs
+            val safetyThreshold = paneUpdateIntervalMs.value.toLong() - blockBeforeChangeMs.value.toLong()
+            if (elapsed >= safetyThreshold) {
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §cBlocked click – too close to next pane change (elapsed ${elapsed}ms, threshold ${safetyThreshold}ms).")
+                }
+                return
+            }
+        }
+
         if (clickedItem != Items.LIME_TERRACOTTA) return
 
         if (noSafeActive) {
@@ -310,20 +322,12 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         if (magentaSlot == null || limeGlassSlot == null) return
         val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
 
-        val isCurrentlyCorrect = limeGlassSlot in validSlotsForColumn
-        val now = System.currentTimeMillis()
-        val withinGrace = clickGraceMs.value > 0 && lastPaneSwitchTimeMs > 0 && (now - lastPaneSwitchTimeMs) < clickGraceMs.value
-
-        if (isCurrentlyCorrect || withinGrace) {
+        if (limeGlassSlot in validSlotsForColumn) {
             sendClickPacket(slot, 0)
 
             val delayTicks = (offsetPacket.value / 50).toInt()
             melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
             isMelodyWaiting = true
-
-            if (SoTerm.debugFlags.contains("melody") && withinGrace && !isCurrentlyCorrect) {
-                ChatUtils.modMessage("§6[Melody] §eClick allowed due to grace window (pane already changed server-side).")
-            }
         }
     }
 
