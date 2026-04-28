@@ -277,16 +277,13 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         if (lastPaneSwitchTimeMs > 0) {
             val elapsed = System.currentTimeMillis() - lastPaneSwitchTimeMs
-            if (elapsed < 100) {
-                val safetyThreshold = paneUpdateIntervalMs.value.toLong() - blockBeforeChangeMs.value.toLong()
-                if (elapsed >= safetyThreshold) {
-                    if (SoTerm.debugFlags.contains("melody")) {
-                        ChatUtils.modMessage("§6[Melody] §cBlocked click – too close to next pane change (elapsed ${elapsed}ms, threshold ${safetyThreshold}ms).")
-                    }
-                    return
+            val interval = paneUpdateIntervalMs.value.toLong()
+            val threshold = interval - blockBeforeChangeMs.value.toLong()
+            if (elapsed >= threshold) {
+                if (SoTerm.debugFlags.contains("melody")) {
+                    ChatUtils.modMessage("§6[Melody] §cBlocked click – too close to next pane change (elapsed ${elapsed}ms, threshold ${threshold}ms).")
                 }
-            } else if (SoTerm.debugFlags.contains("melody")) {
-                ChatUtils.modMessage("§6[Melody] §dLast change was ${elapsed}ms ago, not blocking.")
+                return
             }
         }
 
@@ -355,8 +352,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private fun predict(click: TerminalClick) {
         if (TerminalListener.currentType.equalsOneOf(TerminalType.NUMBERS, TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS)) {
             solution.remove(click)
-        }
-        else if (TerminalListener.currentType == TerminalType.RUBIX) {
+        } else if (TerminalListener.currentType == TerminalType.RUBIX) {
             val currentSolution = solution.find { it.slotId == click.slotId } ?: return
             val change = if (click.btn == 0) -1 else 1
             val newDiff = currentSolution.btn + change
@@ -371,7 +367,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         val initialWindowId = TerminalListener.lastWindowId
         ThreadUtils.setTimeout(resyncTimeout.value) {
-            if (! TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@setTimeout
+            if (!TerminalListener.inTerm || initialWindowId != TerminalListener.lastWindowId) return@setTimeout
 
             if (SoTerm.debugFlags.contains("terminal")) ChatUtils.modMessage("Resync Timeout Triggered")
 
@@ -425,7 +421,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 val match = TerminalType.startwithRegex.matchEntire(TerminalListener.currentTitle)
                 val letter = match?.groupValues?.get(1)?.lowercase() ?: return
                 currentItems.filterNot { it.key in TerminalType.clickedStartWithSlots }.forEach { (slot, item) ->
-                    if (! item.hoverName.unformattedText.lowercase().startsWith(letter)) return@forEach
+                    if (!item.hoverName.unformattedText.lowercase().startsWith(letter)) return@forEach
                     if (item.hasGlint()) return@forEach
                     solution.add(TerminalClick(slot))
                 }
@@ -441,7 +437,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 currentItems.filter {
                     it.value.item != Items.BLACK_STAINED_GLASS_PANE
                             && fixName(it.value.hoverName.unformattedText.lowercase()).startsWith(extra)
-                            && ! it.value.hasGlint()
+                            && !it.value.hasGlint()
                 }.map { it.key }.forEach { solution.add(TerminalClick(it)) }
             }
             TerminalType.RUBIX -> {
@@ -477,7 +473,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     if (magenta != null) TerminalType.melodyState.correct = magenta
                     TerminalType.melodyState.button = button.toInt()
                     TerminalType.melodyState.current = current
-                    // IMPORTANT: reset the stopwatch each time the lime glass moves
                     lastPaneSwitchTimeMs = System.currentTimeMillis()
                 }
             }
@@ -487,7 +482,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     fun onItemsUpdated(slot: Int, item: ItemStack) {
         if (TerminalListener.currentType == TerminalType.MELODY) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE) {
-                // IMPORTANT: reset the stopwatch each time the lime glass moves
                 lastPaneSwitchTimeMs = System.currentTimeMillis()
             }
             isMelodyWaiting = false
