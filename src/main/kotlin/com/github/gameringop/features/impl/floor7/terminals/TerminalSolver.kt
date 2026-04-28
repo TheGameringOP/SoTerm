@@ -3,6 +3,7 @@ package com.github.gameringop.features.impl.floor7.terminals
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
+import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
@@ -17,6 +18,7 @@ import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.hasGlint
 import com.github.gameringop.utils.render.Render2D
@@ -70,8 +72,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     private val queue = mutableListOf<TerminalClick>()
     private var isClicked = false
     private var noSafeActive = false
-    private var lastMelodySlot: Int = -1 
     private var isMelodyWaiting = false
+    private var melodyWaitUntilTick = 0L
 
     override fun onEnable() {
         super.onEnable()
@@ -251,73 +253,69 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
             }
         }
+
+        register<TickEvent.Server> {
+            if (isMelodyWaiting && DungeonListener.currentTime >= melodyWaitUntilTick) {
+                isMelodyWaiting = false
+            }
+        }
     }
 
     private fun handleMelodyClick(slot: Int) {
-            val currentItems = TerminalListener.currentItems
-            val clickedItem = currentItems[slot]?.item
-    
-            if (!melodyBlock.value) {
-                sendClickPacket(slot, 0)
-                return
-            }
-    
-            if (isMelodyWaiting) return
-    
-            if (clickedItem != Items.LIME_TERRACOTTA) return
-    
-            if (noSafeActive) {
-                sendClickPacket(slot, 0)
-                return
-            }
-    
-            val columnMap = mapOf(
-                1 to listOf(10, 19, 28, 37),
-                2 to listOf(11, 20, 29, 38),
-                3 to listOf(12, 21, 30, 39),
-                4 to listOf(13, 22, 31, 40),
-                5 to listOf(14, 23, 32, 41)
-            )
-    
-            val magentaSlot = currentItems.entries.find { 
-                it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE 
-            }?.key
-    
-            val limeGlassSlot = currentItems.entries.find { 
-                it.value.item == Items.LIME_STAINED_GLASS_PANE 
-            }?.key
-    
-            if (SoTerm.debugFlags.contains("melody")) {
-                if (magentaSlot == null || limeGlassSlot == null) {
-                    ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
-                } else if (limeGlassSlot in (columnMap[magentaSlot] ?: emptyList())) {
-                    ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
-                } else {
-                    ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
-                }
-            }
-    
-            if (magentaSlot == null || limeGlassSlot == null) return
-            val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
-    
-            if (limeGlassSlot in validSlotsForColumn) {
-                sendClickPacket(slot, 0)
-                
-                isMelodyWaiting = true
-                val delayMs = offsetPacket.value
-                
-                if (delayMs > 0) {
-                    val delayTicks = (delayMs / 50).toInt()
+        val currentItems = TerminalListener.currentItems
+        val clickedItem = currentItems[slot]?.item
 
-                    ThreadUtils.scheduledTaskServer(delayTicks) {
-                        isMelodyWaiting = false
-                    }
+        if (!melodyBlock.value) {
+            sendClickPacket(slot, 0)
+            return
+        }
 
-                } else {
-                    isMelodyWaiting = false 
-                }
+        if (isMelodyWaiting) return
+
+        if (clickedItem != Items.LIME_TERRACOTTA) return
+
+        if (noSafeActive) {
+            sendClickPacket(slot, 0)
+            return
+        }
+
+        val columnMap = mapOf(
+            1 to listOf(10, 19, 28, 37),
+            2 to listOf(11, 20, 29, 38),
+            3 to listOf(12, 21, 30, 39),
+            4 to listOf(13, 22, 31, 40),
+            5 to listOf(14, 23, 32, 41)
+        )
+
+        val magentaSlot = currentItems.entries.find {
+            it.key in 1..5 && it.value.item == Items.MAGENTA_STAINED_GLASS_PANE
+        }?.key
+
+        val limeGlassSlot = currentItems.entries.find {
+            it.value.item == Items.LIME_STAINED_GLASS_PANE
+        }?.key
+
+        if (SoTerm.debugFlags.contains("melody")) {
+            if (magentaSlot == null || limeGlassSlot == null) {
+                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
+            } else if (limeGlassSlot in (columnMap[magentaSlot] ?: emptyList())) {
+                ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
+            } else {
+                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
             }
         }
+
+        if (magentaSlot == null || limeGlassSlot == null) return
+        val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
+
+        if (limeGlassSlot in validSlotsForColumn) {
+            sendClickPacket(slot, 0)
+
+            val delayTicks = (offsetPacket.value / 50).toInt()
+            melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
+            isMelodyWaiting = true
+        }
+    }
 
     private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
         when (slotStyle.value) {
@@ -493,10 +491,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             }
         }
 
-    fun resetMelodyLock() {
-        isMelodyWaiting = false
-    }
-
     fun onTerminalOpen() {
         isClicked = false
         TerminalType.reset()
@@ -505,6 +499,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         TerminalType.melodyState.current = null
         noSafeActive = false
         isMelodyWaiting = false
+        melodyWaitUntilTick = 0L
     }
 
     fun onTerminalClose() {
@@ -512,6 +507,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         solution.clear()
         TerminalType.reset()
         noSafeActive = false
+        isMelodyWaiting = false
+        melodyWaitUntilTick = 0L
     }
 
     fun register() {

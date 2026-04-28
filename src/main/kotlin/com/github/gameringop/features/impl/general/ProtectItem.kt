@@ -14,6 +14,7 @@ import com.github.gameringop.ui.notification.NotificationManager
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.unformattedText
+import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.items.ItemUtils.customData
 import com.github.gameringop.utils.items.ItemUtils.itemUUID
 import com.github.gameringop.utils.items.ItemUtils.lore
@@ -71,7 +72,7 @@ object ProtectItem: Feature("Prevents dropping or selling important items via /p
         }
 
         register<KeyboardEvent.KeyPressed> {
-            if (LocationUtils.inDungeon) return@register
+            if (LocationUtils.inDungeon && DungeonListener.dungeonStarted && !DungeonListener.dungeonEnded) return@register
             if (mc.screen != null) return@register
             if (! mc.options.keyDrop.matches(event.keyEvent)) return@register
             val heldItem = mc.player?.inventory?.selectedItem ?: return@register
