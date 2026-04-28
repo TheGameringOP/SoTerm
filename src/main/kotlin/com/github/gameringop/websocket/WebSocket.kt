@@ -1,55 +1,78 @@
 package com.github.gameringop.websocket
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.StringUtils.decodeBase64
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.catch
+import com.github.gameringop.utils.network.WebUtils
+import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import org.java_websocket.client.WebSocketClient
-import org.java_websocket.handshake.ServerHandshake
-import java.net.URI
+import io.ktor.client.plugins.websocket.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 object WebSocket {
     val URL = "d3NzOi8vbm9hbW0ub3Jn".decodeBase64()
     val mname = "Tm9hbW1BZGRvbnM=".decodeBase64()
-    private val worker = Executors.newSingleThreadScheduledExecutor {
-        Thread(it, "${mname}-WebSocket").apply { isDaemon = true }
+
+    private val worker = run {
+        val threadFactory = fun(it: Runnable) = Thread(it, "${mname}-WebSocket").apply { isDaemon = true }
+        CoroutineScope(Executors.newSingleThreadExecutor(threadFactory).asCoroutineDispatcher() + SupervisorJob())
     }
+
+    @Volatile private var session: DefaultClientWebSocketSession? = null
+    private var socketJob: Job? = null
 
     fun init() {
+        ThreadUtils.addShutdownHook(::shutdown)
         PacketRegistry.init()
-        TSSocket.connect()
-        ThreadUtils.addShutdownHook { TSSocket.close(1000, "client stopping") }
+        connect()
     }
 
-    fun send(packet: Any) = worker.execute {
-        if (! TSSocket.isOpen) return@execute
+    fun send(packet: Any) = worker.launch {
+        val socket = session?.takeIf { it.isActive } ?: return@launch
         val raw = JsonUtils.gsonBuilder.toJson(packet)
-        if (SoTerm.debugFlags.contains("ws")) ChatUtils.chat(raw)
-        runCatching { TSSocket.send(raw) }
+        socket.send(Frame.Text(raw))
     }
 
-    private object TSSocket: WebSocketClient(URI(URL)) {
-        override fun onMessage(message: String) = worker.execute {
-            runCatching {
-                val json = JsonParser.parseString(message).takeIf { it.isJsonObject }?.asJsonObject ?: return@execute
-                val type = json.get("type")?.asString.takeUnless { it.isNullOrBlank() } ?: return@execute
-                val packetClass = PacketRegistry.getPacketClass(type) ?: return@execute
-                val packet = JsonUtils.gsonBuilder.fromJson(message, packetClass)
-                SoTerm.mc.execute { packet.handle() }
+    private fun connect() {
+        if (socketJob?.isActive == true) return
+
+        socketJob = worker.launch {
+            try {
+                WebUtils.client.webSocket(URL) {
+                    SoTerm.logger.info("WebSocket: Connected Successfully")
+                    session = this
+
+                    for (frame in incoming) if (frame is Frame.Text) handleMessage(frame.readText())
+                }
+            }
+            catch (e: Exception) {
+                SoTerm.logger.info("WebSocket: Disconnected", e)
+            }
+            finally {
+                session = null
+                socketJob = null
+                ThreadUtils.setTimeout(30_000, ::connect)
             }
         }
+    }
 
-        init {
-            connectionLostTimeout = 30
-            isTcpNoDelay = true
-        }
+    private fun handleMessage(message: String) = catch {
+        val json = JsonParser.parseString(message).takeIf(JsonElement::isJsonObject)?.asJsonObject ?: return@catch
+        val type = json.get("type")?.asString?.takeUnless(String::isBlank) ?: return@catch
+        val packetClass = PacketRegistry.getPacketClass(type) ?: return@catch
+        val packet = JsonUtils.gsonBuilder.fromJson(message, packetClass)
+        mc.submit(packet::handle)
+    }
 
-        override fun onClose(code: Int, reason: String, remote: Boolean) = worker.execute { worker.schedule({ reconnect() }, 30, TimeUnit.SECONDS) }
-        override fun onOpen(handshakedata: ServerHandshake) = worker.execute { SoTerm.logger.info("WebSocket: Connected Successfully") }
-        override fun onError(ex: Exception) = worker.execute { SoTerm.logger.error("WebSocket: transport error", ex) }
+    private fun shutdown() = runBlocking {
+        catch { session?.close() }
+        catch { socketJob?.cancelAndJoin() }
+        worker.cancel()
     }
 }

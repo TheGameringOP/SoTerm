@@ -5,12 +5,15 @@ import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.JsonUtils.getObj
 import com.github.gameringop.utils.JsonUtils.getString
 import com.github.gameringop.utils.StringUtils.decodeBase64
+import com.github.gameringop.utils.catch
 import com.github.gameringop.utils.containsOneOf
 import com.github.gameringop.utils.network.cache.ProfileCache
 import com.github.gameringop.utils.network.cache.SecretCache
 import com.github.gameringop.utils.network.cache.UuidCache
 import com.github.gameringop.utils.network.data.DungeonStats
 import com.github.gameringop.utils.network.data.MojangData
+import io.ktor.client.call.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -20,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object ProfileUtils {
     val BASE_URL = "aHR0cHM6Ly9hcGkubm9hbW0ub3Jn".decodeBase64()
-    val NAME = "bm9hbW0=".decodeBase64()
+    val name = "bm9hbW0=".decodeBase64()
 
     private val nameToUuidApis = listOf(
         "https://playerdb.co/api/player/minecraft/",
@@ -57,7 +60,7 @@ object ProfileUtils {
             for ((i, api) in nameToUuidApis.withIndex()) {
                 if (System.currentTimeMillis() < (apiCooldowns[api] ?: 0L)) continue
 
-                val result = WebUtils.getString(api + lowerName)
+                val result = WebUtils.getAs<String>(api + lowerName)
                 if (result.isFailure) {
                     val msg = result.exceptionOrNull()?.message ?: ""
                     if (msg.contains("429")) {
@@ -68,7 +71,7 @@ object ProfileUtils {
                     continue
                 }
 
-                val response = runCatching { JsonUtils.stringToJson(result.getOrThrow()).jsonObject }.getOrNull() ?: continue
+                val response = catch { JsonUtils.stringToJson(result.getOrThrow()).jsonObject } ?: continue
                 val uuid = if (i == 0) response.getObj("player")?.getString("id") else response.getString("id")
                 val fetchedName = if (i == 0) response.getObj("player")?.getString("username") else response.getString("name") ?: name
 
@@ -100,7 +103,7 @@ object ProfileUtils {
             for ((i, api) in uuidToNameApis.withIndex()) {
                 if (System.currentTimeMillis() < (apiCooldowns[api] ?: 0L)) continue
 
-                val result = WebUtils.getString(api + key)
+                val result = WebUtils.getAs<String>(api + key)
                 if (result.isFailure) {
                     val msg = result.exceptionOrNull()?.message ?: ""
                     if (msg.contains("429")) {
@@ -111,7 +114,7 @@ object ProfileUtils {
                     continue
                 }
 
-                val response = runCatching { JsonUtils.stringToJson(result.getOrThrow()).jsonObject }.getOrNull() ?: continue
+                val response = catch { JsonUtils.stringToJson(result.getOrThrow()).jsonObject } ?: continue
                 val uuid = if (i == 0) response.getObj("player")?.getString("id") else response.getString("id") ?: key
                 val fetchedName = if (i == 0) response.getObj("player")?.getString("username") else response.getString("name")
 
@@ -166,21 +169,21 @@ object ProfileUtils {
 
     private suspend inline fun <reified T> doApiRequest(path: String): T {
         val now = System.currentTimeMillis()
-        if (now < (apiCooldowns[NAME] ?: 0L)) throw IllegalStateException("API global cooldown")
+        if (now < (apiCooldowns[name] ?: 0L)) throw IllegalStateException("API global cooldown")
         if (now < (apiCooldowns[path] ?: 0L)) throw IllegalStateException("Path negative cached")
 
-        val resResult = WebUtils.get("$BASE_URL$path")
-        if (resResult.isFailure) {
-            val error = resResult.exceptionOrNull()
-            val msg = error?.message ?: ""
-            when {
-                msg.contains("429") -> apiCooldowns[NAME] = now + 60_000
-                msg.containsOneOf("404", "500", "502", "503", "403") -> apiCooldowns[path] = now + 300_000
+        val res = WebUtils.get("$BASE_URL$path").getOrThrow()
+        val code = res.status.value
+
+        if (code !in 200 .. 299) {
+            when (code) {
+                429 -> apiCooldowns[name] = now + 60_000
+                404, 500, 502, 503, 403 -> apiCooldowns[path] = now + 300_000
             }
 
-            throw error ?: Exception("API Error")
+            throw Error("HTTP ${res.status}: ${res.bodyAsText()}")
         }
 
-        return WebUtils.getAs<T>(resResult.getOrThrow()).getOrThrow()
+        return res.body()
     }
 }

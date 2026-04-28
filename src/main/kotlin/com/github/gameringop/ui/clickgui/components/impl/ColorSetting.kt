@@ -6,6 +6,7 @@ import com.github.gameringop.ui.clickgui.components.Setting
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.utils.ColorUtils.withAlpha
+import com.github.gameringop.utils.catch
 import com.github.gameringop.utils.render.Render2D
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
@@ -156,7 +157,7 @@ class ColorSetting(name: String, defaultValue: Color, val withAlpha: Boolean = t
 
     private fun tryUpdateFromHex() {
         val req = if (withAlpha) 8 else 6
-        if (hexText.length == req) runCatching {
+        if (hexText.length == req) catch {
             val longVal = hexText.toLong(16)
             val c = if (withAlpha) Color((longVal and 0xFFFFFFFFL).toInt(), true)
             else Color((longVal and 0xFFFFFFL).toInt())

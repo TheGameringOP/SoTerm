@@ -18,14 +18,20 @@ val mod_name: String by project
 val fabric_version: String by project
 val modmenu_version: String by project
 val iris_version: String by project
+val ktor_version: String by project
 
 group = maven_group
 version = mod_version
 base.archivesName.set(archives_base_name)
 
-loom {
-    accessWidenerPath.set(file("src/main/resources/soterm.accesswidener"))
+loom { accessWidenerPath.set(file("src/main/resources/soterm.accesswidener")) }
+
+val bundled by configurations.creating
+
+configurations {
+    implementation.get().extendsFrom(bundled)
 }
+
 
 repositories {
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
@@ -63,6 +69,12 @@ dependencies {
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    bundled("io.github.classgraph:classgraph:4.8.174")
+    bundled("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-websockets-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
+    bundled("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
 }
 
 tasks.processResources {
