@@ -59,8 +59,8 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     val melodyWrongColor by ColorSetting("Melody: Wrong", Color(255, 0, 0, 255)).showIf { melody.value }
     val melodyBlock by ToggleSetting("Melody: Block Wrong Clicks").showIf { melody.value }
     val offsetPacket by SliderSetting<Long>("Offset Packet", 500, 0, 1000, 1).showIf { melodyBlock.value }
-    val paneUpdateIntervalMs by SliderSetting("Pane Update Interval (ms)", 50, 20, 100, 1).showIf { melodyBlock.value }
-    val blockBeforeChangeMs by SliderSetting("Block Before Change (ms)", 5, 0, 20, 1).showIf { melodyBlock.value }
+    val paneUpdateIntervalMs by SliderSetting("Pane Update Interval (ms)", 500, 20, 1000, 1).showIf { melodyBlock.value }
+    val blockBeforeChangeMs by SliderSetting("Block Before Change (ms)", 50, 0, 300, 1).showIf { melodyBlock.value }
     val showNoSafeButton by ToggleSetting("Show NoSafe Button").showIf { melodyBlock.value }
 
     val melody by ToggleSetting("Melody", true).section("Toggles")
@@ -259,7 +259,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         register<TickEvent.Server> {
             if (isMelodyWaiting && DungeonListener.currentTime >= melodyWaitUntilTick) {
-                isMelodyWaiting = false
             }
         }
     }
@@ -273,7 +272,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             return
         }
 
-        if (isMelodyWaiting) return
+        if (isMelodyWaiting) return   // Block until next pane movement
 
         if (lastPaneSwitchTimeMs > 0) {
             val elapsed = System.currentTimeMillis() - lastPaneSwitchTimeMs
@@ -326,9 +325,10 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         if (limeGlassSlot in validSlotsForColumn) {
             sendClickPacket(slot, 0)
 
+            isMelodyWaiting = true
+
             val delayTicks = (offsetPacket.value / 50).toInt()
             melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
-            isMelodyWaiting = true
         }
     }
 
@@ -388,11 +388,9 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             if (btn == 0) ClickType.CLONE else ClickType.PICKUP,
             mc.player
         )
-
         if (SoTerm.debugFlags.contains("terminal")) {
             ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
         }
-
         if (TerminalListener.currentType == TerminalType.STARTWITH) {
             TerminalType.clickedStartWithSlots.add(slot)
         }
@@ -406,9 +404,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         when (type) {
             TerminalType.NUMBERS -> {
                 currentItems.filter { it.value.item == Items.RED_STAINED_GLASS_PANE }
-                    .toList()
-                    .sortedBy { it.second.count }
-                    .forEach {
+                    .toList().sortedBy { it.second.count }.forEach {
                         TerminalType.numbersSlotCounts[it.first] = it.second.count
                         solution.add(TerminalClick(it.first))
                     }
@@ -468,12 +464,18 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             TerminalType.MELODY -> {
                 if (updatedItem1.item == Items.LIME_STAINED_GLASS_PANE) {
                     val magenta = currentItems.entries.find { it.value.item == Items.MAGENTA_STAINED_GLASS_PANE }?.key
+                    val oldCorrect = TerminalType.melodyState.correct
+                    if (magenta != null && magenta != oldCorrect) {
+                        lastPaneSwitchTimeMs = System.currentTimeMillis()
+                        isMelodyWaiting = false
+                    }
                     val button = floor((updatedSlot1 / 9).toDouble()) - 1
                     val current = updatedSlot1 % 9 - 1
                     if (magenta != null) TerminalType.melodyState.correct = magenta
                     TerminalType.melodyState.button = button.toInt()
                     TerminalType.melodyState.current = current
                     lastPaneSwitchTimeMs = System.currentTimeMillis()
+                    isMelodyWaiting = false
                 }
             }
         }
@@ -483,23 +485,18 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         if (TerminalListener.currentType == TerminalType.MELODY) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE) {
                 lastPaneSwitchTimeMs = System.currentTimeMillis()
+                isMelodyWaiting = false
             }
-            isMelodyWaiting = false
         }
-
         solve(slot, item)
 
         if (mode.value == 1 && queue.isNotEmpty() && enabled) {
             val nextClick = queue[0]
             val isValid = when (TerminalListener.currentType) {
-                TerminalType.NUMBERS -> {
-                    val firstSol = solution.firstOrNull()
-                    firstSol != null && firstSol.slotId == nextClick.slotId
-                }
-                TerminalType.RUBIX -> {
-                    val sol = solution.find { it.slotId == nextClick.slotId }
-                    sol != null && ((sol.btn > 0 && nextClick.btn == 0) || (sol.btn < 0 && nextClick.btn == 1))
-                }
+                TerminalType.NUMBERS -> solution.firstOrNull()?.slotId == nextClick.slotId
+                TerminalType.RUBIX -> solution.find { it.slotId == nextClick.slotId }?.btn?.let {
+                    (it > 0 && nextClick.btn == 0) || (it < 0 && nextClick.btn == 1)
+                } ?: false
                 else -> solution.any { it.slotId == nextClick.slotId }
             }
             if (isValid) {
