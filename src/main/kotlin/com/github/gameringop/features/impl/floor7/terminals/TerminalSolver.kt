@@ -277,12 +277,16 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         if (lastPaneSwitchTimeMs > 0) {
             val elapsed = System.currentTimeMillis() - lastPaneSwitchTimeMs
-            val safetyThreshold = paneUpdateIntervalMs.value.toLong() - blockBeforeChangeMs.value.toLong()
-            if (elapsed >= safetyThreshold) {
-                if (SoTerm.debugFlags.contains("melody")) {
-                    ChatUtils.modMessage("§6[Melody] §cBlocked click – too close to next pane change (elapsed ${elapsed}ms, threshold ${safetyThreshold}ms).")
+            if (elapsed < 100) {
+                val safetyThreshold = paneUpdateIntervalMs.value.toLong() - blockBeforeChangeMs.value.toLong()
+                if (elapsed >= safetyThreshold) {
+                    if (SoTerm.debugFlags.contains("melody")) {
+                        ChatUtils.modMessage("§6[Melody] §cBlocked click – too close to next pane change (elapsed ${elapsed}ms, threshold ${safetyThreshold}ms).")
+                    }
+                    return
                 }
-                return
+            } else if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("§6[Melody] §dLast change was ${elapsed}ms ago, not blocking.")
             }
         }
 
@@ -473,6 +477,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     if (magenta != null) TerminalType.melodyState.correct = magenta
                     TerminalType.melodyState.button = button.toInt()
                     TerminalType.melodyState.current = current
+                    // IMPORTANT: reset the stopwatch each time the lime glass moves
                     lastPaneSwitchTimeMs = System.currentTimeMillis()
                 }
             }
@@ -482,6 +487,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     fun onItemsUpdated(slot: Int, item: ItemStack) {
         if (TerminalListener.currentType == TerminalType.MELODY) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE) {
+                // IMPORTANT: reset the stopwatch each time the lime glass moves
                 lastPaneSwitchTimeMs = System.currentTimeMillis()
             }
             isMelodyWaiting = false
