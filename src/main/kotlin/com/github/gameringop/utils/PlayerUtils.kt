@@ -1,5 +1,6 @@
 package com.github.gameringop.utils
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
@@ -157,7 +158,9 @@ object PlayerUtils {
     fun swapToSlot(slot: Int) {
         if (! Inventory.isHotbarSlot(slot)) return
         if (mc.player?.inventory?.selectedSlot == slot) return
-        modMessage("swapped to hotbar Slot $slot")
+        if (SoTerm.debugFlags.contains("slot")) {
+            modMessage("swapped to hotbar Slot $slot")
+        }
         mc.player?.inventory?.selectedSlot = slot
     }
 
