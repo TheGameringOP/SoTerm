@@ -1,10 +1,12 @@
 package com.github.gameringop.features.impl.dungeon
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
+import com.github.gameringop.features.impl.dev.HypixelAPI
 import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
@@ -17,6 +19,7 @@ import com.github.gameringop.utils.NumbersUtils.romanToDecimal
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemRarity
 import com.github.gameringop.utils.items.ItemUtils.lore
+import com.github.gameringop.utils.network.ApiUtils
 import com.github.gameringop.utils.network.ProfileUtils
 import com.github.gameringop.utils.network.cache.ProfileCache
 import com.github.gameringop.utils.render.Render2D
@@ -334,41 +337,46 @@ object PartyFinder: Feature() {
     }
 
     private fun getLoreStats(name: String, floor: Int, type: Char): String {
-        val key = name.removeFormatting().uppercase()
-        val cachedData = ProfileCache.getFromCache(key)
+        val cleanName = name.removeFormatting()
+        val member = HypixelAPI.getCachedMember(cleanName)
 
-        if (cachedData == null) {
-            if (key !in pendingRequests && pendingRequests.size < 5) {
-                pendingRequests.add(key)
-
+        if (member == null) {
+            if (cleanName !in pendingRequests && pendingRequests.size < 5) {
+                pendingRequests.add(cleanName)
                 scope.launch {
                     try {
-                        ProfileUtils.getProfile(key).getOrThrow()
-                    }
-                    catch (e: Exception) {
+                        HypixelAPI.fetchMemberData(cleanName)
+                    } catch (e: Exception) {
                         e.printStackTrace()
-                    }
-                    finally {
-                        pendingRequests.remove(key)
+                    } finally {
+                        pendingRequests.remove(cleanName)
                     }
                 }
             }
-
             return "§7(Loading...)"
         }
 
-        val dungeons = cachedData.dungeons
+        val dungeons = member.dungeons ?: return "§7(No dungeons data)"
+        val cataData = dungeons.dungeon_types?.catacombs
+        val masterData = dungeons.dungeon_types?.master_catacombs
+        val cataExp = cataData?.experience ?: 0.0
+        val cataLevel = ApiUtils.getCatacombsLevel(cataExp)
+
+        val secrets = dungeons.secrets ?: 0
+        val totalCatacombsRuns = cataData?.tier_completions?.get("total")?.toInt() ?: 0
+        val totalMasterRuns = masterData?.tier_completions?.get("total")?.toInt() ?: 0
+        val totalRuns = totalCatacombsRuns + totalMasterRuns
+        val secretAverage = if (totalRuns > 0) secrets.toDouble() / totalRuns else 0.0
+
+        val pbMap = if (type == 'F') cataData?.fastest_time_s_plus else masterData?.fastest_time_s_plus
+        val pb = pbMap?.get(floor.toString())?.let { formatTime(it.toLong()) } ?: "N/A"
 
         return buildString {
-            append("§b(§6${cachedData.cataLevel}§b)§r")
-
+            append("§b(§6$cataLevel§b)§r")
             if (showSecrets.value) {
-                append(" §8[§a${dungeons.secrets}§8/§b${cachedData.secretAverage.toFixed(2)}§8]§r")
+                append(" §8[§a$secrets§8/§b${secretAverage.toFixed(2)}§8]§r")
             }
-
             if (showPB.value) {
-                val pbObj = if (type == 'F') dungeons.catacombs else dungeons.masterCatacombs
-                val pb = pbObj.fastestTimeSPlus["$floor"]?.let(::formatTime) ?: "N/A"
                 append(" §8[§9$pb§8]§r")
             }
         }

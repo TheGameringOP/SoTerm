@@ -21,7 +21,6 @@ import com.github.gameringop.utils.render.Render2D.highlight
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.MouseButtonInfo
-import net.minecraft.world.item.ItemStack
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
@@ -33,15 +32,6 @@ object InventorySearch: Feature("Lets you search in inventory and support math")
     private var searchQuery = ""
     private val searchHandler = TextInputHandler({ searchQuery }, { searchQuery = it })
     private var expressionResult: Double? = null
-
-    val color get() = highlightColor.value
-
-    fun matches(stack: ItemStack): Boolean {
-        if (searchQuery.isBlank() || stack.isEmpty) return false
-        val name = stack.hoverName.unformattedText.contains(searchQuery, ignoreCaps.value)
-        val lore = searchLore.value && stack.lore.any { it.removeFormatting().contains(searchQuery, ignoreCaps.value) }
-        return name || lore
-    }
 
     private const val WIDTH = 200f
     private const val HEIGHT = 22f
@@ -96,6 +86,13 @@ object InventorySearch: Feature("Lets you search in inventory and support math")
 
         register<KeyboardEvent.KeyPressed> {
             if (mc.screen !is AbstractContainerScreen<*>) return@register
+
+            if (event.keyEvent.key == GLFW.GLFW_KEY_F && event.keyEvent.hasControlDown()) {
+                searchHandler.listening = ! searchHandler.listening
+                event.isCanceled = true
+                return@register
+            }
+
             if (! searchHandler.listening) return@register
 
             if (mc.options.keyInventory.matches(event.keyEvent)) {
@@ -106,12 +103,14 @@ object InventorySearch: Feature("Lets you search in inventory and support math")
         }
 
         register<ContainerEvent.Render.Slot.Pre> {
-            if (matches(event.slot.item)) event.slot.highlight(event.context, highlightColor.value)
+            if (searchQuery.isBlank()) return@register
+            val stack = event.slot.item.takeUnless { it.isEmpty } ?: return@register
+            val name = stack.hoverName.unformattedText.contains(searchQuery, ignoreCaps.value)
+            val lore = searchLore.value && stack.lore.any { it.removeFormatting().contains(searchQuery, ignoreCaps.value) }
+            if (name || lore) event.slot.highlight(event.context, highlightColor.value)
         }
     }
 
-    // Shunting Yard Algorithm
-    // This shit is less stable than I am
     private fun evaluateExpression(expr: String): Double? {
         if (expr.isBlank()) return null
         if (expr.none { it.isDigit() }) return null
@@ -149,7 +148,7 @@ object InventorySearch: Feature("Lets you search in inventory and support math")
         val stack = ArrayDeque<String>()
 
         for (token in tokens) {
-            val numCheck = NumbersUtils.parseCompactNumberDouble(token)?.toDouble()
+            val numCheck = NumbersUtils.parseCompactNumberDouble(token)
             when {
                 numCheck != null -> output.add(token)
 
@@ -179,7 +178,7 @@ object InventorySearch: Feature("Lets you search in inventory and support math")
         val evalStack = ArrayDeque<Double>()
 
         for (token in output) {
-            val num = NumbersUtils.parseCompactNumberDouble(token)?.toDouble()
+            val num = NumbersUtils.parseCompactNumberDouble(token)
 
             if (num != null) evalStack.addFirst(num)
             else if (token in operators) {

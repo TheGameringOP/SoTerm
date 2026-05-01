@@ -55,9 +55,6 @@ dependencies {
 
     modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
 
-    implementation("io.github.classgraph:classgraph:4.8.174")
-    include("io.github.classgraph:classgraph:4.8.174")
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     include("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
@@ -70,11 +67,20 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
 
-    bundled("io.github.classgraph:classgraph:4.8.174")
-    bundled("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
-    bundled("io.ktor:ktor-client-websockets-jvm:$ktor_version")
-    bundled("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
-    bundled("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+    implementation("io.github.classgraph:classgraph:4.8.174")
+    include("io.github.classgraph:classgraph:4.8.174")
+
+    implementation("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
+    include("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
+
+    implementation("io.ktor:ktor-client-websockets-jvm:$ktor_version")
+    include("io.ktor:ktor-client-websockets-jvm:$ktor_version")
+
+    implementation("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
+    include("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
+
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+    include("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
 }
 
 tasks.processResources {

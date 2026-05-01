@@ -12,7 +12,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 
-object DungeonWaypointCommand: BaseCommand("ndw") {
+object DungeonWaypointCommand: BaseCommand("tdw") {
     override fun CommandNodeBuilder.build() {
         literal("add") {
             runs {
@@ -27,7 +27,7 @@ object DungeonWaypointCommand: BaseCommand("ndw") {
                 val lookingAt = (hit as BlockHitResult).blockPos
 
                 if (DungeonWaypoints.currentRoomWaypoints.any { it.pos == lookingAt }) {
-                    ChatUtils.modMessage("§cA waypoint already exists here. Use /ndw edit.")
+                    ChatUtils.modMessage("§cA waypoint already exists here. Use /tdw edit.")
                     return@runs
                 }
 

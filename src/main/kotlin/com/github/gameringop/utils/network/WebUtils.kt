@@ -1,6 +1,7 @@
 package com.github.gameringop.utils.network
 
 import com.github.gameringop.utils.JsonUtils
+import com.github.gameringop.utils.StringUtils.decodeBase64
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
@@ -13,9 +14,11 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 
 object WebUtils {
+    val AGENT = "Tm9hbW1BZGRvbnMvMS4xLjggKCtodHRwczovL25vYW1tLm9yZyk=".decodeBase64()
+
     val client = HttpClient(OkHttp) {
         install(WebSockets) { pingIntervalMillis = 30_000 }
-        install(UserAgent) { agent = "1.1.8" }
+        install(UserAgent) { agent = AGENT }
         install(HttpTimeout) {
             connectTimeoutMillis = 10_000
             requestTimeoutMillis = 10_000

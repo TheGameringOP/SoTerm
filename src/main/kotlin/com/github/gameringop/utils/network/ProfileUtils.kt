@@ -1,6 +1,8 @@
 package com.github.gameringop.utils.network
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.SoTerm.scope
+import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.JsonUtils
 import com.github.gameringop.utils.JsonUtils.getObj
 import com.github.gameringop.utils.JsonUtils.getString
@@ -172,6 +174,7 @@ object ProfileUtils {
         if (now < (apiCooldowns[name] ?: 0L)) throw IllegalStateException("API global cooldown")
         if (now < (apiCooldowns[path] ?: 0L)) throw IllegalStateException("Path negative cached")
 
+        if (SoTerm.debugFlags.equals("request")) { try { ChatUtils.modMessage("$BASE_URL$path") } catch (e: IllegalStateException) { } }
         val res = WebUtils.get("$BASE_URL$path").getOrThrow()
         val code = res.status.value
 
