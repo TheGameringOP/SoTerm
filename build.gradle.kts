@@ -81,6 +81,12 @@ dependencies {
 
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
     include("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+
+    bundled("io.github.classgraph:classgraph:4.8.174")
+    bundled("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-websockets-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
+    bundled("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
 }
 
 tasks.processResources {

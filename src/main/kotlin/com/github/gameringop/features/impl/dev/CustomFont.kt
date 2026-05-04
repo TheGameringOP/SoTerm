@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.visual
+package com.github.gameringop.features.impl.dev
 
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
@@ -28,34 +28,26 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.util.*
 
-object CustomFont : Feature(
-    name = "Custom Font",
-    description = "Replaces Minecraft text glyphs with a selected TTF/OTF font."
-) {
-    private const val SETTINGS_SECTION = "font"
+object CustomFont : Feature(name = "Custom Font", description = "Replaces Minecraft text glyphs with a selected TTF/OTF font.") {
     private val fontsFolder = File("config/soterm/fonts")
 
     private val fontFile by TextInputSetting("Font File", "")
-        .section(SETTINGS_SECTION)
+        .section("Font")
         .withDescription("A .ttf/.otf file name inside config/soterm/fonts, or a full path.")
 
     private val fontSize by SliderSetting("Font Size", 11.0, 6.0, 32.0, 0.5)
-        .section(SETTINGS_SECTION)
         .withDescription("TrueType font size. Vanilla default is 11.")
 
     private val oversample by SliderSetting("Oversample", 2.0, 1.0, 8.0, 0.5)
-        .section(SETTINGS_SECTION)
         .withDescription("Higher values render smoother text, but use more texture memory.")
 
     private val reloadFontButton by ButtonSetting("Reload Font") {
         reloadMinecraftFonts()
-    }.section(SETTINGS_SECTION)
-        .withDescription("Reloads Minecraft resources so the selected font is applied.")
+    }.withDescription("Reloads Minecraft resources so the selected font is applied.")
 
     private val openFontsFolderButton by ButtonSetting("Open Fonts Folder") {
         openFontsFolder()
-    }.section(SETTINGS_SECTION)
-        .withDescription("Opens config/soterm/fonts. Put your .ttf/.otf files here.")
+    }.withDescription("Opens config/soterm/fonts. Put your .ttf/.otf files here.")
 
     @Volatile
     private var customProvider: TrueTypeGlyphProvider? = null

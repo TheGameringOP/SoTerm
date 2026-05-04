@@ -109,8 +109,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
             event.context.pose().pushMatrix()
             event.context.pose().scale(uiScale, uiScale)
-
-            Render2D.drawCenteredString(event.context, termType.name.lowercase().uppercaseFirst(), offsetX + width / 2f, offsetY - 15f, color = titleColor.value, scale = 1.2f)
+            if (termType.name.lowercase() == "redgreen") {
+                Render2D.drawCenteredString(event.context, "Red Green", offsetX + width / 2f, offsetY - 15f, color = titleColor.value, scale = 1.2f)
+            } else {
+                Render2D.drawCenteredString(event.context, termType.name.lowercase().uppercaseFirst(), offsetX + width / 2f, offsetY - 15f, color = titleColor.value, scale = 1.2f)
+            }
             Render2D.drawRect(event.context, offsetX, offsetY, width, height, backgroundColor.value)
             Render2D.drawBorder(event.context, offsetX, offsetY, width, height, borderColor.value)
 
@@ -228,9 +231,16 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                 termType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> solution.find { it.slotId == slot }
                 termType == TerminalType.RUBIX -> solution.find { it.slotId == slot }?.btn?.let { TerminalClick(slot, if (it > 0) 0 else 1) }
                 termType == TerminalType.MELODY -> {
-                    val state = TerminalType.melodyState
-                    val magentaSlot = state.correct
-                    val limeGlassSlot = state.current
+                    val currentItems = TerminalListener.currentItems
+                    val clickedItem = currentItems[slot]?.item
+                    // Ignore clicks that are not on lime terracotta
+                    if (clickedItem != Items.LIME_TERRACOTTA) {
+                        event.isCanceled = true
+                        return@register
+                    }
+
+                    val magentaSlot = TerminalType.melodyState.correct
+                    val limeGlassSlot = TerminalType.melodyState.current
 
                     if (SoTerm.debugFlags.contains("melody")) {
                         if (magentaSlot == null || limeGlassSlot == null) {
@@ -259,6 +269,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
 
         register<TickEvent.Server> {
             if (isMelodyWaiting && DungeonListener.currentTime >= melodyWaitUntilTick) {
+                isMelodyWaiting = false
             }
         }
     }
@@ -272,7 +283,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             return
         }
 
-        if (isMelodyWaiting) return   // Block until next pane movement
+        if (isMelodyWaiting) return
 
         if (lastPaneSwitchTimeMs > 0) {
             val elapsed = System.currentTimeMillis() - lastPaneSwitchTimeMs
@@ -309,27 +320,26 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             it.value.item == Items.LIME_STAINED_GLASS_PANE
         }?.key
 
-        if (SoTerm.debugFlags.contains("melody")) {
-            if (magentaSlot == null || limeGlassSlot == null) {
-                ChatUtils.modMessage("§6[Melody] §cMissing components! Magenta Slot: $magentaSlot, Lime Slot: $limeGlassSlot")
-            } else if (limeGlassSlot in (columnMap[magentaSlot] ?: emptyList())) {
-                ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot.")
-            } else {
-                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
-            }
-        }
-
         if (magentaSlot == null || limeGlassSlot == null) return
         val validSlotsForColumn = columnMap[magentaSlot] ?: emptyList()
 
-        if (limeGlassSlot in validSlotsForColumn) {
-            sendClickPacket(slot, 0)
-
-            isMelodyWaiting = true
-
-            val delayTicks = (offsetPacket.value / 50).toInt()
-            melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
+        val isCurrentlyCorrect = limeGlassSlot in validSlotsForColumn
+        if (!isCurrentlyCorrect) {
+            if (SoTerm.debugFlags.contains("melody")) {
+                ChatUtils.modMessage("§6[Melody] §eBlocked. Lime Glass ($limeGlassSlot) is not in Column $magentaSlot.")
+            }
+            return
         }
+
+        if (SoTerm.debugFlags.contains("melody")) {
+            val elapsed = if (lastPaneSwitchTimeMs > 0) System.currentTimeMillis() - lastPaneSwitchTimeMs else 0
+            ChatUtils.modMessage("§6[Melody] §aMatch! Column $magentaSlot contains Lime Glass. Clicking $slot. (elapsed ${elapsed}ms)")
+        }
+
+        sendClickPacket(slot, 0)
+        isMelodyWaiting = true
+        val delayTicks = (offsetPacket.value / 50).toInt()
+        melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
     }
 
     private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
@@ -467,7 +477,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     val oldCorrect = TerminalType.melodyState.correct
                     if (magenta != null && magenta != oldCorrect) {
                         lastPaneSwitchTimeMs = System.currentTimeMillis()
-                        isMelodyWaiting = false
                     }
                     val button = floor((updatedSlot1 / 9).toDouble()) - 1
                     val current = updatedSlot1 % 9 - 1
@@ -475,7 +484,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     TerminalType.melodyState.button = button.toInt()
                     TerminalType.melodyState.current = current
                     lastPaneSwitchTimeMs = System.currentTimeMillis()
-                    isMelodyWaiting = false
                 }
             }
         }
@@ -485,7 +493,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         if (TerminalListener.currentType == TerminalType.MELODY) {
             if (item.item == Items.LIME_STAINED_GLASS_PANE) {
                 lastPaneSwitchTimeMs = System.currentTimeMillis()
-                isMelodyWaiting = false
             }
         }
         solve(slot, item)

@@ -177,6 +177,45 @@ object TestCommand: BaseCommand("test") {
                 }
             }
 
+            literal("savg") {
+                argument("user", StringArgumentType.greedyString()) {
+                    runs {
+                        val user = StringArgumentType.getString(it, "user")
+                        SoTerm.scope.launch {
+                            val secrets = HypixelAPI.fetchTotalSecrets(user)
+                            val runs = HypixelAPI.fetchTotalRuns(user)
+                            if (secrets >= 0 && runs > 0) {
+                                val avg = secrets.toDouble() / runs
+                                val avgFormatted = "%.2f".format(avg)
+                                ChatUtils.chat("§a$user has §e$avgFormatted §asecret average")
+                            } else if (runs == 0) {
+                                ChatUtils.chat("§c$user has no dungeon runs recorded")
+                            } else {
+                                ChatUtils.chat("§cFailed to fetch secret average for $user")
+                            }
+                        }
+                        ChatUtils.chat("§eFetching secret average for $user...")
+                    }
+                }
+            }
+
+            literal("uuid") {
+                argument("user", StringArgumentType.greedyString()) {
+                    runs {
+                        val user = StringArgumentType.getString(it, "user")
+                        SoTerm.scope.launch {
+                            val uuid = HypixelAPI.fetchUUID(user)
+                            if (uuid != null) {
+                                ChatUtils.chat("§a$user's UUID: §e$uuid")
+                            } else {
+                                ChatUtils.chat("§cFailed to fetch UUID for $user")
+                            }
+                        }
+                        ChatUtils.chat("§eFetching UUID for $user...")
+                    }
+                }
+            }
+
             literal("requests") {
                 runs {
                     SoTerm.scope.launch {

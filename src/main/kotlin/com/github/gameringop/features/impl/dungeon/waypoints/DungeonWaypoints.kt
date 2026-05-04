@@ -40,7 +40,7 @@ object DungeonWaypoints: Feature("Add a custom waypoint with /ndw add while look
     val chestColor by ColorSetting("Chest Color", Color.MAGENTA, false).section("Colors")
     val itemColor by ColorSetting("Item Color", Utils.favoriteColor, false)
     val batColor by ColorSetting("Bat Color", Color.GREEN, false)
-    val essanceColor by ColorSetting("Essance Color", Color.BLACK, false)
+    val essanceColor by ColorSetting("Essence Color", Color.BLACK, false)
     val keyColor by ColorSetting("Redstone Key Color", Color.RED, false)
 
     data class DungeonWaypoint(val pos: BlockPos, val color: Color, val filled: Boolean, val outline: Boolean, val phase: Boolean)
@@ -97,13 +97,24 @@ object DungeonWaypoints: Feature("Add a custom waypoint with /ndw add while look
 
         register<DungeonEvent.SecretEvent> {
             if (! secretWaypoints.value || currentSecrets.isEmpty()) return@register
-            val playerPos = SoTerm.mc.player?.blockPosition() ?: return@register
             if (event.type == SecretType.LEVER) return@register
-            if (event.pos.distSqr(playerPos) > 36) return@register
 
-            val distinctTypes = setOf(SecretType.BAT, SecretType.ITEM)
-            val target = if (event.type !in distinctTypes) currentSecrets.find { it.pos == event.pos }
-            else currentSecrets.filter { it.type in distinctTypes }.minByOrNull { it.pos.distSqr(event.pos) }
+            val special = setOf(SecretType.BAT, SecretType.ITEM)
+            val target = if (event.type !in special) currentSecrets.find { it.pos == event.pos }
+            else {
+                val maxDistance = when (event.type) {
+                    SecretType.ITEM -> 25
+                    SecretType.BAT -> 144
+                    else -> Int.MAX_VALUE
+                }
+
+                currentSecrets.asSequence()
+                    .filter { it.type == event.type }
+                    .map { it to it.pos.distSqr(event.pos) }
+                    .minByOrNull { it.second }
+                    ?.takeIf { it.second <= maxDistance }
+                    ?.first
+            }
 
             target?.let(currentSecrets::remove)
         }

@@ -4,19 +4,17 @@ import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.utils.ChatUtils.unformattedText
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.DungeonUtils
 import com.github.gameringop.utils.dungeons.DungeonUtils.isSecret
 import com.github.gameringop.utils.dungeons.enums.SecretType
 import com.github.gameringop.utils.dungeons.map.core.UniqueRoom
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
-import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.world.WorldUtils
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
@@ -40,14 +38,6 @@ object EventDispatcher {
     fun init() {
         WorldRenderEvents.END_MAIN.register { context ->
             EventBus.post(RenderWorldEvent(RenderContext.fromContext(context)))
-        }
-
-        ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            EventBus.post(ServerEvent.Connect)
-        }
-
-        ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
-            EventBus.post(ServerEvent.Disconnect)
         }
 
         ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register { _, _ ->
@@ -85,7 +75,7 @@ object EventDispatcher {
             }
             else if (event.packet is ClientboundSoundPacket) {
                 if (! LocationUtils.inDungeon || LocationUtils.inBoss) return@register
-                if (! event.packet.sound.value().equalsOneOf(SoundEvents.BAT_HURT, SoundEvents.BAT_DEATH)) return@register
+                if (event.packet.sound.value() != SoundEvents.BAT_DEATH) return@register
 
                 EventBus.post(DungeonEvent.SecretEvent(
                     SecretType.BAT,

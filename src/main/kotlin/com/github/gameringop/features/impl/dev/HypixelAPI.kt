@@ -9,12 +9,7 @@ import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.network.ApiUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import java.io.BufferedReader
@@ -22,9 +17,6 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 
 object HypixelAPI : Feature("Hypixel API Integration") {
 
@@ -295,6 +287,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
 
     suspend fun fetchMemberData(username: String): Member? = getMemberData(username)
 
+    suspend fun fetchUUID(username: String): String? = getUUIDFromUsername(username)
+
     suspend fun getRequestCount(): Int {
         cleanRequestHistory()
         return requestHistory.size
@@ -321,13 +315,11 @@ object HypixelAPI : Feature("Hypixel API Integration") {
         pendingFetches[lower] = deferred
 
         try {
-            // Apply global rate limiting
             val now = System.currentTimeMillis()
             while (globalRequestTimestamps.isNotEmpty() && now - globalRequestTimestamps.first >= 1000) {
                 globalRequestTimestamps.removeFirst()
             }
             if (globalRequestTimestamps.size >= GLOBAL_MAX_PER_SECOND) {
-                // Rate limit exceeded, do not fetch now.
                 deferred.complete(null)
                 return null
             }
@@ -340,9 +332,8 @@ object HypixelAPI : Feature("Hypixel API Integration") {
                 if (SoTerm.debugFlags.contains("request")) {
                     ChatUtils.modMessage("§a[API] Cached $username")
                 }
-                // Record successful request (after rate limiting passed)
                 requestHistory.addLast(System.currentTimeMillis())
-                cleanRequestHistory() // keep only last 5 minutes
+                cleanRequestHistory()
             }
             deferred.complete(result)
             return result

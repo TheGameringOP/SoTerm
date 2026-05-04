@@ -1,6 +1,5 @@
 package com.github.gameringop.features.impl.dungeon
 
-import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
@@ -21,7 +20,6 @@ import com.github.gameringop.utils.items.ItemRarity
 import com.github.gameringop.utils.items.ItemUtils.lore
 import com.github.gameringop.utils.network.ApiUtils
 import com.github.gameringop.utils.network.ProfileUtils
-import com.github.gameringop.utils.network.cache.ProfileCache
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
 import com.mojang.brigadier.arguments.StringArgumentType
