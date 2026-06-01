@@ -36,7 +36,6 @@ object TestCommand: BaseCommand("test") {
         literal("gui") {
             runs {
                 mc.screen?.onClose()
-                //    SoTerm.screen = KitchenSinkScreen()
             }
         }
 
