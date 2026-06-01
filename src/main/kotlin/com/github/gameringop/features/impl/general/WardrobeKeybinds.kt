@@ -5,11 +5,8 @@ import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.PacketEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.mixin.IKeyMapping
-import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.hideIf
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.GuiUtils
 import com.github.gameringop.utils.equalsOneOf

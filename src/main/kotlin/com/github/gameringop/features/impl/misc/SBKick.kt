@@ -3,9 +3,7 @@ package com.github.gameringop.features.impl.misc
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.RenderOverlayEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.NumbersUtils.toFixed

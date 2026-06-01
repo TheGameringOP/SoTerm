@@ -6,10 +6,8 @@ import com.github.gameringop.event.impl.MouseClickEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.Style
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.ui.utils.TextInputHandler
 import com.github.gameringop.utils.ChatUtils.removeFormatting

@@ -4,10 +4,7 @@ import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.MouseClickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.interfaces.IChatComponent
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.notification.NotificationManager
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.removeFormatting

@@ -1,6 +1,6 @@
 package com.github.gameringop.ui.gui
 
-import com.github.gameringop.features.impl.dungeon.waypoints.DungeonWaypoints
+import com.github.gameringop.features.impl.dungeon.DungeonWaypoints
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.ui.utils.componnents.UIButton
 import com.github.gameringop.utils.ChatUtils

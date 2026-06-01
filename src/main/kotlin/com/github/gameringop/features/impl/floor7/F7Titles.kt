@@ -1,11 +1,9 @@
 package com.github.gameringop.features.impl.floor7
 
-import com.github.gameringop.event.EventBus
+import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.NumbersUtils.toFixed
@@ -130,14 +128,14 @@ object F7Titles: Feature(name = "F7 Titles", description = "Custom Titles for F7
         }
     }
 
-    private val timerRenderer = EventBus.register<RenderOverlayEvent> {
-        if (! enabled) return@register
+    private val timerRenderer = EventListener.create<RenderOverlayEvent> {
+        if (! enabled) return@create
         val timeLeft = (timerTime - DungeonListener.currentTime) / 20.0
 
         if (timeLeft <= 0) {
             this.listener.unregister()
             showTitle("&aStorm's Lightning Ended!")
-            return@register
+            return@create
         }
 
         val width = mc.window.guiScaledWidth

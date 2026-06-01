@@ -8,7 +8,6 @@ import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
@@ -31,7 +30,7 @@ abstract class MixinSkullBlock extends AbstractSkullBlock {
     @Inject(method = "getShape", at = @At("HEAD"), cancellable = true)
     private void modifyShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context, CallbackInfoReturnable<VoxelShape> cir) {
         if (SecretHitboxes.INSTANCE.enabled && SecretHitboxes.getSkull().getValue() && DungeonUtils.isSecret(pos)) {
-            cir.setReturnValue(Shapes.block());
+            cir.setReturnValue(SecretHitboxes.getSkullShape(state));
         }
     }
 

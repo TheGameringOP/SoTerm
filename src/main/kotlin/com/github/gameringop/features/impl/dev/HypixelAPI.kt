@@ -2,11 +2,8 @@ package com.github.gameringop.features.impl.dev
 
 import com.github.gameringop.SoTerm
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.network.ApiUtils
 import kotlinx.coroutines.*
@@ -483,7 +480,7 @@ object HypixelAPI : Feature("Hypixel API Integration") {
     }
 
     // ---------- Low-level HTTP ----------
-    private suspend fun get(url: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun get(url: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val connection = URI(url).toURL().openConnection() as HttpURLConnection
             connection.apply {

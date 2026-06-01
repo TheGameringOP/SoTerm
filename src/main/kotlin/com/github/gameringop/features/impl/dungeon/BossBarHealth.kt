@@ -2,9 +2,7 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.features.Feature
 import com.github.gameringop.mixin.ILerpingBossEvent
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.location.LocationUtils
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation

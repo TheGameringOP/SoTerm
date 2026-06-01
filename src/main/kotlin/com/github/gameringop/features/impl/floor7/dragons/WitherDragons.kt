@@ -3,7 +3,6 @@ package com.github.gameringop.features.impl.floor7.dragons
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
@@ -28,10 +27,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import java.awt.Color
 
-object WitherDragons: Feature(
-    name = "Wither Dragons",
-    description = "M7 dragons timers, boxes, priority, health, and alerts"
-) {
+object WitherDragons: Feature(name = "Wither Dragons", description = "M7 dragons timers, boxes, priority, health, and alerts") {
     private val dragonTimer by ToggleSetting("Dragon Timer ", true).section("Dragon Timer")
     private val dragonTimerStyle by DropdownSetting("Timer Style", 0, listOf("Milliseconds", "Seconds", "Ticks")).showIf { dragonTimer.value }
     private val showSymbol by ToggleSetting("Timer Symbol", true).showIf { dragonTimer.value }
@@ -78,7 +74,7 @@ object WitherDragons: Feature(
             }
         }
 
-        register<EntityDeathEvent> {
+        register<EntityUnloadEvent> {
             if (LocationUtils.F7Phase != 5) return@register
             if (event.entity !is EnderDragon) return@register
             WitherDragonEnum.entries.find { it.entityId == event.entity.id }?.setDead()

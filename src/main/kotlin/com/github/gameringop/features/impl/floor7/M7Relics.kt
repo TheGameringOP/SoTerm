@@ -3,10 +3,8 @@ package com.github.gameringop.features.impl.floor7
 import com.github.gameringop.config.PersonalBest
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
+import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.toPos
@@ -16,6 +14,7 @@ import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.WitherRelic
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
+import com.github.gameringop.utils.render.Render2D.width
 import com.github.gameringop.utils.render.Render3D
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
@@ -28,6 +27,8 @@ import java.awt.Color
 object M7Relics: Feature(name = "M7 Relics", description = "A bunch of M7 Relics features") {
     private val relicBox by ToggleSetting("Box Relics").withDescription("Draws a box on where the relics are spawning and the cauldron you need to place.")
     private val relicSpawnTimer by ToggleSetting("Spawn Timer").withDescription("Shows on screen when the relic will spawn.")
+    private val color by ColorSetting("Timer Color", Color(0, 255, 0, 255)).showIf { relicSpawnTimer.value }
+    private val unit by ToggleSetting("Show Seconds Suffix", true).showIf { relicSpawnTimer.value }
     private val relicTimer by ToggleSetting("Place Timer").withDescription("Sends in chat the time it took to place the relic after you picked it up.")
     private val blockWrongRelic by ToggleSetting("Block Wrong Relic").withDescription("Prevents you from placing your relic at the wrong cauldron.")
 
@@ -48,6 +49,21 @@ object M7Relics: Feature(name = "M7 Relics", description = "A bunch of M7 Relics
     )
 
     override fun init() {
+        hudElement(
+            name = "Relic Spawn Timer",
+            enabled = { relicSpawnTimer.value },
+            shouldDraw = { LocationUtils.inDungeon && LocationUtils.inBoss && LocationUtils.dungeonFloor == "M7" },
+            centered = true,
+        ) { ctx, example ->
+            val timeLeft = if (example) 42L else spawnTimerTicks - DungeonListener.currentTime
+            if (! example && timeLeft <= 0) return@hudElement 0f to 0f
+
+            val suffix = if (unit.value) "s" else ""
+            val displayTime = "${(timeLeft / 20.0).toFixed(2)}$suffix"
+            Render2D.drawCenteredString(ctx, displayTime, 0, 0, color = color.value, scale = 3f)
+            return@hudElement displayTime.width().toFloat() * 3f to 27f
+        }
+
         register<WorldChangeEvent> {
             spawnTimerTicks = 0
             relicTimes.clear()
@@ -89,25 +105,6 @@ object M7Relics: Feature(name = "M7 Relics", description = "A bunch of M7 Relics
             if (event.packet !is ClientboundContainerSetSlotPacket) return@register
             val item = PlayerUtils.getHotbarSlot(8)?.hoverName ?: return@register
             val relic = WitherRelic.fromName(item.unformattedText) ?: return@register
-        }
-
-        register<RenderOverlayEvent> {
-            if (! relicSpawnTimer.value) return@register
-            val timeLeft = spawnTimerTicks - DungeonListener.currentTime
-            if (timeLeft <= 0) return@register
-
-            val displayTime = (timeLeft / 20.0).toFixed(2)
-            val width = mc.window.guiScaledWidth
-            val height = mc.window.guiScaledHeight
-
-            Render2D.drawCenteredString(
-                event.context,
-                displayTime,
-                width / 2f,
-                height * 0.4f,
-                scale = 3f,
-                color = DungeonListener.thePlayer?.clazz?.color ?: Color.WHITE
-            )
         }
 
         register<RenderWorldEvent> {

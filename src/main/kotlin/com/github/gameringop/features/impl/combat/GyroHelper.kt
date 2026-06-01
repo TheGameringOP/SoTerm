@@ -1,14 +1,10 @@
-package com.github.gameringop.features.impl.general
+package com.github.gameringop.features.impl.combat
 
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.MathUtils
 import com.github.gameringop.utils.MathUtils.add

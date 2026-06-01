@@ -2,7 +2,7 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
+import com.github.gameringop.ui.clickgui.components.Setting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.hud.getValue

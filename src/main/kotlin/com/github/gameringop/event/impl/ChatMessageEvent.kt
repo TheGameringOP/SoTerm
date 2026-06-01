@@ -6,6 +6,6 @@ import com.github.gameringop.utils.ChatUtils.unformattedText
 import net.minecraft.network.chat.Component
 
 class ChatMessageEvent(val component: Component): Event(cancelable = true) {
-    inline val formattedText: String get() = component.formattedText
-    inline val unformattedText: String get() = component.unformattedText
+    val formattedText by lazy { component.formattedText }
+    val unformattedText by lazy { component.unformattedText }
 }

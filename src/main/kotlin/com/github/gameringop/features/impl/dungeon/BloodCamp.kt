@@ -3,7 +3,6 @@ package com.github.gameringop.features.impl.dungeon
 import com.github.gameringop.SoTerm.PREFIX
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ChatUtils
@@ -141,7 +140,7 @@ object BloodCamp: Feature("Features for Blood Room.") {
             data.endVector = endpoint
         }
 
-        register<EntityDeathEvent> {
+        register<EntityUnloadEvent> {
             if (! bloodCamp.value) return@register
             bloodMobs.remove(event.entity)
         }

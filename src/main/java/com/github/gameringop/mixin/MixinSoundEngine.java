@@ -1,6 +1,6 @@
 package com.github.gameringop.mixin;
 
-import com.github.gameringop.features.impl.misc.MonoAudio;
+import com.github.gameringop.features.impl.misc.sound.MonoAudio;
 import com.github.gameringop.interfaces.MonoAudioChannel;
 import net.minecraft.client.Camera;
 import net.minecraft.client.sounds.ChannelAccess;

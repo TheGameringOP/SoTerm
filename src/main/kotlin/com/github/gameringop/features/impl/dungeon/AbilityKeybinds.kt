@@ -2,12 +2,8 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.KeyboardEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.KeybindSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.PlayerUtils.useDungeonClassAbility
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.location.LocationUtils

@@ -1,5 +1,6 @@
 package com.github.gameringop.mixin;
 
+import com.github.gameringop.SoTerm;
 import com.github.gameringop.TestGround;
 import com.github.gameringop.event.EventBus;
 import com.github.gameringop.event.impl.PacketEvent;
@@ -28,7 +29,7 @@ public class MixinConnection {
     private void channelRead0(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo ci) {
         if (packet instanceof ClientboundPingPacket pingPacket && pingPacket.getId() != 0) {
             if (!TestGround.Companion.getExperimental()) {
-                EventBus.post(TickEvent.Server.INSTANCE);
+                SoTerm.mc.execute(() -> EventBus.post(TickEvent.Server.INSTANCE));
             }
         }
 

@@ -8,8 +8,10 @@ import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.ui.utils.TextInputHandler
 import com.github.gameringop.utils.SoundUtils
 import com.github.gameringop.utils.render.Render2D
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -33,11 +35,7 @@ class SoundSetting(name: String, defaultValue: SoundEvent): Setting<SoundEvent>(
             BuiltInRegistries.SOUND_EVENT.entrySet()
                 .filter { it.key.location() in prettyNames.keys }
                 .map { it.value }
-                .sortedBy { prettyNames[it.location()] }
-        }
-
-        private fun getSoundName(loc: ResourceLocation): String {
-            return prettyNames[loc] !!
+                .sortedBy { prettyNames[it.location] }
         }
 
         private fun getSound(loc: ResourceLocation): Holder.Reference<SoundEvent>? {
@@ -118,7 +116,7 @@ class SoundSetting(name: String, defaultValue: SoundEvent): Setting<SoundEvent>(
             filteredSounds.forEach { sound ->
                 if (entryY + entryHeight > listY && entryY < listY + viewableHeight) {
                     val isEntryHovered = mouseX >= x + 4 && mouseX <= x + width - 4 &&
-                        mouseY >= entryY && mouseY < entryY + entryHeight
+                            mouseY >= entryY && mouseY < entryY + entryHeight
 
                     val isSelected = sound == value
 
@@ -212,13 +210,11 @@ class SoundSetting(name: String, defaultValue: SoundEvent): Setting<SoundEvent>(
         return mx >= x && mx <= x + width && my >= y && my <= y + height
     }
 
-    override fun write(): JsonElement = JsonPrimitive(value.location().toString())
-
+    override fun write() = JsonPrimitive(value.location().toString())
     override fun read(element: JsonElement?) {
-        element?.asString?.let {
-            val loc = ResourceLocation.tryParse(it) ?: return
-            val sound = getSound(loc) ?: return
-            value = sound.value()
-        }
+        val str = element?.jsonPrimitive?.contentOrNull ?: return
+        val loc = ResourceLocation.tryParse(str) ?: return
+        val sound = getSound(loc) ?: return
+        value = sound.value()
     }
 }

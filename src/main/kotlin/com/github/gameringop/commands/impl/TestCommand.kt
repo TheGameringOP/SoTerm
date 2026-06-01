@@ -1,18 +1,25 @@
 package com.github.gameringop.commands.impl
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.electionData
 import com.github.gameringop.SoTerm.mc
-import com.github.gameringop.SoTerm.priceData
 import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandNodeBuilder
 import com.github.gameringop.config.Config
 import com.github.gameringop.features.impl.dev.HypixelAPI
+import com.github.gameringop.init.NetworkLoop
+import com.github.gameringop.init.NetworkLoop.electionData
+import com.github.gameringop.init.NetworkLoop.priceData
 import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.ChatUtils.addColor
 import com.github.gameringop.utils.PlayerUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
-import com.github.gameringop.utils.items.ItemUtils.skyblockId
+import com.github.gameringop.utils.items.ItemUtils.idToNameMap
 import com.github.gameringop.utils.network.ApiUtils
+import com.github.gameringop.websocket.PacketRegistry
+import com.github.gameringop.websocket.WebSocket
+import com.github.gameringop.websocket.packets.S2CPacketChat
+import com.google.gson.JsonParser
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -223,10 +230,215 @@ object TestCommand: BaseCommand("test") {
                     }
                 }
             }
+
+            literal("mayor") {
+                literal("refresh") {
+                    runs {
+                        ChatUtils.chat("§eRefreshing mayor data...")
+                        SoTerm.scope.launch {
+                            NetworkLoop.refreshMayor()
+                                .onSuccess {
+                                    printMayorPerks()
+                                    ChatUtils.chat("§aMayor cache updated.")
+                                }
+                                .onFailure { ChatUtils.chat("§cMayor refresh failed: ${it.message}") }
+                        }
+                    }
+                }
+
+                runs { printMayorPerks() }
+            }
+
+            literal("lowestbin") {
+                literal("refresh") {
+                    runs {
+                        ChatUtils.chat("§eRefreshing lowest bins...")
+                        SoTerm.scope.launch {
+                            NetworkLoop.refreshLowestBins()
+                                .onSuccess { ChatUtils.chat("§aLowest bins updated. §7(${priceData.size} prices cached)") }
+                                .onFailure { ChatUtils.chat("§cLowest bin refresh failed: ${it.message}") }
+                        }
+                    }
+                }
+
+                argument("item", StringArgumentType.word()) {
+                    suggests { priceData.keys }
+                    runs {
+                        printPrice(StringArgumentType.getString(it, "item").uppercase())
+                    }
+                }
+
+                runs {
+                    ChatUtils.chat("§e${priceData.size} prices cached. §7/test api lowestbin <ITEM_ID> §8| §7refresh")
+                }
+            }
+
+            literal("bazaar") {
+                literal("refresh") {
+                    runs {
+                        ChatUtils.chat("§eRefreshing bazaar prices...")
+                        SoTerm.scope.launch {
+                            NetworkLoop.refreshBazaar()
+                                .onSuccess { ChatUtils.chat("§aBazaar prices updated. §7(${priceData.size} prices cached)") }
+                                .onFailure { ChatUtils.chat("§cBazaar refresh failed: ${it.message}") }
+                        }
+                    }
+                }
+
+                runs { ChatUtils.chat("§7/test api bazaar refresh") }
+            }
+        }
+
+        literal("ws") {
+            literal("status") {
+                runs {
+                    val connected = WebSocket.isConnected()
+                    ChatUtils.chat("§eWebSocket: ${if (connected) "§aconnected" else "§cdisconnected"}")
+                    ChatUtils.chat("§7Inbound buffer: §f${WebSocket.getRecentInbound().size} messages")
+                }
+            }
+
+            literal("reconnect") {
+                runs {
+                    WebSocket.reconnect()
+                    ChatUtils.chat("§eWebSocket reconnecting...")
+                }
+            }
+
+            literal("clear") {
+                runs {
+                    WebSocket.clearRecentInbound()
+                    ChatUtils.chat("§aCleared inbound message buffer.")
+                }
+            }
+
+            literal("types") {
+                runs {
+                    ChatUtils.chat("§6Registered packet types:")
+                    PacketRegistry.packets.keys.sorted().forEach { ChatUtils.chat(" §7- §f$it") }
+                }
+            }
+
+            literal("listen") {
+                argument("count", IntegerArgumentType.integer(1, 32)) {
+                    runs {
+                        printInbound(IntegerArgumentType.getInteger(it, "count"))
+                    }
+                }
+
+                runs { printInbound(5) }
+            }
+
+            literal("chat") {
+                argument("message", StringArgumentType.greedyString()) {
+                    runs {
+                        val message = StringArgumentType.getString(it, "message").addColor()
+                        WebSocket.send(S2CPacketChat("§d${mc.user.name}: §r$message"))
+                        ChatUtils.chat("§aSent WS chat packet.")
+                    }
+                }
+
+                runs { ChatUtils.chat("§7/test ws chat <message>") }
+            }
+
+            literal("users") {
+                runs {
+                    WebSocket.send(mapOf("type" to "check_users"))
+                    ChatUtils.chat("§aSent check_users. §7Use §f/test ws listen §7for the response.")
+                }
+            }
+
+            literal("reset") {
+                runs {
+                    WebSocket.send(mapOf("type" to "reset"))
+                    ChatUtils.chat("§aSent reset packet.")
+                }
+            }
+
+            literal("raw") {
+                argument("json", StringArgumentType.greedyString()) {
+                    runs {
+                        val json = StringArgumentType.getString(it, "json")
+                        if (! WebSocket.isConnected()) {
+                            ChatUtils.chat("§cWebSocket is not connected.")
+                            return@runs
+                        }
+                        runCatching { JsonParser.parseString(json) }
+                            .onFailure {
+                                ChatUtils.chat("§cInvalid JSON: ${it.message}")
+                                return@runs
+                            }
+                        WebSocket.sendRaw(json)
+                        ChatUtils.chat("§aSent raw JSON.")
+                    }
+                }
+
+                runs { ChatUtils.chat("§7/test ws raw {\"type\":\"check_users\"}") }
+            }
+
+            runs {
+                ChatUtils.chat("§6WebSocket test commands:")
+                ChatUtils.chat(" §fstatus §7- connection info")
+                ChatUtils.chat(" §freconnect §7| §fclear §7| §ftypes §7| §flisten [n]")
+                ChatUtils.chat(" §fchat <msg> §7| §fusers §7| §freset §7| §fraw <json>")
+            }
         }
 
         runs {
-            ChatUtils.chat("${mc.player?.mainHandItem?.skyblockId}: ${priceData[mc.player?.mainHandItem?.skyblockId]}")
+            ChatUtils.chat("§7/test api §8| §7/test ws §8| §7/test mayor")
+        }
+    }
+
+    private fun printMayorPerks() {
+        val mayor = electionData.mayor
+        if (mayor.name.isBlank()) {
+            ChatUtils.chat("§cNo mayor data cached. §7Try §e/test api mayor refresh")
+            return
+        }
+
+        ChatUtils.chat("§6§lMayor: §f${mayor.name}")
+        if (mayor.perks.isEmpty()) ChatUtils.chat(" §7(no perks listed)")
+        mayor.perks.forEachIndexed { index, perk ->
+            ChatUtils.chat(" §e${index + 1}. §f${perk.name} §8- §7${perk.description}")
+        }
+
+        electionData.minister?.takeIf { it.name.isNotBlank() }?.let { minister ->
+            ChatUtils.chat("§6§lMinister: §f${minister.name}")
+            ChatUtils.chat(" §e• §f${minister.perk.name} §8- §7${minister.perk.description}")
+        }
+    }
+
+    private fun printPrice(itemId: String) {
+        val price = priceData[itemId]
+        if (price == null) {
+            ChatUtils.chat("§cNo cached price for §f$itemId§c.")
+            ChatUtils.chat("§7Try §e/test api lowestbin refresh §7or §e/test api bazaar refresh")
+            return
+        }
+
+        val name = idToNameMap[itemId] ?: itemId
+        ChatUtils.chat("§a$name §8($itemId)§a: §6${formatCoins(price)} coins")
+    }
+
+    private fun printInbound(count: Int) {
+        val messages = WebSocket.getRecentInbound()
+        if (messages.isEmpty()) {
+            ChatUtils.chat("§7No inbound messages yet.")
+            return
+        }
+
+        ChatUtils.chat("§6Last ${count.coerceAtMost(messages.size)} inbound message(s):")
+        messages.takeLast(count).forEachIndexed { index, message ->
+            val preview = message.replace("\n", " ").take(200)
+            ChatUtils.chat(" §8${index + 1}. §f$preview")
+        }
+    }
+
+    private fun formatCoins(amount: Long): String {
+        return when {
+            amount >= 1_000_000 -> "%.2fM".format(amount / 1_000_000.0)
+            amount >= 1_000 -> "%.1fK".format(amount / 1_000.0)
+            else -> amount.toString()
         }
     }
 

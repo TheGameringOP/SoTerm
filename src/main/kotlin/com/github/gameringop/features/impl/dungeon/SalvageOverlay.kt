@@ -2,9 +2,7 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.PlayerUtils
 import com.github.gameringop.utils.items.ItemUtils.customData

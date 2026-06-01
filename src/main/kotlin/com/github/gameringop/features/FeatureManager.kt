@@ -41,7 +41,8 @@ object FeatureManager {
                         hudElements.addAll(feature.hudElements)
                         features.add(feature)
                         loadedCount++
-                        println("Successfully loaded feature: ${feature::class.simpleName}")
+
+                        SoTerm.logger.info("[SoTerm Debug] [${loadedCount}/${featureClasses.size}] Successfully loaded: ${feature.name} (${feature::class.simpleName})")
                     } ?: run {
                         SoTerm.logger.warn("Could not get INSTANCE from ${classInfo.name}")
                     }

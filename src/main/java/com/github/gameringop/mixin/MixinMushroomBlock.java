@@ -6,7 +6,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.MushroomBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +17,7 @@ public class MixinMushroomBlock {
     @Inject(method = "getShape", at = @At("HEAD"), cancellable = true)
     private void modifyShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context, CallbackInfoReturnable<VoxelShape> cir) {
         if (SecretHitboxes.INSTANCE.enabled && SecretHitboxes.getMushroom().getValue()) {
-            cir.setReturnValue(Shapes.block());
+            cir.setReturnValue(SecretHitboxes.getMushroomShape(state));
         }
     }
 }

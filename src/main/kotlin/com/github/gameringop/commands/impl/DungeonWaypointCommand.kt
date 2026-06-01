@@ -3,7 +3,7 @@ package com.github.gameringop.commands.impl
 import com.github.gameringop.SoTerm
 import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandNodeBuilder
-import com.github.gameringop.features.impl.dungeon.waypoints.DungeonWaypoints
+import com.github.gameringop.features.impl.dungeon.DungeonWaypoints
 import com.github.gameringop.ui.gui.DungeonWaypointScreen
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
@@ -12,7 +12,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 
-object DungeonWaypointCommand: BaseCommand("tdw") {
+object DungeonWaypointCommand: BaseCommand("ndw") {
     override fun CommandNodeBuilder.build() {
         literal("add") {
             runs {
@@ -27,7 +27,7 @@ object DungeonWaypointCommand: BaseCommand("tdw") {
                 val lookingAt = (hit as BlockHitResult).blockPos
 
                 if (DungeonWaypoints.currentRoomWaypoints.any { it.pos == lookingAt }) {
-                    ChatUtils.modMessage("§cA waypoint already exists here. Use /tdw edit.")
+                    ChatUtils.modMessage("§cA waypoint already exists here. Use /ndw edit.")
                     return@runs
                 }
 
@@ -90,21 +90,14 @@ object DungeonWaypointCommand: BaseCommand("tdw") {
 
                         if (removed) {
                             DungeonWaypoints.waypoints[roomName] = roomList
-                            DungeonWaypoints.saveConfig()
                             DungeonWaypoints.currentRoomWaypoints.remove(closest)
                             ChatUtils.modMessage("§aWaypoint removed.")
                         }
-                        else {
-                            ChatUtils.modMessage("§cError syncing config.")
-                        }
+                        else ChatUtils.modMessage("§cError syncing config.")
                     }
-                    else {
-                        ChatUtils.modMessage("§cNo waypoint found nearby (must be within 5 blocks).")
-                    }
+                    else ChatUtils.modMessage("§cNo waypoint found nearby (must be within 5 blocks).")
                 }
-                else {
-                    ChatUtils.modMessage("§cNo waypoints found in this room.")
-                }
+                else ChatUtils.modMessage("§cNo waypoints found in this room.")
             }
         }
 
@@ -118,7 +111,6 @@ object DungeonWaypointCommand: BaseCommand("tdw") {
                 }
 
                 DungeonWaypoints.waypoints.remove(roomName)
-                DungeonWaypoints.saveConfig()
                 DungeonWaypoints.currentRoomWaypoints.clear()
                 ChatUtils.modMessage("§aAll waypoints cleared for room: $roomName")
             }

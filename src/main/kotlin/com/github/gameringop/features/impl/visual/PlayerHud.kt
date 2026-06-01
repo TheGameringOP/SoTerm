@@ -2,7 +2,6 @@ package com.github.gameringop.features.impl.visual
 
 import com.github.gameringop.event.impl.ActionBarMessageEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.MultiCheckboxSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.hud.getValue

@@ -2,13 +2,9 @@ package com.github.gameringop.features.impl.general
 
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.items.ItemRarity
 import com.github.gameringop.utils.items.ItemUtils
@@ -23,7 +19,7 @@ import kotlin.jvm.optionals.getOrDefault
 import kotlin.jvm.optionals.getOrNull
 
 
-object FEAT_ItemRarity: Feature(name = "Item Rarity", description = "Draws the rarity of item behind the slot.") {
+object ItemRarity: Feature(name = "Item Rarity", description = "Draws the rarity of item behind the slot.") {
     val drawOnHotbar by ToggleSetting("Draw on Hotbar", true)
     private val rarityOpacity by SliderSetting("Rarity Opacity", 30f, 10f, 100f, 1f)
     private val style by DropdownSetting("Rarity Style", 0, listOf("Filled", "Outline", "Filled Outline"))

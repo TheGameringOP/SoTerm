@@ -2,9 +2,7 @@ package com.github.gameringop.features.impl.floor7
 
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.DataDownloader
 import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.location.LocationUtils

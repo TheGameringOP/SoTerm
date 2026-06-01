@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.world.entity.ambient.Bat
 import java.awt.Color
 
@@ -30,6 +31,7 @@ class TestGround {
         val rotation get() = SoTerm.debugFlags.contains("rotation")
         val bat get() = SoTerm.debugFlags.contains("bat")
         val slot get() = SoTerm.debugFlags.contains("slot")
+        val sound get() = SoTerm.debugFlags.contains("sound")
     }
 
     init {
@@ -74,14 +76,14 @@ class TestGround {
             if (! rotation) return@register
             DungeonScanner.clayBlocksCorners.forEachIndexed { index, (dx, dz) ->
                 DungeonInfo.uniqueRooms.values.forEach { room ->
-                    val centerr = BlockPos(room.mainRoom.x, room.highestBlock ?: ScanUtils.getHighestY(room.mainRoom.x, room.mainRoom.z), room.mainRoom.z)
+                    val center = BlockPos(room.mainRoom.x, room.highestBlock ?: ScanUtils.getHighestY(room.mainRoom.x, room.mainRoom.z), room.mainRoom.z)
                     Render3D.renderBlock(
                         event.ctx,
-                        centerr.add(x = dx, z = dz),
+                        center.add(x = dx, z = dz),
                         (if (room.rotation?.div(90) == index) Color.GREEN else Color.red).withAlpha(60)
                     )
 
-                    Render3D.renderString("$index", centerr.x + dx + 0.5, centerr.y, centerr.z + dz + 0.5, phase = true, scale = 3)
+                    Render3D.renderString("$index", center.x + dx + 0.5, center.y, center.z + dz + 0.5, phase = true, scale = 3)
                 }
             }
         }
@@ -101,6 +103,15 @@ class TestGround {
             if (! slot) return@register
             val stack = event.screen.menu.getSlot(event.slotId).item
             ChatUtils.modMessage(stack.skyblockId)
+        }
+
+        EventBus.register<MainThreadPacketReceivedEvent.Pre> {
+            if (! sound) return@register
+            val packet = event.packet as? ClientboundSoundPacket ?: return@register
+            val name = packet.sound.value().location
+            val pitch = packet.pitch
+            val volume = packet.volume
+            ChatUtils.modMessage("name: $name, pitch: $pitch, volume: $volume")
         }
     }
 }
