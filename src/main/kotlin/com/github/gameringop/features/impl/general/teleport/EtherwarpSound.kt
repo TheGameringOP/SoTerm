@@ -3,13 +3,10 @@ package com.github.gameringop.features.impl.general.teleport
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.PacketEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.SoundSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.MathUtils.toVec
 import com.github.gameringop.utils.PlayerUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils

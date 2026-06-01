@@ -212,10 +212,11 @@ object DungeonListener {
 
     private fun updateDungeonTeammates(tabName: String, second: PlayerInfo) {
         if (SoTerm.isDev) listOf(
-            DungeonPlayer("TheGameringOP", DungeonClass.Mage, 50, isDead = false),
-            DungeonPlayer("GameringOP", DungeonClass.Archer, 50, isDead = false),
-            DungeonPlayer("StormyPlasma", DungeonClass.Healer, 50, isDead = true),
-            DungeonPlayer("S3nseLol", DungeonClass.Tank, 50, isDead = false),
+            DungeonPlayer("TheGameringOP", DungeonClass.Mage, 50),
+            DungeonPlayer("GameringOP", DungeonClass.Archer, 50),
+            DungeonPlayer("TheGamerOP", DungeonClass.Healer, 50),
+            DungeonPlayer("GamerOP", DungeonClass.Tank, 50),
+            DungeonPlayer("Gamering", DungeonClass.Berserk, 50),
         ).let { list ->
             dungeonTeammates.clear()
             dungeonTeammates.addAll(list)

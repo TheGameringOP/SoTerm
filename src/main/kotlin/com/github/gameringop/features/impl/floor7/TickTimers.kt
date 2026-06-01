@@ -2,11 +2,8 @@ package com.github.gameringop.features.impl.floor7
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.location.LocationUtils
@@ -71,8 +68,8 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
         }
         
         hudElement("GY Timer", shouldDraw = { LocationUtils.inDungeon }, enabled = {gyTimer.value}, centered = true) { ctx, example ->
-            val textToRender = if (example) "§bGY: §a125t"
-            else if (gyTickTime != - 1) formatTimer(gyTickTime, 125, "§bGY:§a")
+            val textToRender = if (example) "§bGY: §a145t"
+            else if (gyTickTime != - 1) formatTimer(gyTickTime, 145, "§bGY:§a")
             else return@hudElement 0f to 0f
 
             Render2D.drawCenteredString(ctx, textToRender, 0f, 0f)
@@ -96,7 +93,7 @@ object TickTimers: Feature("Shows various types of server tick timers for F7 bos
                     }
                     if (gyTimer.value && ! gyTriggered) {
                         gyTriggered = true
-                        gyTickTime = 125
+                        gyTickTime = 145
                     }
                 }
 

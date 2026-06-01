@@ -1,6 +1,7 @@
 package com.github.gameringop.utils.location
 
 import com.github.gameringop.event.EventBus
+import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.google.gson.JsonParser
@@ -17,7 +18,7 @@ object LocrawListener {
             parseLocRaw(event.unformattedText)
         }
 
-        EventBus.register<WorldChangeEvent> { reset() }
+        EventListener.create<WorldChangeEvent> { reset() }
     }
 
     private fun parseLocRaw(message: String) {

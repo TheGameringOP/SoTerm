@@ -3,10 +3,7 @@ package com.github.gameringop.features.impl.misc
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.mixin.IAbstractContainerScreen
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import org.lwjgl.glfw.GLFW
 
 

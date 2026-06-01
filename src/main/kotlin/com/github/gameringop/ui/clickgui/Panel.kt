@@ -1,11 +1,13 @@
 package com.github.gameringop.ui.clickgui
 
+import com.github.gameringop.SoTerm
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.FeatureManager
 import com.github.gameringop.features.impl.dev.ClickGui
 import com.github.gameringop.features.impl.misc.sound.SoundManager
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.ui.clickgui.enums.CategoryType
+import com.github.gameringop.ui.gui.SoundManagerScreen
 import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.render.Render2D
@@ -150,12 +152,12 @@ class Panel(val category: CategoryType, var x: Int, var y: Int) {
                     feature.toggle()
                     return
                 }
-                else if (button == 1 && feature.configSettings.isNotEmpty()) {
+                else if (button == 1) {
                     if (feature is SoundManager) {
                         ClickGuiScreen.selectedFeature = null
-                        SoundManager.btn.action.invoke()
+                        SoTerm.screen = SoundManagerScreen()
                     }
-                    else ClickGuiScreen.openFeatureWindow(feature, mouseX.toFloat() + 12f, mouseY.toFloat() - 12f)
+                    else if (feature.configSettings.isNotEmpty()) ClickGuiScreen.openFeatureWindow(feature)
                     return
                 }
             }

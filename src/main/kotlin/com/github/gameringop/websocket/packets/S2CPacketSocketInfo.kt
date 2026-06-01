@@ -3,11 +3,7 @@ package com.github.gameringop.websocket.packets
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.websocket.WebSocketPacket
 
-class S2CPacketSocketInfo(
-    var connectedUsers: Int = 0,
-    var usersInLobby: Int = 0,
-    var lobby: String = ""
-): WebSocketPacket("socket_info") {
+class S2CPacketSocketInfo(var connectedUsers: Int, var usersInLobby: Int, var lobby: String = ""): WebSocketPacket {
     override fun handle() {
         ChatUtils.chat("§b§m--------------------------------")
         ChatUtils.chat("§6§lWebSocket Stats")

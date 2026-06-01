@@ -6,10 +6,7 @@ import com.github.gameringop.commands.CommandNodeBuilder
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.location.LocationUtils
@@ -63,6 +60,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         }
 
         warpCommand("arachne", "arachne")
+        warpCommand("atoll", "lotus")
         warpCommand("backwater", "bayou")
         warpCommand("base", "camp")
         warpCommand("bayou", "bayou")
@@ -96,6 +94,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         warpCommand("jungle", "jungle")
         warpCommand("kuudra", "kuudra")
         warpCommand("loch", "murk")
+        warpCommand("lotus", "lotus")
         warpCommand("mines", "mines")
         warpCommand("murk", "murk")
         warpCommand("murkwater", "murk")
@@ -124,6 +123,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
 
     val warpList = listOf(
         "arachne" to "arachne",
+        "atoll" to "lotus",
         "backwater" to "backwater bayou",
         "bayou" to "backwater bayou",
         "base" to "camp",
@@ -162,6 +162,7 @@ object WarpShortcuts: Feature("removes the /warp in warp commands", "Warp Shortc
         "kuudra" to "kuudra's skull",
         "skull" to "kuudra's skull",
         "loch" to "murkwater",
+        "lotus" to "lotus",
         "murk" to "murkwater",
         "murkwater" to "murkwater",
         "museum" to "museum",

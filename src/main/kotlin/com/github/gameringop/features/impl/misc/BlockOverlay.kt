@@ -2,13 +2,10 @@ package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.impl.general.teleport.EtherwarpHelper
-import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.hideIf
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
 import com.github.gameringop.utils.equalsOneOf

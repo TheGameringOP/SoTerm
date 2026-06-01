@@ -5,14 +5,10 @@ import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
@@ -226,14 +222,23 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
             val slot = slotX + slotY * 9
             if (slot >= windowSize) return@register
 
-            val click = when {
-                termType == TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
-                termType.equalsOneOf(TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS) -> solution.find { it.slotId == slot }
-                termType == TerminalType.RUBIX -> solution.find { it.slotId == slot }?.btn?.let { TerminalClick(slot, if (it > 0) 0 else 1) }
-                termType == TerminalType.MELODY -> {
+            val click = when (termType) {
+                TerminalType.NUMBERS -> solution.firstOrNull()?.takeIf { it.slotId == slot }
+
+                TerminalType.REDGREEN, TerminalType.STARTWITH, TerminalType.COLORS -> {
+                    solution.find { it.slotId == slot }
+                }
+
+                TerminalType.RUBIX -> {
+                    solution.find { it.slotId == slot }?.btn?.let {
+                        TerminalClick(slot, if (it > 0) 0 else 1)
+                    }
+                }
+
+                TerminalType.MELODY -> {
                     val currentItems = TerminalListener.currentItems
                     val clickedItem = currentItems[slot]?.item
-                    // Ignore clicks that are not on lime terracotta
+
                     if (clickedItem != Items.LIME_TERRACOTTA) {
                         event.isCanceled = true
                         return@register
@@ -256,15 +261,14 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     event.isCanceled = true
                     return@register
                 }
+
                 else -> null
             }
 
-            if (click != null) {
-                event.isCanceled = true
-                if (TerminalListener.checkFcDelay()) return@register
-                if (mode.value != 0) predict(click)
-                if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
-            }
+            if (click == null) return@register
+            if (mode.value == 0 && isClicked) return@register
+            predict(click)
+            if (mode.value == 0) click(click) else if (isClicked) queue.add(click) else click(click)
         }
 
         register<TickEvent.Server> {
@@ -391,18 +395,21 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     private fun sendClickPacket(slot: Int, btn: Int) {
-        mc.gameMode?.handleInventoryMouseClick(
+        mc.gameMode !!.handleInventoryMouseClick(
             TerminalListener.lastWindowId,
             slot,
             if (btn == 0) 2 else btn,
             if (btn == 0) ClickType.CLONE else ClickType.PICKUP,
-            mc.player
+            mc.player !!
         )
         if (SoTerm.debugFlags.contains("terminal")) {
             ChatUtils.modMessage("Clicked $slot on ${TerminalListener.currentType?.name}")
         }
         if (TerminalListener.currentType == TerminalType.STARTWITH) {
-            TerminalType.clickedStartWithSlots.add(slot)
+            val item = TerminalListener.currentItems[slot]?.item
+            if (item.equalsOneOf(Items.NETHER_STAR, Items.EXPERIENCE_BOTTLE)) {
+                TerminalType.clickedStartWithSlots.add(slot)
+            }
         }
     }
 
@@ -536,7 +543,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     fun register() {
-        TerminalListener.packetRecivedListener.register()
+        TerminalListener.packetReceivedListener.register()
         TerminalListener.packetSentListener.register()
         TerminalListener.tickListener.register()
         TerminalListener.worldChangeListener.register()
@@ -545,7 +552,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     fun unregister() {
-        TerminalListener.packetRecivedListener.unregister()
+        TerminalListener.packetReceivedListener.unregister()
         TerminalListener.packetSentListener.unregister()
         TerminalListener.tickListener.unregister()
         TerminalListener.worldChangeListener.unregister()

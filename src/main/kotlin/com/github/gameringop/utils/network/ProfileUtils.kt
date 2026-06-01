@@ -1,14 +1,15 @@
 package com.github.gameringop.utils.network
 
-import com.github.gameringop.SoTerm
+import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.SoTerm.scope
-import com.github.gameringop.utils.ChatUtils
-import com.github.gameringop.utils.JsonUtils
+import com.github.gameringop.event.EventListener
+import com.github.gameringop.event.impl.ChatMessageEvent
+import com.github.gameringop.utils.*
 import com.github.gameringop.utils.JsonUtils.getObj
 import com.github.gameringop.utils.JsonUtils.getString
 import com.github.gameringop.utils.StringUtils.decodeBase64
-import com.github.gameringop.utils.catch
-import com.github.gameringop.utils.containsOneOf
+import com.github.gameringop.utils.dungeons.DungeonListener
+import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.network.cache.ProfileCache
 import com.github.gameringop.utils.network.cache.SecretCache
 import com.github.gameringop.utils.network.cache.UuidCache
@@ -19,13 +20,14 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.jsonObject
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object ProfileUtils {
-    val BASE_URL = "aHR0cHM6Ly9hcGkubm9hbW0ub3Jn".decodeBase64()
-    val name = "bm9hbW0=".decodeBase64()
+    private val BASE_URL = "aHR0cHM6Ly9hcGkubm9hbW0ub3Jn".decodeBase64()
+    private val name = "bm9hbW0=".decodeBase64()
 
     private val nameToUuidApis = listOf(
         "https://playerdb.co/api/player/minecraft/",
@@ -35,7 +37,7 @@ object ProfileUtils {
         "https://mc-api.io/uuid/",
     )
 
-    val uuidToNameApis = listOf(
+    private val uuidToNameApis = listOf(
         "https://playerdb.co/api/player/minecraft/",
         "https://mowojang.matdoes.dev/",
         "https://sessionserver.mojang.com/session/minecraft/profile/",
@@ -73,7 +75,7 @@ object ProfileUtils {
                     continue
                 }
 
-                val response = catch { JsonUtils.stringToJson(result.getOrThrow()).jsonObject } ?: continue
+                val response = catch { JsonUtils.json.parseToJsonElement(result.getOrThrow()).jsonObject } ?: continue
                 val uuid = if (i == 0) response.getObj("player")?.getString("id") else response.getString("id")
                 val fetchedName = if (i == 0) response.getObj("player")?.getString("username") else response.getString("name") ?: name
 
@@ -116,9 +118,9 @@ object ProfileUtils {
                     continue
                 }
 
-                val response = catch { JsonUtils.stringToJson(result.getOrThrow()).jsonObject } ?: continue
-                val uuid = if (i == 0) response.getObj("player")?.getString("id") else response.getString("id") ?: key
-                val fetchedName = if (i == 0) response.getObj("player")?.getString("username") else response.getString("name")
+                val response = catch { JsonUtils.json.parseToJsonElement(result.getOrThrow()).jsonObject } ?: continue
+                val uuid = if (i == 0) response.getObj("data")?.getObj("player")?.getString("id") else response.getString("id") ?: key
+                val fetchedName = if (i == 0) response.getObj("data")?.getObj("player")?.getString("username") else response.getString("name")
 
                 if (uuid.isNullOrBlank() || fetchedName.isNullOrBlank()) continue
 
@@ -132,6 +134,10 @@ object ProfileUtils {
 
     suspend fun getSecrets(playerName: String): Result<Long> {
         val name = playerName.lowercase()
+        if (name == mc.user.name.lowercase() && DungeonListener.thePlayer?.isDead == false) {
+            return runCatching { getSecretsCMD() }
+        }
+
         SecretCache.getFromCache(name)?.let { return Result.success(it) }
 
         return awaitSharedRequest("SECRETS", name) {
@@ -174,7 +180,6 @@ object ProfileUtils {
         if (now < (apiCooldowns[name] ?: 0L)) throw IllegalStateException("API global cooldown")
         if (now < (apiCooldowns[path] ?: 0L)) throw IllegalStateException("Path negative cached")
 
-        if (SoTerm.debugFlags.equals("request")) { try { ChatUtils.modMessage("$BASE_URL$path") } catch (e: IllegalStateException) { } }
         val res = WebUtils.get("$BASE_URL$path").getOrThrow()
         val code = res.status.value
 
@@ -188,5 +193,33 @@ object ProfileUtils {
         }
 
         return res.body()
+    }
+
+    // usuaslly i dont like running commands in the background
+    // but this one seems to behave exacly like /locraw.
+    // meaning it does not effect the message spam cooldown
+    private suspend fun getSecretsCMD(): Long {
+        if (! LocationUtils.inSkyblock) error("Not in Skyblock")
+        _totalSecrets = null
+        chatListener.register()
+        ChatUtils.sendCommand("/secretcount")
+        ThreadUtils.setTimeout(5000) { chatListener.unregister() }
+        while (chatListener.isRegistered()) delay(50)
+        return _totalSecrets ?: error("No secrets found")
+    }
+
+    private val regex = Regex("^\\w+: \\d+$")
+    private var _totalSecrets: Long? = null
+    private val chatListener = EventListener.create<ChatMessageEvent> {
+        val text = event.unformattedText
+
+        if (text == "Secret Counts:") return@create event.cancel()
+        if (text.matches(regex)) {
+            event.cancel()
+            if (text.substringBefore(":") == mc.user.name) {
+                _totalSecrets = text.substringAfter(": ").toLong()
+                listener.unregister()
+            }
+        }
     }
 }

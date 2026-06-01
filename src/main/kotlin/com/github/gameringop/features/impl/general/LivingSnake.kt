@@ -6,11 +6,7 @@ import com.github.gameringop.event.impl.PlayerInteractEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.PlayerUtils
 import com.github.gameringop.utils.PlayerUtils.findHotbarSlot

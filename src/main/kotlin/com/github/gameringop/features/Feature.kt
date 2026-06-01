@@ -12,14 +12,14 @@ import com.github.gameringop.ui.clickgui.components.Setting
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.SoundSetting
-import com.github.gameringop.ui.clickgui.components.showIf
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.clickgui.enums.CategoryType
 import com.github.gameringop.ui.hud.HudElement
+import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.spaceCaps
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.sounds.SoundEvent
+import kotlin.reflect.KProperty
 
 open class Feature(
     val description: String? = null,
@@ -50,13 +50,8 @@ open class Feature(
         if (enabled || alwaysActive) onEnable() else onDisable()
     }
 
-    open fun init() {}
-
-
-    open fun onEnable() {
-        listeners.forEach(EventListener<*>::register)
-    }
-
+    open fun init() = Unit
+    open fun onEnable() = listeners.forEach(EventListener<*>::register)
     open fun onDisable() {
         if (alwaysActive) return
         listeners.forEach(EventListener<*>::unregister)
@@ -68,11 +63,8 @@ open class Feature(
         else onDisable()
     }
 
-    protected inline fun <reified T: Event> register(
-        priority: EventPriority = EventPriority.NORMAL,
-        noinline block: EventContext<T>.() -> Unit
-    ): EventListener<T> {
-        val listener = EventListener(T::class.java, priority, block)
+    protected inline fun <reified T: Event> register(priority: EventPriority = EventPriority.NORMAL, noinline block: EventContext<T>.() -> Unit): EventListener<T> {
+        val listener = EventListener.create<T>(priority, block)
         listeners.add(listener)
         return listener
     }
@@ -109,7 +101,7 @@ open class Feature(
             .showIf(showIf)
 
         val play = ButtonSetting("Play Sound", false) {
-            repeat(5) { mc.soundManager.play(SimpleSoundInstance.forUI(sound.value, pitch.value, volume.value)) }
+            ThreadUtils.runOnMcThread { repeat(5) { mc.soundManager.play(SimpleSoundInstance.forUI(sound.value, pitch.value, volume.value)) } }
         }.withDescription("Click to test the current sound configuration.").showIf(showIf)
 
         configSettings.add(sound)
@@ -121,9 +113,7 @@ open class Feature(
     }
 
 
-    fun getSettingByName(key: String?): Setting<*>? {
-        return configSettings.find { it.name == key && it is Savable }
-    }
+    fun getSettingByName(key: String?) = configSettings.find { it.name == key && it is Savable }
 
     private fun initCategory(): CategoryType {
         val parts = this::class.java.`package` !!.name.split(".")
@@ -131,4 +121,11 @@ open class Feature(
         if (CategoryType.entries.none { it.name.equals(categoryName, true) }) throw Error("Category does not exist: $categoryName")
         return CategoryType.valueOf(categoryName.uppercase())
     }
+
+    protected fun <T: Setting<*>> T.section(name: String) = with(Setting.Companion) { this@section.section(name) }
+    protected fun <T: Setting<*>> T.withDescription(desc: String) = with(Setting.Companion) { this@withDescription.withDescription(desc) }
+    protected fun <T: Setting<*>> T.showIf(condition: () -> Boolean) = with(Setting.Companion) { this@showIf.showIf(condition) }
+    protected fun <T: Setting<*>> T.hideIf(condition: () -> Boolean) = with(Setting.Companion) { this@hideIf.hideIf(condition) }
+    protected operator fun <T, S: Setting<T>> S.provideDelegate(thisRef: Feature, prop: KProperty<*>) = with(Setting.Companion) { this@provideDelegate.provideDelegate(thisRef, prop) }
+    protected operator fun <T, S: Setting<T>> S.getValue(thisRef: Feature, prop: KProperty<*>) = with(Setting.Companion) { this@getValue.getValue(thisRef, prop) }
 }

@@ -1,7 +1,7 @@
 package com.github.gameringop.utils.dungeons.map.core
 
-import com.github.gameringop.SoTerm
 import com.github.gameringop.features.impl.dungeon.map.MapConfig
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.DungeonInfo
 import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
 import net.minecraft.core.BlockPos
@@ -78,13 +78,12 @@ class UniqueRoom(arrX: Int, arrY: Int, room: Room) {
 
     fun findRotation() {
         if (mainRoom.data.type == RoomType.FAIRY) {
-            rotation = 0
             corner = BlockPos(mainRoom.x - 15, 0, mainRoom.z - 15)
+            rotation = 0
             return
         }
 
         val y = highestBlock ?: return
-        val level = SoTerm.mc.level ?: return
         val mutablePos = BlockPos.MutableBlockPos()
 
         var minX = Int.MAX_VALUE
@@ -106,29 +105,27 @@ class UniqueRoom(arrX: Int, arrY: Int, room: Room) {
 
         for (i in 0 .. 3) {
             mutablePos.set(primaryCornersX[i], y, primaryCornersZ[i])
-            if (level.getBlockState(mutablePos).block == Blocks.BLUE_TERRACOTTA) {
+            if (WorldUtils.getBlockAt(mutablePos) == Blocks.BLUE_TERRACOTTA) {
                 setRotationAndCorner(i, mutablePos)
                 return
             }
         }
 
-        for (tile in tiles) {
-            for (i in DungeonScanner.clayBlocksCorners.indices) {
-                val offset = DungeonScanner.clayBlocksCorners[i]
-                val tx = tile.x + offset.first
-                val tz = tile.z + offset.second
+        for (tile in tiles) for (i in DungeonScanner.clayBlocksCorners.indices) {
+            val offset = DungeonScanner.clayBlocksCorners[i]
+            val cx = tile.x + offset.first
+            val cz = tile.z + offset.second
 
-                mutablePos.set(tx, y, tz)
-                if (level.getBlockState(mutablePos).block == Blocks.BLUE_TERRACOTTA) {
-                    setRotationAndCorner(i, mutablePos)
-                    return
-                }
+            mutablePos.set(cx, y, cz)
+            if (WorldUtils.getBlockAt(mutablePos) == Blocks.BLUE_TERRACOTTA) {
+                setRotationAndCorner(i, mutablePos)
+                return
             }
         }
     }
 
     private fun setRotationAndCorner(index: Int, pos: BlockPos) {
-        rotation = index * 90
         corner = BlockPos(pos.x, 0, pos.z)
+        rotation = index * 90
     }
 }

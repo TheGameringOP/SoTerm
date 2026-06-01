@@ -14,4 +14,8 @@ object StringUtils {
         val decodedBytes = Base64.getDecoder().decode(this)
         return String(decodedBytes, StandardCharsets.UTF_8)
     }
+
+    fun String.stripped(): String {
+        return this.replace(Regex("(?i)[§&][0-9A-FK-OR]"), "")
+    }
 }

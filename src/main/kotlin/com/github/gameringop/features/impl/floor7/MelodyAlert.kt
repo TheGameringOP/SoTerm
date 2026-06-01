@@ -3,10 +3,8 @@ package com.github.gameringop.features.impl.floor7
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ThreadUtils

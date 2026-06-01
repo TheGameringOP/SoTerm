@@ -1,11 +1,9 @@
-package com.github.gameringop.features.impl.dungeon
+package com.github.gameringop.features.impl.combat
 
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ThreadUtils

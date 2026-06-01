@@ -3,11 +3,9 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.height

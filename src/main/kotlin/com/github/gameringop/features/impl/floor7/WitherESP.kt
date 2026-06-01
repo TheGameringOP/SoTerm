@@ -4,9 +4,7 @@ import com.github.gameringop.event.impl.CheckEntityGlowEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket

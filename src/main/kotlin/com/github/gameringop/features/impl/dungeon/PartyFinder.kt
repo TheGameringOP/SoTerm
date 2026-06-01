@@ -6,7 +6,6 @@ import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.impl.dev.HypixelAPI
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
@@ -318,9 +317,7 @@ object PartyFinder: Feature() {
             if (minimumSecrets.value > 0 && dungeons.secrets < minimumSecrets.value * 1000) {
                 add("Secrets(${dungeons.secrets / 1000}k/${minimumSecrets.value}k)")
             }
-
-            if (isEmpty()) return
-        }
+        }.ifEmpty { return }
 
         kickedPlayers.add(name)
 

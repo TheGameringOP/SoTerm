@@ -1,12 +1,12 @@
 package com.github.gameringop.features.impl.dungeon.map
 
 import com.github.gameringop.ui.clickgui.components.Setting
+import com.github.gameringop.ui.clickgui.components.Setting.Companion.section
+import com.github.gameringop.ui.clickgui.components.Setting.Companion.showIf
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.showIf
 import java.awt.Color
 
 object MapConfig {

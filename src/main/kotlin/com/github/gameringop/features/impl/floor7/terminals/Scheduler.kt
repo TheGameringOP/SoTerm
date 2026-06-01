@@ -1,10 +1,9 @@
 package com.github.gameringop.features.impl.floor7.terminals
 
-import com.github.gameringop.event.EventBus
+import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.TickEvent
 import java.util.concurrent.CopyOnWriteArrayList
-
 
 object Scheduler {
     private var currentTicks = 0L
@@ -12,8 +11,10 @@ object Scheduler {
     private class Task(val targetMs: Long, val targetTicks: Long, val action: Runnable) {
         @Volatile
         var msPassed = false
+
         @Volatile
         var ticksPassed = false
+
         @Volatile
         var executed = false
     }
@@ -31,14 +32,14 @@ object Scheduler {
         ))
     }
 
-    val tickListener = EventBus.register<TickEvent.Server> {
+    val tickListener = EventListener.create<TickEvent.Server> {
         currentTicks ++
         process { task ->
             task.ticksPassed = currentTicks >= task.targetTicks
         }
     }
 
-    val timeListener = EventBus.register<RenderWorldEvent> {
+    val timeListener = EventListener.create<RenderWorldEvent> {
         process { task ->
             task.msPassed = System.currentTimeMillis() >= task.targetMs
         }

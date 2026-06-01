@@ -5,11 +5,8 @@ import com.github.gameringop.event.impl.RenderOverlayEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
@@ -43,7 +40,7 @@ object MaskTimers: Feature("Mask Cooldown Timers, Invulnerability Timers, and mo
             mc.player?.getItemBySlot(EquipmentSlot.HEAD)?.skyblockId?.contains("SPIRIT_MASK") == true
         }),
         PHOENIX("Phoenix", "Pet", "&c", 60 * 20, 4 * 20, Regex("Your Phoenix Pet saved you from certain death!"), {
-            cacheData.getData()["pet"].toString().contains("Phoenix")
+            (cacheData.get()["pet"] as? String).orEmpty().contains("Phoenix", ignoreCase = true)
         });
 
         var cdLeft = 0

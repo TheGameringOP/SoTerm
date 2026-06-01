@@ -2,13 +2,9 @@ package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.ui.clickgui.components.showIf
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import java.awt.Color
 

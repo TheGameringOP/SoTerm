@@ -16,7 +16,7 @@ import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.websocket.WebSocket
 import com.github.gameringop.websocket.packets.S2CPacketDungeonMimic
-import com.github.gameringop.websocket.packets.S2CPacketDungeonScore
+import com.github.gameringop.websocket.packets.S2CPacketDungeonPrince
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
@@ -151,7 +151,7 @@ object ScoreCalculation {
             mimicKilled = true
 
             if (DungeonListener.dungeonTeammatesNoSelf.isNotEmpty()) {
-                WebSocket.send(S2CPacketDungeonMimic())
+                WebSocket.send(S2CPacketDungeonMimic)
             }
 
             if (ScoreCalculator.enabled && ScoreCalculator.sendMimic.value) {
@@ -166,7 +166,7 @@ object ScoreCalculation {
                 princeKilled = true
 
                 if (DungeonListener.dungeonTeammatesNoSelf.isNotEmpty()) {
-                    WebSocket.send(S2CPacketDungeonScore())
+                    WebSocket.send(S2CPacketDungeonPrince)
                 }
 
                 if (ScoreCalculator.enabled && ScoreCalculator.sendPrince.value && msg == "a prince falls. +1 bonus score") {

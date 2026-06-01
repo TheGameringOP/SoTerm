@@ -2,7 +2,6 @@ package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket

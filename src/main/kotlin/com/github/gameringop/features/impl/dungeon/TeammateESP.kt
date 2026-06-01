@@ -3,12 +3,8 @@ package com.github.gameringop.features.impl.dungeon
 import com.github.gameringop.event.impl.CheckEntityGlowEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
-import com.github.gameringop.utils.MathUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.DungeonClass
 import com.github.gameringop.utils.location.LocationUtils
@@ -52,7 +48,7 @@ object TeammateESP: Feature("Highlights your dungeon party.") {
                 val hex = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
                 
                 val renderVec = entity.renderVec
-                val distance = MathUtils.distance3D(renderVec, player.renderVec)
+                val distance = renderVec.distanceTo(mc.player !!.renderVec)
                 val scale = (distance * 0.12).coerceAtLeast(1.0)
         
                 Render3D.renderString(

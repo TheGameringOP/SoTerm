@@ -5,21 +5,17 @@ import com.github.gameringop.event.impl.CheckEntityRenderEvent
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ScreenEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.*
 import com.github.gameringop.ui.utils.Resolution
-import com.github.gameringop.utils.ChatUtils
+import com.github.gameringop.utils.*
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import com.github.gameringop.utils.GuiUtils
-import com.github.gameringop.utils.MathUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.DungeonListener.dungeonTeammatesNoSelf
 import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.dungeons.enums.DungeonClass
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
-import com.github.gameringop.utils.uppercaseFirst
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.sounds.SoundEvents
@@ -52,7 +48,7 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
     }
 
     private val announceSpiritLeaps by ToggleSetting("Announce Leap", true).section("Extras")
-    private val leapMsg by TextInputSetting("Leap Message", "ILY ❤ {name}")
+    private val leapMsg by TextInputSetting("Leap Message", "Leaped to {name}!")
         .withDescription("replaces {name} with the player name")
         .showIf { announceSpiritLeaps.value }
 
@@ -64,23 +60,23 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
     data class LeapMenuPlayer(val slotIndex: Int, val player: DungeonPlayer)
 
     val players = MutableList<LeapMenuPlayer?>(4) { null }
-    private val leapRegex = Regex("^You have teleported to (.+)!$")
     private val playerRegex = Regex("(?:\\[.+?] )?(?<name>\\w+)")
     private var shouldHide: Long = 0
 
     var customLeapOrder = listOf<String>()
+    var customLeapType = "name"
 
     override fun init() {
         register<ChatMessageEvent> {
-            leapRegex.find(event.unformattedText)?.destructured?.component1()?.let { name ->
-                if (announceSpiritLeaps.value) leapMsg.value.replace("{name}", name).takeUnless { it.isBlank() }?.let {
-                    ChatUtils.sendPartyMessage(it)
-                }
+            val message = event.unformattedText
+            if (! message.endsWith("!")) return@register
+            if (! message.startsWith("You have teleported to ")) return@register
+            val name = message.remove("You have teleported to ", "!")
 
-                if (hideAfterLeap.value) {
-                    shouldHide = System.currentTimeMillis() + ((hideTime.value * 1000L).toLong())
-                }
+            if (announceSpiritLeaps.value) leapMsg.value.replace("{name}", name).takeUnless { it.isBlank() }?.let {
+                ChatUtils.sendPartyMessage(it)
             }
+            if (hideAfterLeap.value) shouldHide = System.currentTimeMillis() + ((hideTime.value * 1000L).toLong())
         }
 
         register<CheckEntityRenderEvent> {
@@ -229,6 +225,8 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
 
     fun updateLeapMenu() {
         players.clear()
+        repeat(4) { players.add(null) }
+
         val loadedHeads = mutableMapOf<String, Int>()
 
         mc.player?.containerMenu?.let { menu ->
@@ -240,24 +238,42 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
             }
         }
 
-        val leapTeammates: List<DungeonPlayer?> = when (sorting.value) {
+        val leapTeammates: List<DungeonPlayer> = when (sorting.value) {
             0 -> dungeonTeammatesNoSelf.sortedWith(compareBy({ it.clazz.ordinal }, { it.name }))
             1 -> dungeonTeammatesNoSelf.sortedBy { it.name }
-            2 -> odinSorting(dungeonTeammatesNoSelf).toList()
-            3 -> dungeonTeammatesNoSelf.sortedBy {
-                customLeapOrder.indexOf(it.name.lowercase()).takeIf { i -> i != - 1 } ?: Int.MAX_VALUE
+            2 -> odinSorting(dungeonTeammatesNoSelf).filterNotNull()
+            3 -> {
+                val sorted = dungeonTeammatesNoSelf.toMutableList()
+                sorted.sortWith(Comparator { a, b ->
+                    val type = customLeapType.lowercase()
+                    val priorityA = when (type) {
+                        "name" -> customLeapOrder.indexOf(a.name.lowercase())
+                        "class" -> customLeapOrder.indexOf(a.clazz.name.lowercase())
+                        else -> -1
+                    }.takeIf { it != -1 } ?: Int.MAX_VALUE
+
+                    val priorityB = when (type) {
+                        "name" -> customLeapOrder.indexOf(b.name.lowercase())
+                        "class" -> customLeapOrder.indexOf(b.clazz.name.lowercase())
+                        else -> -1
+                    }.takeIf { it != -1 } ?: Int.MAX_VALUE
+
+                    if (priorityA != priorityB) priorityA.compareTo(priorityB)
+                    else when (type) {
+                        "name" -> a.name.lowercase().compareTo(b.name.lowercase())
+                        "class" -> a.clazz.name.lowercase().compareTo(b.clazz.name.lowercase())
+                        else -> 0
+                    }
+                })
+                sorted
             }
 
             else -> dungeonTeammatesNoSelf
         }
 
-        leapTeammates.forEach { player ->
-            if (player == null) players.add(null)
-            else {
-                val slotIndex = loadedHeads[player.name]
-                if (slotIndex != null) players.add(LeapMenuPlayer(slotIndex, player))
-                else players.add(null)
-            }
+        leapTeammates.take(4).forEachIndexed { i, player ->
+            val slotIndex = loadedHeads[player.name]
+            if (slotIndex != null) players[i] = LeapMenuPlayer(slotIndex, player)
         }
     }
 

@@ -4,7 +4,6 @@ import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.CategorySetting
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting

@@ -7,12 +7,7 @@ import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.websocket.WebSocketPacket
 
-class S2CPacketDungeonRoom(
-    val name: String,
-    val x: Int, val z: Int,
-    val col: Int, val row: Int,
-    val core: Int, val isSeparator: Boolean
-): WebSocketPacket("dungeonroom") {
+class S2CPacketDungeonRoom(val name: String, val x: Int, val z: Int, val col: Int, val row: Int, val core: Int, val isSeparator: Boolean): WebSocketPacket {
     override fun handle() {
         if (DungeonScanner.hasScanned) return
         val idx = row * 11 + col

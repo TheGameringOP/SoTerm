@@ -1,139 +1,68 @@
 package com.github.gameringop.config
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.logger
-import com.github.gameringop.utils.JsonUtils.fromJson
-import com.github.gameringop.utils.JsonUtils.toJson
+import com.github.gameringop.SoTerm.MOD_NAME
+import com.github.gameringop.utils.GsonUtils
+import com.github.gameringop.utils.ThreadUtils
+import com.google.common.reflect.TypeToken
 import java.io.File
+import java.lang.reflect.Type
+import java.util.concurrent.*
+import kotlin.reflect.KProperty
 
-
-class PogObject<T: Any>(fileName: String, val defaultObject: T) {
-    private val dataFile = File("config/${SoTerm.MOD_NAME}/${fileName}.json")
-    private var data: T
-    private var lastSavedTime = System.currentTimeMillis()
-    private var currentAutosaveIntervalMillis: Long? = null
+class PogObject<T: Any>(val fileName: String, @Volatile private var data: T, private val type: Type) {
+    private val dataFile = File("config/$MOD_NAME/$fileName.json").apply {
+        parentFile.mkdirs()
+    }
 
     init {
-        dataFile.parentFile.mkdirs()
-        this.data = loadData() ?: defaultObject.also {
-            if (! dataFile.exists() || loadData() == null) save()
-        }
-        registerPogObject(this)
-        autosave(5)
-    }
-
-    private fun loadData(): T? {
-        return try {
-            if (dataFile.exists()) {
-                val loadedData = fromJson(dataFile, defaultObject::class.java)
-                if (loadedData != null && loadedData::class.java == defaultObject::class.java) {
-                    loadedData
-                }
-                else {
-                    logger.info("[PogObject] Data type mismatch, loading defaults.")
-                    null
-                }
-            }
-            else {
-                logger.info("[PogObject] No existing data found, loading defaults.")
-                null
-            }
-        }
-        catch (e: Exception) {
-            null
-        }
-    }
-
-    @Synchronized
-    fun save() {
-        try {
-            toJson(dataFile, data)
-            lastSavedTime = System.currentTimeMillis()
-        }
-        catch (_: Exception) {
-        }
-    }
-
-    fun autosave(intervalMinutes: Long) {
-        if (intervalMinutes > 0) this.currentAutosaveIntervalMillis = intervalMinutes * 60 * 1000L
-        else this.currentAutosaveIntervalMillis = null
-    }
-
-    @Synchronized
-    fun setData(newData: T) {
-        if (this.data == newData) return
-        this.data = newData
+        data = loadData()
+        objects.add(this)
         save()
     }
 
+    private fun loadData(): T {
+        if (! dataFile.exists()) return data
+        return try {
+            val content = dataFile.readText().takeUnless(String::isNullOrBlank) ?: return data
+            if (content == "null") return data
+            GsonUtils.gson.fromJson<T>(content, type) ?: error("data is null?")
+        }
+        catch (e: Exception) {
+            SoTerm.logger.warn("PogObject: failed to load $fileName", e)
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = data
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        data = value
+        save()
+    }
+
+    fun get(): T = data
+    fun set(newData: T) = ::data.set(newData)
+
     @Synchronized
-    fun getData(): T = data
+    fun save() = try {
+        dataFile.writeText(GsonUtils.gson.toJson(data, type))
+    }
+    catch (e: Exception) {
+        SoTerm.logger.warn("PogObject: failed to save $fileName", e)
+        e.printStackTrace()
+        throw e
+    }
 
     companion object {
-        private val activePogObjects = mutableListOf<PogObject<*>>()
-        private var autosaveThread: Thread? = null
+        private val objects = ArrayList<PogObject<*>>()
+
+        inline operator fun <reified T: Any> invoke(fileName: String, defaultObject: T) =
+            PogObject(fileName, defaultObject, object: TypeToken<T>() {}.type)
 
         init {
-            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
-            startAutosaveLoop()
-        }
-
-        @Synchronized
-        private fun registerPogObject(pogObject: PogObject<*>) {
-            if (! activePogObjects.contains(pogObject)) {
-                activePogObjects.add(pogObject)
-            }
-        }
-
-        @Synchronized
-        private fun shutdown() {
-            autosaveThread?.interrupt()
-            val objectsToSave = ArrayList(activePogObjects)
-            objectsToSave.forEach {
-                try {
-                    it.save()
-                }
-                catch (e: Exception) {
-                }
-            }
-            activePogObjects.clear()
-        }
-
-        private fun startAutosaveLoop() {
-            if (autosaveThread?.isAlive == true) return
-
-            autosaveThread = Thread {
-                try {
-                    while (! Thread.currentThread().isInterrupted) {
-                        Thread.sleep(10_000)
-                        val currentTime = System.currentTimeMillis()
-
-                        val objectsToProcess = ArrayList(activePogObjects)
-                        objectsToProcess.forEach { pogObject ->
-                            pogObject.currentAutosaveIntervalMillis?.let { interval ->
-                                if (currentTime - pogObject.lastSavedTime >= interval) {
-                                    val onDiskData = fromJson(pogObject.dataFile, Any::class.java)
-                                    if (onDiskData != pogObject.getData()) pogObject.save()
-                                    else pogObject.lastSavedTime = currentTime
-
-                                    synchronized(pogObject) {
-                                        pogObject.save()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                }
-                catch (_: Exception) {
-                }
-            }.apply {
-                isDaemon = true
-                name = "PogObject-Autosave-Thread"
-                start()
-            }
+            ThreadUtils.loop(TimeUnit.MINUTES.toMillis(5)) { objects.forEach(PogObject<*>::save) }
+            ThreadUtils.addShutdownHook { objects.forEach(PogObject<*>::save) }
         }
     }
 }

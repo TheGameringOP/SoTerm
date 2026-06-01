@@ -2,16 +2,13 @@ package com.github.gameringop.features.impl.floor7.devices
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ColorUtils.withAlpha
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.level.block.Blocks
@@ -96,12 +93,21 @@ object I4Helper: Feature(name = "I4 Helper") {
     }
 
     fun getPredictionTarget(lastHitPos: BlockPos, doneCoords: Collection<BlockPos>): BlockPos? {
-        return devBlocks.shuffled().find { potentialTarget ->
-            val isNotDone = ! doneCoords.contains(potentialTarget)
-            val isCorrectBlockType = WorldUtils.getBlockAt(potentialTarget) == Blocks.BLUE_TERRACOTTA
-            val isNonAdjacentInSameColumn = potentialTarget.x == lastHitPos.x && potentialTarget.distSqr(lastHitPos) > 4.0
-            isNotDone && isCorrectBlockType && ! isNonAdjacentInSameColumn
+        val available = devBlocks.filter { it !in doneCoords && it != lastHitPos && WorldUtils.getBlockAt(it) == Blocks.BLUE_TERRACOTTA }
+        if (available.isEmpty()) return null
+
+        val pairs = available.shuffled().groupBy { it.y }.flatMap { (_, blocks) ->
+            val sorted = blocks.sortedBy { it.x }
+            buildList {
+                for (i in 0 until sorted.size - 1) {
+                    if (sorted[i + 1].x - sorted[i].x == 2) {
+                        add(sorted[i] to sorted[i + 1])
+                    }
+                }
+            }
         }
+
+        return if (pairs.isNotEmpty()) pairs.random().toList().random() else available.random()
     }
 
     fun isOnDev(): Boolean {
@@ -109,4 +115,3 @@ object I4Helper: Feature(name = "I4 Helper") {
         return abs(playerPos.y - 127.0) < 0.5 && playerPos.x in 62.0 .. 65.0 && playerPos.z in 34.0 .. 37.0
     }
 }
-

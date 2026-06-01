@@ -1,7 +1,7 @@
 package com.github.gameringop.features.impl.visual
 
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
+import com.github.gameringop.ui.clickgui.components.Setting
 import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting

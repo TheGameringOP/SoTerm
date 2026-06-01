@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("fabric-loom") version "1.14-SNAPSHOT"
+    id("net.fabricmc.fabric-loom-remap")
     `maven-publish`
     kotlin("jvm") version "2.3.0"
     kotlin("plugin.serialization") version "2.3.0"
@@ -20,9 +20,9 @@ val modmenu_version: String by project
 val iris_version: String by project
 val ktor_version: String by project
 
-group = maven_group
 version = mod_version
-base.archivesName.set(archives_base_name)
+group = maven_group
+base { archivesName.set(mod_name) }
 
 loom { accessWidenerPath.set(file("src/main/resources/soterm.accesswidener")) }
 
@@ -32,20 +32,16 @@ configurations {
     implementation.get().extendsFrom(bundled)
 }
 
-
 repositories {
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-    maven("https://maven.parchmentmc.org")
     maven("https://maven.terraformersmc.com/releases")
     maven("https://api.modrinth.com/maven")
+    maven(uri("https://jitpack.io"))
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft_version")
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.21.10:2025.10.12@zip")
-    })
+    mappings(loom.officialMojangMappings())
 
     modImplementation("net.fabricmc:fabric-loader:$loader_version")
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabric_version")
@@ -61,32 +57,22 @@ dependencies {
     implementation("io.github.llamalad7:mixinextras-fabric:0.4.1")
     annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.4.1")
 
-    implementation("org.java-websocket:Java-WebSocket:1.5.4")
-    include("org.java-websocket:Java-WebSocket:1.5.4")
-
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
 
-    implementation("io.github.classgraph:classgraph:4.8.174")
-    include("io.github.classgraph:classgraph:4.8.174")
-
-    implementation("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
-    include("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
-
-    implementation("io.ktor:ktor-client-websockets-jvm:$ktor_version")
-    include("io.ktor:ktor-client-websockets-jvm:$ktor_version")
-
-    implementation("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
-    include("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
-
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
-    include("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
-
     bundled("io.github.classgraph:classgraph:4.8.174")
-    bundled("io.ktor:ktor-client-okhttp-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-cio:$ktor_version")
     bundled("io.ktor:ktor-client-websockets-jvm:$ktor_version")
     bundled("io.ktor:ktor-client-content-negotiation-jvm:$ktor_version")
+    bundled("io.ktor:ktor-client-encoding:$ktor_version")
     bundled("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
+}
+
+afterEvaluate {
+    bundled.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+        artifact.moduleVersion.id.let { id ->
+            dependencies.add("include", "${id.group}:${id.name}:${id.version}")
+        }
+    }
 }
 
 tasks.processResources {

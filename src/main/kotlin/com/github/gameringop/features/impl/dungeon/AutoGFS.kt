@@ -3,7 +3,6 @@ package com.github.gameringop.features.impl.dungeon
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ChatUtils

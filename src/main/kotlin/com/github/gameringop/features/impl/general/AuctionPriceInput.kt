@@ -1,16 +1,15 @@
 package com.github.gameringop.features.impl.general
 
-import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.features.Feature
+import com.github.gameringop.init.NetworkLoop
 import com.github.gameringop.mixin.IAbstractSignEditScreen
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.MultiCheckboxSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.ui.utils.componnents.UIButton
 import com.github.gameringop.ui.utils.componnents.UISearchBox
+import com.github.gameringop.utils.ChatUtils.unformattedText
+import com.github.gameringop.utils.GuiUtils
 import com.github.gameringop.utils.NumbersUtils
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import com.github.gameringop.utils.network.PacketUtils.send
@@ -26,16 +25,17 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.ItemLore
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.SignBlockEntity
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
 
 object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox and undercut mode.") {
-    private val defaultMode by DropdownSetting("Default mode", 0, listOf("Normal", "Undercut"))
-        .withDescription("The default input mode that will be used when you open the menu")
+    private val defaultMode by DropdownSetting("Default mode", 0, listOf("Normal", "Undercut")).withDescription("The default input mode that will be used when you open the menu")
+    private val rememberInput by MultiCheckboxSetting("Remember Input", mutableMapOf("Text" to false, "Mode" to false)).withDescription("Toggles for settings on the input menu that should be restored after reopening it")
 
-    private val rememberInput by MultiCheckboxSetting("Remember Input", mutableMapOf("Text" to false, "Mode" to false))
-        .withDescription("Toggles for settings on the input menu that should be restored after reopening it")
+    private val guiNames = setOf("Create BIN Auction", "Create Auction")
+    private val confirmNames = setOf("Confirm BIN Auction", "Confirm Auction")
 
     private enum class InputMode { NORMAL, UNDERCUT }
 
@@ -52,15 +52,33 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
             val lines = Array(4) { i -> sign.frontText.getMessage(i, false).string }
 
             if (lines[1] == "^^^^^^^^^^^^^^^" && lines[2] == "Your auction" && lines[3] == "starting bid") mc.execute {
-                // manually setting the screen so the sign gui wont close
+
                 mc.screen = AuctionInputScreen(sign, lines, stack).apply { init(mc, width, height) }
             }
         }
 
         register<ContainerEvent.SlotClick> {
-            if (event.screen.title.string != "Create BIN Auction") return@register
             if (event.slotId != 31) return@register
+            if (event.screen.title.unformattedText !in guiNames) return@register
             item = event.screen.menu.getSlot(13).item.takeIf { it.skyblockId.isNotEmpty() }
+        }
+
+        register<ContainerEvent.Keyboard> {
+            if (event.key != GLFW.GLFW_KEY_ENTER && event.key != GLFW.GLFW_KEY_KP_ENTER) return@register
+            val title = event.screen.title.unformattedText
+
+            val (slotId, isValidName) = when (title) {
+                in guiNames -> 29 to { name: String -> name in guiNames }
+                in confirmNames -> 11 to { name: String -> name == "Confirm" }
+                else -> return@register
+            }
+
+            val stack = event.screen.menu.slots.getOrNull(slotId)?.item ?: return@register
+            if (! stack.`is`(Blocks.GREEN_TERRACOTTA.asItem())) return@register
+            if (! isValidName(stack.hoverName.unformattedText)) return@register
+
+            GuiUtils.clickSlot(slotId, GuiUtils.ButtonType.LEFT)
+            event.isCanceled = true
         }
     }
 
@@ -80,7 +98,7 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
             if (rememberInput.value["Text"] != true) input = ""
             mode = if (rememberInput.value["Mode"] == true && mode != null) mode else InputMode.entries[defaultMode.value]
 
-            lowestBin = SoTerm.priceData[stack.skyblockId] ?: 0L
+            lowestBin = NetworkLoop.priceData[stack.skyblockId] ?: 0L
 
             val centerX = width / 2
             val centerY = height / 2
@@ -129,8 +147,9 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
                 )
             }
 
-            val headerText = if (mode == InputMode.UNDERCUT) "Lowest BIN: ${NumbersUtils.format(lowestBin)}" else "Set Auction Price"
-            guiGraphics.drawCenteredString(font, headerText, centerX, centerY - 50, Color.ORANGE.rgb)
+            val headerText = if (mode == InputMode.UNDERCUT) "Undercut Mode" else "Set Auction Price"
+            guiGraphics.drawCenteredString(font, headerText, centerX, centerY - 55, Color.ORANGE.rgb)
+            guiGraphics.drawCenteredString(font, "Lowest BIN: ${NumbersUtils.format(lowestBin)}", centerX, centerY - 45, Color.ORANGE.rgb)
 
             val displayText = if (parsedValue != null) "§aValue: §e${NumbersUtils.formatComma(parsedValue)}"
             else if (input.isEmpty()) "§7Enter a value (e.g. 10m, 5k)"
@@ -161,18 +180,13 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
         }
 
         private fun recalculateValue() {
-            val textValue = try {
-                NumbersUtils.parseCompactNumber(inputField.value)
-            } catch (e: Exception) {
-                parsedValue = null
-                return
-            }
-            
+            val textValue = NumbersUtils.parseCompactNumber(input)
+
             if (textValue == null) {
                 parsedValue = null
                 return
             }
-        
+
             parsedValue = if (mode == InputMode.UNDERCUT) (lowestBin - textValue).coerceAtLeast(0)
             else textValue
         }

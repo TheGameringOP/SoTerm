@@ -2,9 +2,7 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.map.core.RoomState

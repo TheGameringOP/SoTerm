@@ -3,7 +3,7 @@ package com.github.gameringop.mixin;
 import com.github.gameringop.event.EventBus;
 import com.github.gameringop.event.impl.ActionBarMessageEvent;
 import com.github.gameringop.event.impl.RenderOverlayEvent;
-import com.github.gameringop.features.impl.general.FEAT_ItemRarity;
+import com.github.gameringop.features.impl.general.ItemRarity;
 import com.github.gameringop.features.impl.misc.Camera;
 import com.github.gameringop.features.impl.visual.DarkMode;
 import com.github.gameringop.features.impl.visual.PlayerHud;
@@ -167,9 +167,9 @@ public abstract class MixinGui {
 
     @Inject(method = "renderSlot", at = @At("HEAD"))
     private void onRenderHotbarSlot(GuiGraphics guiGraphics, int i, int j, DeltaTracker deltaTracker, Player player, ItemStack itemStack, int k, CallbackInfo ci) {
-        if (!FEAT_ItemRarity.INSTANCE.enabled) return;
-        if (FEAT_ItemRarity.INSTANCE.getDrawOnHotbar().getValue()) {
-            FEAT_ItemRarity.onSlotDraw(guiGraphics, itemStack, i, j);
+        if (!ItemRarity.INSTANCE.enabled) return;
+        if (ItemRarity.INSTANCE.getDrawOnHotbar().getValue()) {
+            ItemRarity.onSlotDraw(guiGraphics, itemStack, i, j);
         }
     }
 }

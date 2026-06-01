@@ -1,7 +1,7 @@
 package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 
 import com.github.gameringop.SoTerm.mc
-import com.github.gameringop.event.EventBus
+import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.impl.CheckEntityGlowEvent
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.TickEvent
@@ -59,7 +59,7 @@ object BlazeSolver {
         }
     }
 
-    private val tickListener = EventBus.register<TickEvent.Start> {
+    private val tickListener = EventListener.create<TickEvent.Start> {
         blazes.clear()
         hpMap.clear()
 
@@ -81,7 +81,7 @@ object BlazeSolver {
 
         blazes.sortBy { hpMap[it.id] }
         if (reversed) blazes.reverse()
-    }.unregister()
+    }
 
     fun reset() {
         tickListener.unregister()

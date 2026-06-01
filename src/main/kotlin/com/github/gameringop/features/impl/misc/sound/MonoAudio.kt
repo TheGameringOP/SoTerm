@@ -1,4 +1,4 @@
-package com.github.gameringop.features.impl.misc
+package com.github.gameringop.features.impl.misc.sound
 
 import com.github.gameringop.features.Feature
 import net.minecraft.world.phys.Vec3

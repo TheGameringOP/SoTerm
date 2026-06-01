@@ -3,9 +3,7 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.event.impl.CheckEntityRenderEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils

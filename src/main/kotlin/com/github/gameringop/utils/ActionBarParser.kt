@@ -42,20 +42,16 @@ object ActionBarParser {
     fun init() {
         register<MainThreadPacketReceivedEvent.Post>(EventPriority.HIGHEST) {
             if (! LocationUtils.inSkyblock) return@register
-            if (event.packet is ClientboundSystemChatPacket) {
-                if (event.packet.overlay()) {
-                    extractPlayerStats(event.packet.content.formattedText)
-                    effectiveHP = (currentHealth * (1 + currentDefense / 100))
-                }
+            if (event.packet is ClientboundSystemChatPacket && event.packet.overlay()) {
+                extractStats(event.packet.content.formattedText)
             }
             else if (event.packet is ClientboundSetActionBarTextPacket) {
-                extractPlayerStats(event.packet.text.formattedText)
-                effectiveHP = (currentHealth * (1 + currentDefense / 100))
+                extractStats(event.packet.text.formattedText)
             }
         }
     }
 
-    private fun extractPlayerStats(input: String) {
+    private fun extractStats(input: String) {
         HP_REGEX.find(input)?.let { match ->
             currentHealth = match.groupValues[1].remove(",").toIntOrNull() ?: currentHealth
             maxHealth = match.groupValues[2].remove(",").toIntOrNull() ?: maxHealth
@@ -64,6 +60,8 @@ object ActionBarParser {
         DEF_REGEX.find(input)?.let { match ->
             currentDefense = match.groupValues[1].remove(",").toIntOrNull() ?: currentDefense
         }
+
+        effectiveHP = (currentHealth * (1 + currentDefense / 100))
 
         MANA_REGEX.find(input)?.let { match ->
             currentMana = match.groupValues[1].remove(",").toIntOrNull() ?: currentMana

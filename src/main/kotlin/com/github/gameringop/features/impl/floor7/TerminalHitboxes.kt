@@ -4,12 +4,9 @@ import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.hideIf
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.Vec3
 import com.github.gameringop.utils.Utils

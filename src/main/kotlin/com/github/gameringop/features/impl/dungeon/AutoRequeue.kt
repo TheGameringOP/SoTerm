@@ -3,11 +3,8 @@ package com.github.gameringop.features.impl.dungeon
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.impl.general.PartyHelper
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.PartyUtils
 import com.github.gameringop.utils.ThreadUtils

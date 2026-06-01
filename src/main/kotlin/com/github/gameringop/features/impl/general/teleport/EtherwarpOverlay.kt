@@ -2,14 +2,10 @@ package com.github.gameringop.features.impl.general.teleport
 
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
-import com.github.gameringop.ui.clickgui.components.hideIf
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.section
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
 import com.github.gameringop.utils.equalsOneOf
@@ -20,12 +16,13 @@ object EtherwarpOverlay: Feature() {
     private val mode by DropdownSetting("Mode", 0, listOf("Outline", "Fill", "Filled Outline")).section("Settings")
     private val phase by ToggleSetting("Phase")
     private val lineWidth by SliderSetting("Line Width", 1.0, 1.0, 10.0, 0.1).hideIf { mode.value == 1 }
+    private val showFail by ToggleSetting("Show Fail", true).withDescription("Shows the fail position of the etherwarp")
 
     private val fillColor by ColorSetting("Fill Color", Utils.favoriteColor.withAlpha(50)).hideIf { mode.value == 0 }.section("Colors")
     private val outlineColor by ColorSetting("Outline Color", Utils.favoriteColor, false).hideIf { mode.value == 1 }
 
-    private val invalidFillColor by ColorSetting("Invalid Fill Color ", Color.RED.withAlpha(50)).hideIf { mode.value == 0 }
-    private val invalidOutlineColor by ColorSetting("Invalid Outline Color ", Color.RED, false).hideIf { mode.value == 1 }
+    private val invalidFillColor by ColorSetting("Invalid Fill Color ", Color.RED.withAlpha(50)).hideIf { mode.value == 0 || ! showFail.value }
+    private val invalidOutlineColor by ColorSetting("Invalid Outline Color ", Color.RED, false).hideIf { mode.value == 1 || ! showFail.value }
 
     override fun init() {
         register<RenderWorldEvent> {
@@ -34,6 +31,7 @@ object EtherwarpOverlay: Feature() {
             val heldItem = player.mainHandItem.takeUnless { it.isEmpty } ?: return@register
             val distance = EtherwarpHelper.getEtherwarpDistance(heldItem) ?: return@register
             val (valid, pos) = EtherwarpHelper.getEtherPos(player.position(), distance)
+            if (! valid && ! showFail.value) return@register
             
             Render3D.renderBlock(
                 event.ctx, pos ?: return@register,

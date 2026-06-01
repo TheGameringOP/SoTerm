@@ -3,11 +3,7 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.*
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.showIf
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
@@ -87,7 +83,7 @@ object BoxMobs: Feature("Highlights custom selected mobs everywhere in Skyblock.
             }
         }
 
-        register<EntityDeathEvent> {
+        register<EntityUnloadEvent> {
             trackedMobs.remove(event.entity.id)
             checked.remove(event.entity.id)
         }

@@ -3,9 +3,7 @@ package com.github.gameringop.features.impl.misc
 import com.github.gameringop.event.EventPriority
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import java.time.LocalTime
 

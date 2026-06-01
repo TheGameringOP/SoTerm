@@ -9,7 +9,6 @@ import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.ui.utils.TextInputHandler
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
@@ -131,7 +130,7 @@ class SoundManagerScreen: Screen(Component.literal("SoundManager")) {
 
         if (draggingId == item.id) {
             val pct = ((mx - sliderX) / sliderW).coerceIn(0.0f, 1.0f)
-            SoundManager.volumes.getData()[item.id] = (pct * 2.0).toFloat()
+            SoundManager.volumes[item.id] = (pct * 2.0).toFloat()
         }
 
         val vol = SoundManager.getMultiplier(item.id)
@@ -283,10 +282,8 @@ class SoundManagerScreen: Screen(Component.literal("SoundManager")) {
     }
 
     override fun onClose() {
-        SoundManager.volumes.save()
-        ThreadUtils.scheduledTask {
-            SoTerm.screen = ClickGuiScreen
-        }
+        SoundManager.volumes = SoundManager.volumes.toMutableMap()
+        SoTerm.screen = ClickGuiScreen
     }
 
     private sealed class SoundItem {

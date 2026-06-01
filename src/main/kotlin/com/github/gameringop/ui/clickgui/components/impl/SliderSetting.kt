@@ -7,8 +7,9 @@ import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.utils.NumbersUtils.toFixed
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 import net.minecraft.client.gui.GuiGraphics
 import org.lwjgl.glfw.GLFW
 import java.awt.Color
@@ -158,8 +159,10 @@ open class SliderSetting<T: Number>(
         }
     }
 
-    override fun write(): JsonElement = JsonPrimitive(value)
+    override fun write() = JsonPrimitive(value)
     override fun read(element: JsonElement?) {
-        element?.asNumber?.let { value = snapToStep(it.toDouble()) }
+        (element as? JsonPrimitive)?.doubleOrNull?.let {
+            value = snapToStep(it)
+        }
     }
 }

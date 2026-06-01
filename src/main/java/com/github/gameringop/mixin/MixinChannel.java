@@ -1,6 +1,6 @@
 package com.github.gameringop.mixin;
 
-import com.github.gameringop.features.impl.misc.MonoAudio;
+import com.github.gameringop.features.impl.misc.sound.MonoAudio;
 import com.github.gameringop.interfaces.MonoAudioChannel;
 import com.mojang.blaze3d.audio.Channel;
 import net.minecraft.world.phys.Vec3;

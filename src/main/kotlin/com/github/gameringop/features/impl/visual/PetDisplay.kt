@@ -5,7 +5,6 @@ import com.github.gameringop.event.impl.ContainerEvent
 import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.annotations.AlwaysActive
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ChatUtils
@@ -33,13 +32,13 @@ object PetDisplay: Feature("Pet Features") {
     private val chatDespawnRegex = Regex("§aYou despawned your .*§a!")
 
     private val petLevelRegex = Regex(".+\\[Lvl .*]")
-    private var selectedPetSlot = -1
+    private var selectedPetSlot = - 1
 
     override fun init() {
         hudElement("PetDisplay",
             enabled = { petDisplay.value },
-            shouldDraw = { LocationUtils.inSkyblock && cacheData.getData()["pet"] != null }) { context, example ->
-            val text = if (example) "&6Golden Dragon" else cacheData.getData()["pet"].toString()
+            shouldDraw = { LocationUtils.inSkyblock && cacheData.get()["pet"] != null }) { context, example ->
+            val text = if (example) "&6Golden Dragon" else cacheData.get()["pet"].toString()
             Render2D.drawString(context, text, 0, 0)
             return@hudElement text.width().toFloat() to text.height().toFloat()
         }
@@ -49,29 +48,25 @@ object PetDisplay: Feature("Pet Features") {
             event.formattedText.let {
                 if (chatDespawnRegex.matches(it)) {
                     selectedPetSlot = - 1
-                    cacheData.getData().remove("pet")
+                    cacheData.get().remove("pet")
                     return@register
                 }
 
                 val match1 = chatSpawnRegex.find(it)?.destructured?.component1()
                 val match2 = chatPetRuleRegex.find(it)?.destructured?.component1()
                 if (match2 != null && autoPetTitles.value && enabled) ChatUtils.showTitle(match2)
-                cacheData.getData()["pet"] = match1 ?: match2 ?: return@let
+                cacheData.get()["pet"] = match1 ?: match2 ?: return@let
             }
         }
 
         register<ContainerFullyOpenedEvent> {
-            if (! enabled) return@register
-            if (! activePetHighlight.value) return@register
             if (! event.title.unformattedText.startsWith("Pets")) return@register
 
-            for (item in event.items) {
-                for (line in item.value.lore) {
-                    if (line.removeFormatting() != "Click to despawn!") continue
-                    selectedPetSlot = item.key
-                    cacheData.getData()["pet"] = item.value.hoverName.formattedText.remove(petLevelRegex).trim()
-                    return@register
-                }
+            for (item in event.items) for (line in item.value.lore) {
+                if (line.removeFormatting() != "Click to despawn!") continue
+                selectedPetSlot = item.key
+                cacheData.get()["pet"] = item.value.hoverName.formattedText.remove(petLevelRegex).trim()
+                return@register
             }
         }
 

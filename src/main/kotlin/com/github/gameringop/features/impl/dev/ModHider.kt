@@ -1,6 +1,6 @@
 package com.github.gameringop.features.impl.dev
 
-import com.github.gameringop.SoTerm.mc
+import com.github.gameringop.features.Feature
 import com.github.gameringop.mixin.ILanguage
 import com.github.gameringop.mixin.ILanguageManager
 import com.github.gameringop.utils.equalsOneOf
@@ -21,10 +21,10 @@ import net.minecraft.server.packs.resources.MultiPackResourceManager
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
-
-object ModHider {
-    private val language = ILanguage.invokeLoadDefault()
+object ModHider: Feature("stops the exploit that allows servers to send a translation key inside a Sign or Anvil to gets the mods you are using. mods without language keys are safe from this", toggled = true) {
+    override fun toggle() = Unit
     private val serverLanguages = IdentityHashMap<ClientPacketListener?, Language?>()
+    private val language = ILanguage.invokeLoadDefault()
 
     @JvmStatic
     fun getString(component: Component): String {

@@ -3,12 +3,9 @@ package com.github.gameringop.features.impl.visual
 import com.github.gameringop.SoTerm
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.getValue
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.clickgui.components.provideDelegate
-import com.github.gameringop.ui.clickgui.components.withDescription
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.removeFormatting
@@ -86,7 +83,7 @@ object PestBox: Feature("Highlights garden pests in the Garden.") {
             }
         }
 
-        register<EntityDeathEvent> {
+        register<EntityUnloadEvent> {
             trackedPests.removeIf { it.id == event.entity.id }
             checked.remove(event.entity.id)
         }

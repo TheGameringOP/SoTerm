@@ -48,11 +48,17 @@ object PlayerUtils {
     }
 
     fun leftClick() {
-        (mc.options.keyAttack as IKeyMapping).clickCount += 1
+        val key = mc.options.keyAttack
+        key.isDown = true
+        (key as IKeyMapping).clickCount += 1
+        key.isDown = false
     }
 
     fun rightClick() {
-        (mc.options.keyUse as IKeyMapping).clickCount += 1
+        val key = mc.options.keyUse
+        key.isDown = true
+        (key as IKeyMapping).clickCount += 1
+        key.isDown = false
     }
 
     fun getSelectionBlock(): BlockPos? {
@@ -144,6 +150,16 @@ object PlayerUtils {
         rotateSmoothly(rot, time, block)
     }
 
+    suspend fun changeMaskAction() {
+        val maskId = mc.player?.inventory?.nonEquipmentItems?.firstNotNullOfOrNull { item ->
+            item?.skyblockId?.takeIf { id ->
+                id.containsOneOf("SPIRIT_MASK", "BONZO_MASK")
+            }
+        } ?: return modMessage("&cNo mask found in inventory!")
+
+        quickSwapAction(maskId)
+    }
+
     private var awaiting4EQ = ""
     suspend fun quickSwapAction(itemID: String) {
         if (thePlayer?.isDead == true) return
@@ -201,6 +217,7 @@ object PlayerUtils {
         rightClick()
         delay(100)
         swapToSlot(prev)
+        delay(100)
     }
 
     fun interactEntity(entity: Entity, hand: InteractionHand) {
@@ -224,7 +241,7 @@ object PlayerUtils {
                         val con = mc.player?.containerMenu?.slots ?: return@scheduledTask
 
                         val item = con.filter { it.index in con.size - 36 until con.size }.find {
-                            it.item?.skyblockId?.contains(awaiting4EQ) == true
+                            it.item.skyblockId.contains(awaiting4EQ)
                         } ?: return@scheduledTask
 
                         GuiUtils.clickSlot(item.index, GuiUtils.ButtonType.LEFT)

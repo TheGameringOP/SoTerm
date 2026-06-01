@@ -4,7 +4,6 @@ import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.event.impl.RenderWorldEvent
 import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.components.*
 import com.github.gameringop.ui.clickgui.components.impl.*
 import com.github.gameringop.ui.hud.getValue
 import com.github.gameringop.ui.hud.provideDelegate
