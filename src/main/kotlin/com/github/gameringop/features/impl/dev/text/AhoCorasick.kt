@@ -6,12 +6,6 @@ import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 
-
-/**
- * Taken from Starred's library
- * Under BSD 3-Clause License
- * https://github.com/skies-starred/library/blob/master/src/main/kotlin/xyz/aerii/library/handlers/minecraft/AbstractWords.kt
- */
 class AhoCorasick {
     private var root = Node()
 
@@ -167,7 +161,7 @@ class AhoCorasick {
         fun ensureResult(): MutableComponent {
             val existing = result
             if (existing != null) return existing
-            val r = Component.literal("") as MutableComponent
+            val r = Component.literal("")
             result = r
             return r
         }
@@ -189,7 +183,7 @@ class AhoCorasick {
                 flush(ensureResult(), bl)
 
                 val baseStyle = bs[bl] ?: Style.EMPTY
-                val rep = r1[outIdx].copy() as MutableComponent
+                val rep = r1[outIdx].copy()
                 if (rep.style.isEmpty) rep.withStyle(baseStyle)
                 ensureResult().append(rep)
 

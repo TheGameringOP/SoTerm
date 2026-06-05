@@ -12,7 +12,7 @@ import com.github.gameringop.utils.render.RenderContext
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.projectile.AbstractArrow
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.EnderpearlItem
 import net.minecraft.world.level.ClipContext
@@ -70,7 +70,7 @@ object Trajectories: Feature(name = "Trajectories", description = "Shows the tra
                     listOf(calculateTrajectory(0f, isPearl = false, useCharge = true))
                 }
             } else if (pearls.value && heldItem.item is EnderpearlItem) {
-                if (heldItem.displayName?.string?.contains("Spirit") != true) {
+                if (heldItem.displayName.string.contains("Spirit") != true) {
                     cachedPearlTrajectory = calculateTrajectory(0f, isPearl = true, useCharge = false)
                 }
             }
@@ -178,7 +178,6 @@ object Trajectories: Feature(name = "Trajectories", description = "Shows the tra
                         0.15 * size
                     )
                 )
-            else -> return
         }
         val box = AABB(minVec, maxVec)
         val col = color.value
@@ -242,7 +241,7 @@ object Trajectories: Feature(name = "Trajectories", description = "Shows the tra
                 )
             )
             if (blockHit.type == HitResult.Type.BLOCK) {
-                hitResult = blockHit as BlockHitResult
+                hitResult = blockHit
                 lines.add(blockHit.location)
                 return@repeat
             }

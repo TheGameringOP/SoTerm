@@ -1,8 +1,8 @@
 package com.github.gameringop.utils
 
 import com.github.gameringop.SoTerm.mc
-import net.minecraft.Util
 import net.minecraft.network.protocol.Packet
+import net.minecraft.util.Util
 import java.awt.Color
 import java.net.URI
 

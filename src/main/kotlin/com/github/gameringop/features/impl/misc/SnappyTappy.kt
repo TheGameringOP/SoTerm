@@ -3,7 +3,7 @@ package com.github.gameringop.features.impl.misc
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.mojang.blaze3d.platform.InputConstants
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
 import net.minecraft.client.KeyMapping
 import org.lwjgl.glfw.GLFW
 
@@ -15,7 +15,7 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
 
     override fun init() {
         register<TickEvent.Start> {
-            val windowHandle = mc.window?.handle() ?: return@register
+            val windowHandle = mc.window.handle()
             val opts = mc.options
 
             if (mc.screen != null) {
@@ -53,7 +53,7 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
     }
 
     private fun isKeyDown(handle: Long, key: KeyMapping): Boolean {
-        val bound = KeyBindingHelper.getBoundKeyOf(key) ?: return false
+        val bound = KeyMappingHelper.getBoundKeyOf(key)
         return if (bound.type == InputConstants.Type.MOUSE) {
             GLFW.glfwGetMouseButton(handle, bound.value) == GLFW.GLFW_PRESS
         }

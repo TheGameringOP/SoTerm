@@ -15,7 +15,7 @@ object TimeChanger: Feature("Changes the world time.") {
         register<MainThreadPacketReceivedEvent.Pre>(EventPriority.LOW) {
             if (event.packet !is ClientboundSetTimePacket) return@register
             val customTime = TIME_VALUES.getOrElse(timeChangerMode.value) { getTickTime() }
-            mc.level?.setTimeFromServer(mc.level !!.gameTime, customTime, false)
+            mc.level?.setTimeFromServer(customTime)
             event.isCanceled = true
         }
     }

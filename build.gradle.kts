@@ -1,11 +1,12 @@
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("net.fabricmc.fabric-loom-remap")
+    id("net.fabricmc.fabric-loom")
     `maven-publish`
-    kotlin("jvm") version "2.3.0"
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 
 val minecraft_version: String by project
@@ -13,7 +14,6 @@ val loader_version: String by project
 val fabric_kotlin_version: String by project
 val mod_version: String by project
 val maven_group: String by project
-val archives_base_name: String by project
 val mod_name: String by project
 val fabric_version: String by project
 val modmenu_version: String by project
@@ -41,23 +41,20 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft_version")
-    mappings(loom.officialMojangMappings())
 
-    modImplementation("net.fabricmc:fabric-loader:$loader_version")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabric_version")
-    modImplementation("net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version")
-    modImplementation("com.terraformersmc:modmenu:$modmenu_version")
-    modImplementation("maven.modrinth:iris:$iris_version")
+    implementation("net.fabricmc:fabric-loader:$loader_version")
+    implementation("net.fabricmc.fabric-api:fabric-api:$fabric_version")
+    implementation("net.fabricmc:fabric-language-kotlin:$fabric_kotlin_version")
 
-    modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
+    runtimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.2")
+    compileOnly("maven.modrinth:iris:$iris_version")
+    compileOnly("com.terraformersmc:modmenu:$modmenu_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     include("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     implementation("io.github.llamalad7:mixinextras-fabric:0.4.1")
     annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.4.1")
-
-    implementation("com.google.code.gson:gson:2.10.1")
 
     bundled("io.github.classgraph:classgraph:4.8.174")
     bundled("io.ktor:ktor-client-cio:$ktor_version")
@@ -83,46 +80,31 @@ tasks.processResources {
 }
 
 tasks.withType<JavaCompile> {
-    options.release.set(21)
+    options.release.set(25)
 }
 
 tasks.withType<KotlinCompile> {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
+        jvmTarget.set(JvmTarget.JVM_25)
     }
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+    toolchain { languageVersion.set(JavaLanguageVersion.of(25)) }
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
-val intermediateJarsDir = layout.buildDirectory.dir("tmp/intermediateJars")
-
-tasks.jar {
-    destinationDirectory.set(intermediateJarsDir)
-    from("LICENSE") {
-        rename { "${it}_${base.archivesName.get()}" }
-    }
-}
-
-tasks.remapJar {
+tasks.named<Jar>("jar") {
     archiveFileName.set("$mod_name - $version.jar")
-    dependsOn(tasks.jar)
-    inputFile.set(tasks.jar.flatMap { it.archiveFile })
-}
 
-artifacts {
-    add("archives", tasks.remapJar)
-}
-
-tasks.build {
-    dependsOn(tasks.remapJar)
+    from("LICENSE") {
+        rename { "${it}_${mod_name}" }
+    }
 }
 
 tasks.test {
@@ -132,7 +114,7 @@ tasks.test {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = archives_base_name
+            artifactId = mod_name
             from(components["java"])
         }
     }

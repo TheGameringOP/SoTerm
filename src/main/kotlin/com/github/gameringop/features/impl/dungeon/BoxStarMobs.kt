@@ -174,7 +174,7 @@ object BoxStarMob: Feature("Highlights all starred mobs in a dungeon.") {
     ) {
         if (fillColor.alpha <= 0) return
 
-        val cameraPos = event.ctx.camera.position
+        val cameraPos = event.ctx.camera.position()
         event.ctx.matrixStack.pushPose()
         event.ctx.matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z)
 

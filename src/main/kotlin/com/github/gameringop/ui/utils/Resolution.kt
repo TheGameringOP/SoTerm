@@ -3,7 +3,7 @@ package com.github.gameringop.ui.utils
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.utils.NumbersUtils.div
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 
 object Resolution {
     private const val REFERENCE_HEIGHT = 540f
@@ -28,12 +28,12 @@ object Resolution {
         width = guiWidth / scale
     }
 
-    fun push(ctx: GuiGraphics) {
+    fun push(ctx: GuiGraphicsExtractor) {
         ctx.pose().pushMatrix()
         ctx.pose().scale(scale, scale)
     }
 
-    fun pop(ctx: GuiGraphics) {
+    fun pop(ctx: GuiGraphicsExtractor) {
         ctx.pose().popMatrix()
     }
 

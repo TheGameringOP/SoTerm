@@ -231,7 +231,7 @@ object LeapMenu: Feature("Custom Leap Menu and leap message") {
 
         mc.player?.containerMenu?.let { menu ->
             for (i in 0 until (menu.slots.size - 36)) {
-                val stack = menu.slots[i].item ?: continue
+                val stack = menu.slots[i].item
                 if (stack.isEmpty || ! stack.`is`(Items.PLAYER_HEAD)) continue
                 val headName = playerRegex.find(stack.hoverName.string)?.groups?.get("name")?.value ?: continue
                 loadedHeads[headName] = i

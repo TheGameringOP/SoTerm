@@ -2,7 +2,7 @@ package com.github.gameringop.utils
 
 import com.github.gameringop.SoTerm
 import com.github.gameringop.utils.network.WebUtils
-import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.fabricmc.loader.api.FabricLoader
@@ -87,5 +87,5 @@ object DataDownloader {
         }
     }
 
-    inline fun <reified T> loadJson(fileName: String) = GsonUtils.decode<T>(modDataPath.resolve(fileName).readText())
+    inline fun <reified T: Any> loadJson(fileName: String) = GsonUtils.decode<T>(modDataPath.resolve(fileName).readText())
 }

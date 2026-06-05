@@ -4,7 +4,7 @@ import com.github.gameringop.SoTerm
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -58,7 +58,7 @@ class TextInputHandler(
 
     private var previousMousePos = 0f to 0f
 
-    fun draw(context: GuiGraphics, mouseX: Float, mouseY: Float, suffix: String? = null) {
+    fun draw(context: GuiGraphicsExtractor, mouseX: Float, mouseY: Float, suffix: String? = null) {
         if (previousMousePos != mouseX to mouseY) mouseDragged(mouseX)
         previousMousePos = mouseX to mouseY
 
@@ -195,13 +195,13 @@ class TextInputHandler(
                 if (input.hasControlDown() && ! input.hasShiftDown()) {
                     when (input.key) {
                         GLFW.GLFW_KEY_V -> {
-                            SoTerm.mc.keyboardHandler?.clipboard?.let { insert(it) }
+                            insert(SoTerm.mc.keyboardHandler.clipboard)
                             true
                         }
 
                         GLFW.GLFW_KEY_C -> {
                             if (caret != selection) {
-                                SoTerm.mc.keyboardHandler?.clipboard = text.substringSafe(caret, selection)
+                                SoTerm.mc.keyboardHandler.clipboard = text.substringSafe(caret, selection)
                                 true
                             }
                             else false
@@ -209,7 +209,7 @@ class TextInputHandler(
 
                         GLFW.GLFW_KEY_X -> {
                             if (caret != selection) {
-                                SoTerm.mc.keyboardHandler?.clipboard = text.substringSafe(caret, selection)
+                                SoTerm.mc.keyboardHandler.clipboard = text.substringSafe(caret, selection)
                                 deleteSelection()
                                 true
                             }
@@ -269,11 +269,8 @@ class TextInputHandler(
 
     private fun deleteSelection() {
         if (caret == selection) return
-        val start = min(caret, selection)
-        val end = max(caret, selection)
-        textSetter(text.removeRangeSafe(start, end))
-        caret = start
-        clearSelection()
+        textSetter(text.removeRangeSafe(caret, selection))
+        caret = if (selection > caret) caret else selection
         saveState()
     }
 
@@ -405,11 +402,8 @@ class TextInputHandler(
         return substring(f, t)
     }
 
-    private fun String.removeRangeSafe(from: Int, to: Int): String {
-        val start = min(from, to).coerceIn(0, length)
-        val end = max(from, to).coerceIn(start, length)
-        return removeRange(start, end)
-    }
+    private fun String.removeRangeSafe(from: Int, to: Int): String =
+        removeRange(min(from, to), max(to, from))
 
     private fun String.dropAt(at: Int, amount: Int): String =
         removeRangeSafe(at, at + amount)

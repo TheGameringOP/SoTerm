@@ -1,7 +1,8 @@
 package com.github.gameringop.mixin;
 
 import com.github.gameringop.features.impl.general.SlotBinding;
-import net.minecraft.client.gui.GuiGraphics;
+import com.github.gameringop.features.impl.misc.HideRecipeBook;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
@@ -19,8 +20,13 @@ public abstract class MixinAbstractRecipeBookScreen<T extends RecipeBookMenu> ex
         super(abstractContainerMenu, inventory, component);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;nextStratum()V", ordinal = 0, shift = At.Shift.AFTER))
-    private void onRenderPre(GuiGraphics context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
-        SlotBinding.drawSlotBinding(context, mouseX, mouseY, this);
+    @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractRecipeBookScreen;initButton()V"), cancellable = true)
+    private void renderRecipeBook(CallbackInfo ci) {
+        if (HideRecipeBook.INSTANCE.enabled) ci.cancel();
+    }
+
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;nextStratum()V", ordinal = 0, shift = At.Shift.AFTER))
+    private void onRenderPre(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+        SlotBinding.drawSlotBinding(graphics, mouseX, mouseY, this);
     }
 }

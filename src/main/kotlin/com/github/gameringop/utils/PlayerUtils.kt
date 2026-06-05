@@ -11,19 +11,17 @@ import com.github.gameringop.utils.ChatUtils.modMessage
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.interpolateYaw
 import com.github.gameringop.utils.MathUtils.lerp
+import com.github.gameringop.utils.Utils.send
 import com.github.gameringop.utils.dungeons.DungeonListener.thePlayer
 import com.github.gameringop.utils.dungeons.DungeonPlayer
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
-import com.github.gameringop.utils.network.PacketUtils.send
 import kotlinx.coroutines.delay
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.DROP_ALL_ITEMS
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.DROP_ITEM
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
@@ -218,14 +216,6 @@ object PlayerUtils {
         delay(100)
         swapToSlot(prev)
         delay(100)
-    }
-
-    fun interactEntity(entity: Entity, hand: InteractionHand) {
-        val hitVec = Vec3(0.0, entity.bbHeight / 2.0, 0.0)
-        val shift = mc.player !!.isShiftKeyDown
-
-        ServerboundInteractPacket.createInteractionPacket(entity, shift, hand, hitVec).send()
-        ServerboundInteractPacket.createInteractionPacket(entity, shift, hand).send()
     }
 
     init {

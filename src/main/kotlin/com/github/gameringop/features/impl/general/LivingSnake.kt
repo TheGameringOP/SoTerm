@@ -123,7 +123,7 @@ object LivingSnake: Feature("Swaps to Frozen Water Pungi after each mined snake 
     }
 
     private fun releaseUse() {
-        mc.options?.keyUse?.isDown = false
+        mc.options.keyUse.isDown = false
     }
 
     private fun resetState() {

@@ -39,7 +39,6 @@ object WebSocket {
     fun clearRecentInbound() = synchronized(recentInbound) { recentInbound.clear() }
 
     fun init() {
-        ThreadUtils.addShutdownHook(::shutdown)
         PacketRegistry.init()
         connect()
     }
@@ -107,10 +106,4 @@ object WebSocket {
         recentInbound.addLast(text)
     }
 
-    private fun shutdown() = runBlocking {
-        catch { session?.close() }
-        catch { session?.cancel() }
-        catch { socketJob?.cancelAndJoin() }
-        worker.cancel()
-    }
 }

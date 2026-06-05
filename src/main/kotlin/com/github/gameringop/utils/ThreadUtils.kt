@@ -8,8 +8,11 @@ import com.github.gameringop.event.EventPriority
 import com.github.gameringop.event.impl.ShutdownEvent
 import com.github.gameringop.event.impl.TickEvent
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.*
-import java.util.concurrent.atomic.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.Executors
+import java.util.concurrent.PriorityBlockingQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 object ThreadUtils {
     private val scheduler = Executors.newSingleThreadScheduledExecutor {

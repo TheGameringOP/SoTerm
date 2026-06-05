@@ -51,7 +51,7 @@ object Soulcry: Feature(name = "Soulcry", description = "Automatically uses the 
             if (! hasEnoughMana(item)) return@register reset()
 
             if (tick == -1) {
-                val max = maxDelay.value.coerceAtLeast(minDelay.value.toInt())
+                val max = maxDelay.value.coerceAtLeast(minDelay.value)
                 tick = (minDelay.value..max).random()
                 return@register
             }

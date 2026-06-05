@@ -5,13 +5,13 @@ import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.ui.utils.Animation
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 class ButtonSetting(name: String, val playSound: Boolean = true, val action: () -> Unit): Setting<Unit>(name, Unit) {
     private val hoverAnim = Animation(200)
 
-    override fun draw(ctx: GuiGraphics, mouseX: Int, mouseY: Int) {
+    override fun draw(ctx: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         val isHovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height
         hoverAnim.update(if (isHovered) 1f else 0f)
 

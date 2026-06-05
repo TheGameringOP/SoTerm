@@ -88,14 +88,14 @@ object BigDiamond : Feature("Diamond Profit Tracker for Dwarven Mines") {
             var total = 0
             val isDebug = SoTerm.debugFlags.contains("diamonds")
     
-            val detailedHoverText = event.component?.siblings?.firstNotNullOfOrNull { sibling ->
+            val detailedHoverText = event.component.siblings.firstNotNullOfOrNull { sibling ->
                 val hoverEvent = sibling.style.hoverEvent ?: return@firstNotNullOfOrNull null
-                
+
                 val hoverComponent = when (hoverEvent.action()) {
                     HoverEvent.Action.SHOW_TEXT -> (hoverEvent as HoverEvent.ShowText).value
                     else -> null
                 } ?: return@firstNotNullOfOrNull null
-                
+
                 val text = hoverComponent.string
                 if (text.contains("Added") || text.contains("Removed")) text else null
             } ?: return 0

@@ -14,11 +14,8 @@ import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.location.LocationUtils
-import com.github.gameringop.utils.render.OPRenderLayers
 import com.github.gameringop.utils.render.Render3D
-import com.github.gameringop.utils.render.RenderContext
 import com.github.gameringop.utils.render.RenderHelper.renderVec
-import net.minecraft.client.renderer.ShapeRenderer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
@@ -26,7 +23,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.monster.Zombie
+import net.minecraft.world.entity.monster.zombie.Zombie
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -162,27 +159,11 @@ object BloodCamp: Feature("Features for Blood Room.") {
                 val time = (if (data.firstSpawn) 40 else 0) + 38 - timeTook + 0.8
                 val endAABB = AABB(1.0, 1.0, 1.0, 0.0, 0.0, 0.0).move(boxOffset.add(endVector))
 
-                event.ctx.drawWireFrameBox(endAABB, if (ServerUtils.averagePing > time * 50) boxColor.value.invert() else boxColor.value)
+                Render3D.renderBoxBounds(event.ctx, endAABB, if (ServerUtils.averagePing > time * 50) boxColor.value.invert() else boxColor.value, outline = true, fill = false, phase = true)
                 Render3D.renderLine(event.ctx, entity.renderVec.add(y = 2), endVector.add(y = 2), lineColor.value, phase = true)
                 Render3D.renderString(((time - 0.8) / 20).toFixed(1), endVector.add(y = 2), scale = 2f, color = timerColor.value, phase = true)
             }
         }
-    }
-
-    private fun RenderContext.drawWireFrameBox(aabb: AABB, bboxColor: Color) {
-        val cam = camera.position.reverse()
-        matrixStack.pushPose()
-        matrixStack.translate(cam.x, cam.y, cam.z)
-
-        ShapeRenderer.renderLineBox(
-            matrixStack.last(),
-            consumers.getBuffer(OPRenderLayers.getLinesThroughWalls(2.0)),
-            aabb.minX, aabb.minY, aabb.minZ,
-            aabb.maxX, aabb.maxY, aabb.maxZ,
-            bboxColor.red / 255f, bboxColor.green / 255f, bboxColor.blue / 255f, 0.7f
-        )
-
-        matrixStack.popPose()
     }
 
     private val watcherSkulls = setOf(

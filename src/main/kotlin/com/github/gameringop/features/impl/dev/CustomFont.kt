@@ -18,7 +18,7 @@ import it.unimi.dsi.fastutil.ints.IntSet
 import net.minecraft.client.gui.font.FontOption
 import net.minecraft.client.gui.font.FontSet
 import net.minecraft.client.gui.font.providers.FreeTypeUtil
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.util.freetype.FT_Face
@@ -71,7 +71,7 @@ object CustomFont : Feature(name = "Custom Font", description = "Replaces Minecr
     }
 
     @JvmStatic
-    fun applyToFontSets(fontSets: Map<ResourceLocation, FontSet>) {
+    fun applyToFontSets(fontSets: Map<Identifier, FontSet>) {
         if (!enabled) {
             closeCustomProvider()
             return

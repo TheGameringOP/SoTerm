@@ -6,10 +6,10 @@ import com.github.gameringop.event.EventPriority
 import com.github.gameringop.event.impl.PacketEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.event.impl.WorldChangeEvent
-import net.minecraft.Util
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import net.minecraft.util.Util
 import kotlin.math.min
 
 object ServerUtils {
@@ -78,8 +78,8 @@ object ServerUtils {
 
     private fun sendPingRequest() {
         if (isPinging || mc.player == null) return
-
         val connection = mc.connection ?: return
+
         isPinging = true
         pingStartTime = Util.getNanos()
         connection.send(ServerboundPingRequestPacket(Util.getMillis()))

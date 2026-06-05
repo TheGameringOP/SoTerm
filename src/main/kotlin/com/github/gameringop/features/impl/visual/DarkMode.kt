@@ -4,7 +4,7 @@ import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ColorUtils.withAlpha
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 /**
@@ -13,10 +13,12 @@ import java.awt.Color
  */
 object DarkMode: Feature("Darkens the screen") {
     private val opacity by SliderSetting("Opacity", 25, 1, 100, 1).withDescription("The strength of the dark tint.")
+
+    @JvmStatic
     val tintHud by ToggleSetting("Tint HUD").withDescription("Should the dark tint also apply to HUD elements?")
 
     @JvmStatic
-    fun drawOverlay(ctx: GuiGraphics) {
+    fun drawOverlay(ctx: GuiGraphicsExtractor) {
         if (! enabled) return
         val window = mc.window
         ctx.fill(

@@ -14,7 +14,6 @@ import net.minecraft.network.chat.ComponentContents
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.contents.KeybindContents
 import net.minecraft.network.chat.contents.TranslatableContents
-import net.minecraft.server.packs.PackResources
 import net.minecraft.server.packs.PackType
 import net.minecraft.server.packs.repository.PackSource
 import net.minecraft.server.packs.resources.MultiPackResourceManager
@@ -56,7 +55,7 @@ object ModHider: Feature("stops the exploit that allows servers to send a transl
 
     private fun createServerLanguage(): Language {
         val allPackResources = mc.resourceManager.listPacks().toList()
-        val packResources = ArrayList<PackResources?>().apply { add(allPackResources.first()) }
+        val packResources = mutableListOf(allPackResources.first())
 
         for (i in 1 ..< allPackResources.size) {
             val packResource = allPackResources[i]
@@ -71,7 +70,7 @@ object ModHider: Feature("stops the exploit that allows servers to send a transl
 
         var languageInfo: LanguageInfo? = null
         val languages = ILanguageManager.invokeExtractLanguages(resourceManager.listPacks())
-        val list = ArrayList<String?>(2).apply { add("en_us") }
+        val list = mutableListOf("en_us")
         var bidirectional = ILanguageManager.getDefaultLanguage().bidirectional()
         if (currentLanguageCode != "en_us" && (languages[currentLanguageCode].also { languageInfo = it }) != null) {
             list.add(currentLanguageCode)

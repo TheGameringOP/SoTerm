@@ -4,14 +4,14 @@ import com.github.gameringop.utils.datafixer.DataComponentFixer
 import net.minecraft.core.component.DataComponentType
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.ConcurrentHashMap
 
-object ItemModelFix : DataComponentFixer<ResourceLocation> {
-    private val cache = ConcurrentHashMap<String, ResourceLocation>()
-    override val type: DataComponentType<ResourceLocation> = DataComponents.ITEM_MODEL
+object ItemModelFix : DataComponentFixer<Identifier> {
+    private val cache = ConcurrentHashMap<String, Identifier>()
+    override val type: DataComponentType<Identifier> = DataComponents.ITEM_MODEL
 
     override fun getData(tag: CompoundTag) = tag.getAndRemoveString("ItemModel")?.let {
-        cache.getOrPut(it) { ResourceLocation.tryParse(it) }
+        cache.getOrPut(it) { Identifier.tryParse(it) }
     }
 }

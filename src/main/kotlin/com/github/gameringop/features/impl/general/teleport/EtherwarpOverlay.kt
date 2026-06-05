@@ -9,6 +9,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
 import com.github.gameringop.utils.equalsOneOf
+import com.github.gameringop.utils.items.EtherwarpHelper
 import com.github.gameringop.utils.render.Render3D
 import java.awt.Color
 
@@ -27,12 +28,12 @@ object EtherwarpOverlay: Feature() {
     override fun init() {
         register<RenderWorldEvent> {
             val player = mc.player ?: return@register
-            if (! player.isCrouching) return@register
+            if (! player.isSteppingCarefully) return@register
             val heldItem = player.mainHandItem.takeUnless { it.isEmpty } ?: return@register
             val distance = EtherwarpHelper.getEtherwarpDistance(heldItem) ?: return@register
-            val (valid, pos) = EtherwarpHelper.getEtherPos(player.position(), distance)
+            val (valid, pos) = EtherwarpHelper.getEtherPos(player.position(), player.lookAngle, distance)
             if (! valid && ! showFail.value) return@register
-            
+
             Render3D.renderBlock(
                 event.ctx, pos ?: return@register,
                 if (valid) outlineColor.value else invalidOutlineColor.value,

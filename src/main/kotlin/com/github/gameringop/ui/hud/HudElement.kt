@@ -1,13 +1,10 @@
 package com.github.gameringop.ui.hud
 
-import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.features.Feature
-import com.github.gameringop.features.FeatureManager
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
-import kotlin.random.Random
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmName
 
@@ -19,61 +16,6 @@ abstract class HudElement {
     var width = 0f
     var height = 0f
 
-    init {
-        randomizePosition()
-    }
-
-    private fun randomizePosition() {
-        if (mc.window == null) return
-        val screenW = mc.window.guiScaledWidth
-        val screenH = mc.window.guiScaledHeight
-
-        val estW = 60
-        val estH = 20
-
-        val padding = 10
-
-        var safeX = 0f
-        var safeY = 0f
-        var foundSpot = false
-
-        for (i in 0 .. 50) {
-            val randX = Random.nextInt(padding, (screenW - estW - padding).coerceAtLeast(padding + 1)).toFloat()
-            val randY = Random.nextInt(padding, (screenH - estH - padding).coerceAtLeast(padding + 1)).toFloat()
-
-            var collides = false
-            for (element in FeatureManager.hudElements) {
-                val otherW = if (element.width > 0) element.width else estW.toFloat()
-                val otherH = if (element.height > 0) element.height else estH.toFloat()
-
-                if (randX < element.x + otherW &&
-                    randX + estW > element.x &&
-                    randY < element.y + otherH &&
-                    randY + estH > element.y
-                ) {
-                    collides = true
-                    break
-                }
-            }
-
-            if (! collides) {
-                safeX = randX
-                safeY = randY
-                foundSpot = true
-                break
-            }
-        }
-
-        if (foundSpot) {
-            x = safeX
-            y = safeY
-        }
-        else {
-            x = (FeatureManager.hudElements.size * 10).toFloat() % (screenW - 50)
-            y = (FeatureManager.hudElements.size * 10).toFloat() % (screenH - 50)
-        }
-    }
-
     open var x = 0f
     open var y = 0f
 
@@ -83,7 +25,7 @@ abstract class HudElement {
     private var dragX = 0f
     private var dragY = 0f
 
-    fun renderElement(ctx: GuiGraphics, example: Boolean) {
+    fun renderElement(ctx: GuiGraphicsExtractor, example: Boolean) {
         if (! toggle) return
 
         ctx.pose().pushMatrix()
@@ -98,9 +40,9 @@ abstract class HudElement {
         ctx.pose().popMatrix()
     }
 
-    abstract fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float>
+    abstract fun draw(ctx: GuiGraphicsExtractor, example: Boolean): Pair<Float, Float>
 
-    fun drawEditor(ctx: GuiGraphics, mx: Int, my: Int) {
+    fun drawEditor(ctx: GuiGraphicsExtractor, mx: Int, my: Int) {
         if (! toggle) return
 
         if (isDragging) {
@@ -112,7 +54,7 @@ abstract class HudElement {
         renderElement(ctx, true)
     }
 
-    open fun drawBackground(ctx: GuiGraphics, mx: Int, my: Int) {
+    open fun drawBackground(ctx: GuiGraphicsExtractor, mx: Int, my: Int) {
         val scaledW = width * scale
         val scaledH = height * scale
         val centeredOffset = if (centered) scaledW / 2f else 0f

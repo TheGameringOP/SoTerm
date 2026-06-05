@@ -20,7 +20,7 @@ import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
 import kotlinx.coroutines.runBlocking
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 import kotlin.math.ceil
 
@@ -87,7 +87,7 @@ object DungeonScoreHud: Feature("Dungeon Score HUD") {
         failedPuzzles = DungeonListener.puzzles.count { it.state == RoomState.FAILED }
     }
 
-    private fun drawDemo(ctx: GuiGraphics): Pair<Float, Float> {
+    private fun drawDemo(ctx: GuiGraphicsExtractor): Pair<Float, Float> {
         textLines.clear()
 
         if (showDungeonStatus.value) {
@@ -128,7 +128,7 @@ object DungeonScoreHud: Feature("Dungeon Score HUD") {
         return maxWidth to y
     }
 
-    private fun drawActual(ctx: GuiGraphics): Pair<Float, Float> {
+    private fun drawActual(ctx: GuiGraphicsExtractor): Pair<Float, Float> {
         textLines.clear()
         val floorNum = LocationUtils.dungeonFloorNumber ?: 0
         val isPaul = DungeonUtils.isPaul()

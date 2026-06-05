@@ -25,11 +25,11 @@ import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.entity.animal.Chicken
-import net.minecraft.world.entity.animal.Cow
-import net.minecraft.world.entity.animal.Pig
-import net.minecraft.world.entity.animal.Rabbit
-import net.minecraft.world.entity.animal.horse.Horse
+import net.minecraft.world.entity.animal.chicken.Chicken
+import net.minecraft.world.entity.animal.cow.Cow
+import net.minecraft.world.entity.animal.equine.Horse
+import net.minecraft.world.entity.animal.pig.Pig
+import net.minecraft.world.entity.animal.rabbit.Rabbit
 import net.minecraft.world.entity.animal.sheep.Sheep
 import java.awt.Color
 
@@ -145,7 +145,7 @@ object TrevorHelper: Feature(name = "Trevor Helper", description = "Helper featu
                 }
 
                 val ms = (cooldown - System.currentTimeMillis() - (callOff.value * 1000).toLong()).coerceAtLeast(0)
-                val extra = (callDelay.value.toInt() + (0..2).random()) * 50L
+                val extra = (callDelay.value + (0..2).random()) * 50L
 
                 ThreadUtils.setTimeout(ms + extra) { ChatUtils.sendCommand("call trevor") }
                 reset()
@@ -156,7 +156,7 @@ object TrevorHelper: Feature(name = "Trevor Helper", description = "Helper featu
             if (! stripped.startsWith("Accept the trapper's task to hunt the animal?")) return@register
 
             val command = event.component.findRunCommand() ?: return@register
-            ThreadUtils.scheduledTask(acceptDelay.value.toInt() + (0..2).random()) {
+            ThreadUtils.scheduledTask(acceptDelay.value + (0..2).random()) {
                 ChatUtils.sendCommand(command.removePrefix("/"))
             }
         }

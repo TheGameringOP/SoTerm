@@ -1,6 +1,7 @@
 package com.github.gameringop.features
 
 import com.github.gameringop.SoTerm
+import com.github.gameringop.SoTerm.MOD_NAME
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.config.Config
 import com.github.gameringop.event.EventBus.register
@@ -11,6 +12,7 @@ import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.utils.render.Render2D.width
 import io.github.classgraph.ClassGraph
+import net.minecraft.util.profiling.Profiler
 
 object FeatureManager {
     val hudElements = mutableListOf<HudElement>()
@@ -26,43 +28,37 @@ object FeatureManager {
 
         scanResult.use { result ->
             val featureClasses = result.getSubclasses("com.github.gameringop.features.Feature")
-            SoTerm.logger.info("ClassGraph found ${featureClasses.size} subclasses of Feature")
+            SoTerm.logger.debug("ClassGraph found ${featureClasses.size} subclasses of Feature")
 
-            var loadedCount = 0
             featureClasses.forEach { classInfo ->
                 try {
-                    println("Loading feature class: ${classInfo.name}")
                     val clazz = classInfo.loadClass()
                     val instance = clazz.getDeclaredField("INSTANCE").get(null) as? Feature
 
                     instance?.let { feature ->
-                        println("Initializing feature instance: ${feature::class.simpleName}")
                         feature.initialize()
                         hudElements.addAll(feature.hudElements)
                         features.add(feature)
-                        loadedCount++
-
-                        SoTerm.logger.info("[SoTerm Debug] [${loadedCount}/${featureClasses.size}] Successfully loaded: ${feature.name} (${feature::class.simpleName})")
-                    } ?: run {
-                        SoTerm.logger.warn("Could not get INSTANCE from ${classInfo.name}")
+                        SoTerm.logger.info("Successfully loaded feature: ${feature::class.simpleName}")
                     }
-                } catch (e: Exception) {
-                    println("Error while loading feature class: ${classInfo.name}")
+                }
+                catch (e: Exception) {
                     SoTerm.logger.error("Failed to load feature class: ${classInfo.name}", e)
-                    throw e
                 }
             }
-            SoTerm.logger.info("FeatureManager: Loaded $loadedCount features successfully")
         }
 
         Config.load()
 
         register<RenderOverlayEvent> {
             if (mc.screen == HudEditorScreen) return@register
+            val profiler = Profiler.get()
+            profiler.push("$MOD_NAME-Hud")
             Resolution.refresh()
             Resolution.push(event.context)
             hudElements.forEach { if (it.shouldDraw) it.renderElement(event.context, false) }
             Resolution.pop(event.context)
+            profiler.pop()
         }
     }
 

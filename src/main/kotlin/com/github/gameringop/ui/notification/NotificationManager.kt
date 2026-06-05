@@ -4,7 +4,7 @@ import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.ui.clickgui.components.Style
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -18,7 +18,7 @@ object NotificationManager {
     }
 
     @JvmStatic
-    fun render(ctx: GuiGraphics) {
+    fun render(ctx: GuiGraphicsExtractor) {
         val now = System.currentTimeMillis()
         val delta = now - lastFrameTime
         lastFrameTime = now
@@ -63,7 +63,7 @@ object NotificationManager {
 
             var lineY = y + 20f
             notify.wrappedLines.forEach { line ->
-                ctx.drawString(mc.font, line, (x + 10f).toInt(), lineY.toInt(), Color.GRAY.rgb, true)
+                ctx.text(mc.font, line, (x + 10f).toInt(), lineY.toInt(), Color.GRAY.rgb, true)
                 lineY += mc.font.lineHeight + 1f
             }
 

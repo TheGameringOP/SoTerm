@@ -19,8 +19,8 @@ import com.github.gameringop.utils.equalsOneOf
 import com.github.gameringop.utils.items.ItemUtils.hasGlint
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.uppercaseFirst
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import java.awt.Color
@@ -261,8 +261,6 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
                     event.isCanceled = true
                     return@register
                 }
-
-                else -> null
             }
 
             if (click == null) return@register
@@ -346,7 +344,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         melodyWaitUntilTick = DungeonListener.currentTime + delayTicks
     }
 
-    private fun drawSlot(ctx: GuiGraphics, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
+    private fun drawSlot(ctx: GuiGraphicsExtractor, x: Number, y: Number, color: Color, w: Number = 16, h: Number = 16) {
         when (slotStyle.value) {
             0 -> Render2D.drawRect(ctx, x, y, w, h, color)
             1 -> {
@@ -357,7 +355,7 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
         }
     }
 
-    private fun drawCenteredText(ctx: GuiGraphics, text: String, slotX: Number, slotY: Number) {
+    private fun drawCenteredText(ctx: GuiGraphicsExtractor, text: String, slotX: Number, slotY: Number) {
         val centerX = slotX.toFloat() + 8f
         val centerY = slotY.toFloat() + 8f - mc.font.lineHeight / 2
         Render2D.drawCenteredString(ctx, text, centerX, centerY, color = overlayTextColor.value)
@@ -395,11 +393,11 @@ object TerminalSolver: Feature("Renders solutions for Floor 7 terminals.") {
     }
 
     private fun sendClickPacket(slot: Int, btn: Int) {
-        mc.gameMode !!.handleInventoryMouseClick(
+        mc.gameMode !!.handleContainerInput(
             TerminalListener.lastWindowId,
             slot,
             if (btn == 0) 2 else btn,
-            if (btn == 0) ClickType.CLONE else ClickType.PICKUP,
+            if (btn == 0) ContainerInput.CLONE else ContainerInput.PICKUP,
             mc.player !!
         )
         if (SoTerm.debugFlags.contains("terminal")) {

@@ -23,8 +23,8 @@ import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
 import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.launch
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.world.item.Items
@@ -186,10 +186,10 @@ object PartyFinder: Feature() {
 
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(
-                ClientCommandManager.literal("pfs").executes {
+                ClientCommands.literal("pfs").executes {
                     scope.launch { printPlayerStats(mc.user.name) }
                     1
-                }.then(ClientCommandManager.argument("ign", StringArgumentType.word())
+                }.then(ClientCommands.argument("ign", StringArgumentType.word())
                     .suggests { _, builder ->
                         val players = TabListUtils.getTabList().mapNotNull { it.second.profile.name }.filterNot { it.matches("^![A-Z]-[a-z]$".toRegex()) }
                         players.forEach { builder.suggest(it) }

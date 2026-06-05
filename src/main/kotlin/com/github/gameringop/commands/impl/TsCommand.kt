@@ -8,13 +8,12 @@ import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandNodeBuilder
 import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.ChatMessageEvent
-import com.github.gameringop.features.impl.dev.HypixelAPI
+import com.github.gameringop.event.impl.OPDebugFlagEvent
 import com.github.gameringop.features.impl.dungeon.LeapMenu
 import com.github.gameringop.ui.clickgui.ClickGuiScreen
 import com.github.gameringop.ui.hud.HudEditorScreen
 import com.github.gameringop.utils.*
 import com.github.gameringop.utils.ChatUtils.addColor
-import com.github.gameringop.utils.JsonUtils.json
 import com.github.gameringop.utils.StringUtils.decodeBase64
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.DungeonClass
@@ -83,11 +82,18 @@ object TsCommand: BaseCommand("ts") {
             argument("flag", StringArgumentType.word()) {
                 runs { ctx ->
                     val flag = StringArgumentType.getString(ctx, "flag")
-                    if (debugFlags.remove(flag)) ChatUtils.modMessage("§cRemoved debug flag: §b$flag")
+                    val event: OPDebugFlagEvent
+                    if (debugFlags.remove(flag)) {
+                        ChatUtils.modMessage("§cRemoved debug flag: §b$flag")
+                        event = OPDebugFlagEvent.Remove(flag)
+                    }
                     else {
                         debugFlags.add(flag)
                         ChatUtils.modMessage("§aAdded debug flag: §b$flag")
+                        event = OPDebugFlagEvent.Add(flag)
                     }
+
+                    EventBus.post(event)
                 }
             }
         }

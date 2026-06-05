@@ -18,7 +18,6 @@ import com.github.gameringop.utils.render.Render2D.width
 import com.github.gameringop.utils.render.Render3D
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.phys.Vec3
@@ -150,23 +149,6 @@ object M7Relics: Feature(name = "M7 Relics", description = "A bunch of M7 Relics
                 }
                 relicTimes.clear()
             }
-        }
-
-        register<TickEvent.Start> {
-            if (LocationUtils.F7Phase != 5) return@register
-            if (System.currentTimeMillis() - lastClick < 200) return@register
-            if (mc.player !!.inventory.getItem(8).displayName.string.contains("Relic")) return@register
-
-            val armorStand = mc.level?.entitiesForRendering()?.filterIsInstance<ArmorStand>()?.find {
-                val isRelic = it.getItemBySlot(EquipmentSlot.HEAD).displayName.string.contains("Relic")
-                val atCauldron = WitherRelic.entries.any { relic -> isEntityAtCauldron(it.position(), relic) }
-                val distance = it.position().distanceTo(mc.player !!.position())
-                isRelic && ! atCauldron && distance < 3
-            } ?: return@register
-
-            PlayerUtils.interactEntity(armorStand, InteractionHand.MAIN_HAND)
-            PlayerUtils.swingArm()
-            lastClick = System.currentTimeMillis()
         }
     }
 

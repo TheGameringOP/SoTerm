@@ -7,7 +7,7 @@ import com.github.gameringop.utils.ThreadUtils
 import com.google.common.reflect.TypeToken
 import java.io.File
 import java.lang.reflect.Type
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KProperty
 
 class PogObject<T: Any>(val fileName: String, @Volatile private var data: T, private val type: Type) {

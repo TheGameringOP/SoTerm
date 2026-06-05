@@ -1,42 +1,68 @@
-package com.github.gameringop.features.impl.visual
-
-import com.github.gameringop.features.Feature
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.core.BlockPos
-import net.minecraft.world.level.BlockAndTintGetter
-import net.minecraft.world.level.material.FluidState
-import net.minecraft.world.level.material.Fluids
-
-object LavaToWater: Feature("Replaces lava with the water texture and water fog (resource-pack aware).") {
-    override fun init() {
-        val origStill = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.LAVA)
-        val origFlowing = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.FLOWING_LAVA)
-        FluidRenderHandlerRegistry.INSTANCE.register(Fluids.LAVA, makeHandler(origStill))
-        FluidRenderHandlerRegistry.INSTANCE.register(Fluids.FLOWING_LAVA, makeHandler(origFlowing))
-    }
-
-    override fun onEnable() {
-        super.onEnable()
-        if (mc.level != null) mc.levelRenderer.allChanged()
-    }
-
-    override fun onDisable() {
-        super.onDisable()
-        if (mc.level != null) mc.levelRenderer.allChanged()
-    }
-
-    private fun makeHandler(originalHandler: FluidRenderHandler?) = object: FluidRenderHandler {
-        override fun getFluidSprites(view: BlockAndTintGetter?, pos: BlockPos?, state: FluidState): Array<TextureAtlasSprite> {
-            val fallback = originalHandler?.getFluidSprites(view, pos, state) ?: arrayOf()
-            if (! enabled) return fallback
-            return FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)?.getFluidSprites(view, pos, state) ?: fallback
-        }
-
-        override fun getFluidColor(view: BlockAndTintGetter?, pos: BlockPos?, state: FluidState): Int {
-            if (! enabled) return originalHandler?.getFluidColor(view, pos, state) ?: - 1
-            return FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)?.getFluidColor(view, pos, state) ?: - 1
-        }
-    }
-}
+//package com.github.gameringop.features.impl.visual
+//
+//import com.github.gameringop.SoTerm.logger
+//import com.github.gameringop.features.Feature
+//import com.github.gameringop.utils.ThreadUtils
+//import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry
+//import net.fabricmc.fabric.impl.client.rendering.fluid.FluidRenderingRegistryImpl
+//import net.minecraft.client.renderer.block.FluidModel
+//import net.minecraft.world.level.material.Fluids
+//
+//object LavaToWater: Feature("Replaces lava with the water texture and water fog (resource-pack aware).") {
+//    private var lavaStillModel: FluidModel.Unbaked? = null
+//    private var lavaFlowModel: FluidModel.Unbaked? = null
+//    private var waterStillModel: FluidModel.Unbaked? = null
+//    private var waterFlowModel: FluidModel.Unbaked? = null
+//
+//    override fun init() {
+//        captureModels()
+//    }
+//
+//    override fun onEnable() {
+//        super.onEnable()
+//        applyAppearance()
+//    }
+//
+//    override fun onDisable() {
+//        super.onDisable()
+//        restoreAppearance()
+//    }
+//
+//    private fun captureModels() {
+//        val models = FluidRenderingRegistryImpl.getUnbakedModels()
+//        lavaStillModel = models[Fluids.LAVA]
+//        lavaFlowModel = models[Fluids.FLOWING_LAVA]
+//        waterStillModel = models[Fluids.WATER]
+//        waterFlowModel = models[Fluids.FLOWING_WATER]
+//
+//        if (lavaStillModel == null || waterStillModel == null) {
+//            logger.warn("LavaToWater: fluid models not ready yet, will retry when enabled")
+//        }
+//    }
+//
+//    private fun applyAppearance() {
+//        if (lavaStillModel == null || waterStillModel == null) captureModels()
+//
+//        val still = waterStillModel ?: return
+//        val flow = waterFlowModel ?: still
+//        FluidRenderingRegistry.register(Fluids.LAVA, still)
+//        FluidRenderingRegistry.register(Fluids.FLOWING_LAVA, flow)
+//        refreshChunks()
+//    }
+//
+//    private fun restoreAppearance() {
+//        if (lavaStillModel == null) captureModels()
+//
+//        val still = lavaStillModel ?: return
+//        val flow = lavaFlowModel ?: still
+//        FluidRenderingRegistry.register(Fluids.LAVA, still)
+//        FluidRenderingRegistry.register(Fluids.FLOWING_LAVA, flow)
+//        refreshChunks()
+//    }
+//
+//    private fun refreshChunks() {
+//        ThreadUtils.runOnMcThread {
+//            mc.levelRenderer.allChanged()
+//        }
+//    }
+//}

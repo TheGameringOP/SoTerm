@@ -35,8 +35,8 @@
   "accessWidener": "soterm.accesswidener",
   "depends": {
     "fabricloader": ">=0.17.3",
-    "minecraft": "~1.21.10",
-    "java": ">=21",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
     "fabric-api": "*",
     "fabric-language-kotlin": "*"
   }

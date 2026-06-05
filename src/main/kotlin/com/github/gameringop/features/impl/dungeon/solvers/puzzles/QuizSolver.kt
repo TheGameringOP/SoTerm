@@ -16,7 +16,7 @@ import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
 import com.github.gameringop.utils.startsWithOneOf
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.core.BlockPos
 
 object QuizSolver {
@@ -119,7 +119,7 @@ object QuizSolver {
         }
     }
 
-    fun onRenderOverlay(ctx: GuiGraphics) {
+    fun onRenderOverlay(ctx: GuiGraphicsExtractor) {
         if (quizTimer.value && questionsStarted && ! LocationUtils.inBoss) {
             val ticksLeft = answerTime - DungeonListener.currentTime
             if (ticksLeft <= 0) return

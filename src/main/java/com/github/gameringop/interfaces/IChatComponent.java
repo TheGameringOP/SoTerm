@@ -1,7 +1,6 @@
 package com.github.gameringop.interfaces;
 
-
-import net.minecraft.client.GuiMessage;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 
 import java.util.List;
 

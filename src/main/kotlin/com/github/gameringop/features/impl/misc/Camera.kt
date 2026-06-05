@@ -23,7 +23,6 @@ object Camera: Feature() {
     @JvmStatic val hideBlockOverlay by ToggleSetting("Hide Block Overlay").withDescription("Hides the block that render on your screen when you are stuck inside a block.")
 
     @JvmStatic val disableBlindness by ToggleSetting("Disable Blindness").withDescription("Disables the Blindness effect.").section("Hide Effects")
-    @JvmStatic val disableDarkness by ToggleSetting("Disable Darkness").withDescription("Disables the Darkness effect.")
     @JvmStatic val disableNausea by ToggleSetting("Disable Nausea").withDescription("Disables the Nausea effect")
 
     @JvmStatic val customFOV by ToggleSetting("Custom FOV").section("Custom FOV")

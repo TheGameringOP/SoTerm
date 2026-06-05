@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.properties.AttachFace
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 
-object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larger.") {
+object SecretHitboxes : Feature("Changes the hitboxes of secret blocks to be larger.") {
 
     @JvmStatic val lever by ToggleSetting("Lever", true).section("Levers")
     private val leverSize by SliderSetting("Lever Size", 1.0, 0.0, 1.0, 0.05).showIf { lever.value }
@@ -27,13 +27,11 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
     @JvmStatic val mushroom by ToggleSetting("Mushroom", true).section("Mushrooms")
     private val mushroomSize by SliderSetting("Mushroom Size", 1.0, 0.0, 1.0, 0.05).showIf { mushroom.value }
 
-
     private const val BUTTON_THICKNESS = 0.125
 
     private fun getInflatedShape(face: AttachFace, direction: Direction, size: Double): VoxelShape {
         val min = 0.5 - (size / 2.0)
         val max = 0.5 + (size / 2.0)
-
         return when (face) {
             AttachFace.CEILING -> Shapes.box(min, 1.0 - size, min, max, 1.0, max)
             AttachFace.FLOOR -> Shapes.box(min, 0.0, min, max, size, max)
@@ -52,7 +50,6 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
         val min = 0.5 - (s / 2.0)
         val max = 0.5 + (s / 2.0)
         val thickness = BUTTON_THICKNESS
-
         return when (face) {
             AttachFace.CEILING -> Shapes.box(min, 1.0 - thickness, min, max, 1.0, max)
             AttachFace.FLOOR -> Shapes.box(min, 0.0, min, max, thickness, max)
@@ -68,7 +65,6 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
 
     @JvmStatic
     fun getButtonShape(state: BlockState): VoxelShape {
-        if (!button.value) return state.getShape(null, null)
         val face = state.getValue(FaceAttachedHorizontalDirectionalBlock.FACE)
         val direction = state.getValue(FaceAttachedHorizontalDirectionalBlock.FACING)
         return getButtonShape(face, direction, buttonSize.value)
@@ -76,7 +72,6 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
 
     @JvmStatic
     fun getLeverShape(state: BlockState): VoxelShape {
-        if (!lever.value) return state.getShape(null, null)
         val face = state.getValue(FaceAttachedHorizontalDirectionalBlock.FACE)
         val direction = state.getValue(FaceAttachedHorizontalDirectionalBlock.FACING)
         return getInflatedShape(face, direction, leverSize.value)
@@ -84,7 +79,6 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
 
     @JvmStatic
     fun getSkullShape(state: BlockState): VoxelShape {
-        if (!skull.value) return state.getShape(null, null)
         return if (state.block is WallSkullBlock) {
             getInflatedShape(AttachFace.WALL, state.getValue(WallSkullBlock.FACING), skullSize.value)
         } else {
@@ -94,7 +88,6 @@ object SecretHitboxes: Feature("Changes the hitboxes of secret blocks to be larg
 
     @JvmStatic
     fun getMushroomShape(state: BlockState): VoxelShape {
-        if (!mushroom.value) return state.getShape(null, null)
         return getInflatedShape(AttachFace.FLOOR, Direction.UP, mushroomSize.value)
     }
 

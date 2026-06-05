@@ -9,10 +9,11 @@ import com.github.gameringop.ui.clickgui.components.impl.SoundSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.MathUtils.toVec
 import com.github.gameringop.utils.PlayerUtils
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.equalsOneOf
+import com.github.gameringop.utils.items.EtherwarpHelper
 import com.github.gameringop.utils.location.LocationUtils
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
@@ -25,7 +26,7 @@ object EtherwarpSound: Feature() {
     private val volume by SliderSetting("Volume", 0.5f, 0f, 1f, 0.1f).withDescription("The loudness of the sound.")
     private val pitch by SliderSetting("Pitch", 1f, 0f, 2f, 0.1f).withDescription("The pitch/frequency of the sound.")
     private val playSound by ButtonSetting("Play Sound", false) {
-        repeat(5) { mc.soundManager?.play(SimpleSoundInstance.forUI(sound.value, pitch.value, volume.value)) }
+        repeat(5) { mc.soundManager.play(SimpleSoundInstance.forUI(sound.value, pitch.value, volume.value)) }
     }.withDescription("Click to play sound.")
 
     private val interactable = listOf(
@@ -54,7 +55,7 @@ object EtherwarpSound: Feature() {
             PlayerUtils.getSelectionBlock()?.let { if (WorldUtils.getBlockAt(it) in interactable) return@register }
             val dist = EtherwarpHelper.getEtherwarpDistance(player.mainHandItem) ?: return@register
 
-            val (succeeded, pos) = EtherwarpHelper.getEtherPos(player.position(), dist)
+            val (succeeded, pos) = EtherwarpHelper.getEtherPos(player.position(), player.lookAngle, dist)
             if (! succeeded || pos == null) return@register
 
             if (ScanUtils.getRoomFromPos(pos.toVec())?.data?.name.equalsOneOf("Teleport Maze", "Boulder")) return@register

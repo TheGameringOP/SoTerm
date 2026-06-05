@@ -13,7 +13,7 @@ import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import com.github.gameringop.utils.render.Render2D.width
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket
 import java.awt.Color
 
@@ -36,7 +36,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
         override val shouldDraw get() = titleStr.isNotBlank() && titleMode.value == 0
         override val centered = true
 
-        override fun draw(ctx: GuiGraphics, example: Boolean): Pair<Float, Float> {
+        override fun draw(ctx: GuiGraphicsExtractor, example: Boolean): Pair<Float, Float> {
             val str = if (example) handleTitle(mc.user.name, "terminal", 6, 7) else titleStr
             Render2D.drawCenteredString(ctx, str, 0, 0)
             return str.width().toFloat() to 9f
@@ -47,7 +47,7 @@ object TerminalTitles: Feature("Reformats the Terminal titles on P3.") {
             return mx >= x - halfWidth && mx <= x + halfWidth && my >= y && my <= y + (height * scale)
         }
 
-        override fun drawBackground(ctx: GuiGraphics, mx: Int, my: Int) {
+        override fun drawBackground(ctx: GuiGraphicsExtractor, mx: Int, my: Int) {
             val scaledW = width * scale
             val scaledH = height * scale
             val drawX = x - scaledW / 2

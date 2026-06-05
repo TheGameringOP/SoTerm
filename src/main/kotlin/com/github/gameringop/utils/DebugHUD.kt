@@ -13,20 +13,19 @@ import com.github.gameringop.utils.dungeons.map.handlers.DungeonScanner.startZ
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 object DebugHUD {
     @JvmStatic
-    fun render(guiGraphics: GuiGraphics) {
+    fun render(guiGraphics: GuiGraphicsExtractor) {
         renderDungeonDebug(guiGraphics)
         renderLocationDebug(guiGraphics)
         renderPartyDebug(guiGraphics)
         renderLeapDebug(guiGraphics)
     }
 
-
-    private fun renderDungeonDebug(graphics: GuiGraphics) {
+    private fun renderDungeonDebug(graphics: GuiGraphicsExtractor) {
         if (! SoTerm.debugFlags.contains("dungeon")) return
 
         var y = 20
@@ -108,7 +107,7 @@ object DebugHUD {
         }")
     }
 
-    private fun renderLocationDebug(graphics: GuiGraphics) {
+    private fun renderLocationDebug(graphics: GuiGraphicsExtractor) {
         if (! SoTerm.debugFlags.contains("location")) return
 
         var y = 20
@@ -160,7 +159,7 @@ object DebugHUD {
 
     }
 
-    private fun renderPartyDebug(graphics: GuiGraphics) {
+    private fun renderPartyDebug(graphics: GuiGraphicsExtractor) {
         if (! SoTerm.debugFlags.contains("party")) return
         var y = 20
         val x = 350
@@ -192,7 +191,7 @@ object DebugHUD {
         }
     }
 
-    private fun renderLeapDebug(graphics: GuiGraphics) {
+    private fun renderLeapDebug(graphics: GuiGraphicsExtractor) {
         if (! SoTerm.debugFlags.contains("leap")) return
 
         var y = 30

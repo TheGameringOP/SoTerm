@@ -11,7 +11,7 @@ import com.github.gameringop.utils.items.ItemUtils
 import com.github.gameringop.utils.items.ItemUtils.customData
 import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
@@ -20,7 +20,7 @@ import kotlin.jvm.optionals.getOrNull
 
 
 object ItemRarity: Feature(name = "Item Rarity", description = "Draws the rarity of item behind the slot.") {
-    val drawOnHotbar by ToggleSetting("Draw on Hotbar", true)
+    @JvmStatic val drawOnHotbar by ToggleSetting("Draw on Hotbar", true)
     private val rarityOpacity by SliderSetting("Rarity Opacity", 30f, 10f, 100f, 1f)
     private val style by DropdownSetting("Rarity Style", 0, listOf("Filled", "Outline", "Filled Outline"))
 
@@ -71,7 +71,7 @@ object ItemRarity: Feature(name = "Item Rarity", description = "Draws the rarity
      * @see com.github.gameringop.mixin.MixinGui
      */
     @JvmStatic
-    fun onSlotDraw(ctx: GuiGraphics, stack: ItemStack?, x: Int, y: Int) {
+    fun onSlotDraw(ctx: GuiGraphicsExtractor, stack: ItemStack?, x: Int, y: Int) {
         if (! LocationUtils.inSkyblock) return
         if (stack == null) return
 

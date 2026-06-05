@@ -1,6 +1,6 @@
 package com.github.gameringop.ui.customgui
 
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -8,7 +8,7 @@ import net.minecraft.world.inventory.Slot
 
 abstract class CustomGui {
 
-    open fun render(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {}
+    open fun render(context: GuiGraphicsExtractor, delta: Float, mouseX: Int, mouseY: Int) {}
 
     open fun mouseClick(click: MouseButtonEvent, doubled: Boolean): Boolean = false
 
@@ -26,9 +26,9 @@ abstract class CustomGui {
 
     open fun moveSlot(slot: Slot) {}
 
-    open fun beforeSlotRender(context: GuiGraphics, slot: Slot) {}
+    open fun beforeSlotRender(context: GuiGraphicsExtractor, slot: Slot) {}
 
-    open fun afterSlotRender(context: GuiGraphics, slot: Slot) {}
+    open fun afterSlotRender(context: GuiGraphicsExtractor, slot: Slot) {}
 
     open fun onInit() {}
 
