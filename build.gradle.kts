@@ -36,7 +36,7 @@ repositories {
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://maven.terraformersmc.com/releases")
     maven("https://api.modrinth.com/maven")
-    maven(uri("https://jitpack.io"))
+    maven("https://jitpack.io")
 }
 
 dependencies {

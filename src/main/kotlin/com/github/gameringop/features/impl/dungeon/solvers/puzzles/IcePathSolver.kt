@@ -2,8 +2,9 @@ package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.DungeonEvent
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.icePathColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.icePathFirstColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.icePathColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.icePathFirstColor
 import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils.rotate
@@ -17,7 +18,9 @@ import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.abs
 
-object IcePathSolver {
+object IcePathSolver: PuzzleSolver {
+    override val enabled get() = PuzzleSolvers.icepath.value
+
     private data class PathSegment(val start: Vec3, val end: Vec3)
     private data class GridPos(val x: Int, val z: Int)
 
@@ -33,7 +36,7 @@ object IcePathSolver {
     private const val GRID_SIZE = 19
     private const val MIN_OFFSET = - 8
 
-    fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
+    override fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
         if (event.room.name != "Ice Path") return
 
         inPath = true
@@ -42,7 +45,7 @@ object IcePathSolver {
         grid = buildGrid(event.room.centerPos)
     }
 
-    fun reset() {
+    override fun reset() {
         inPath = false
         roomCenter = null
         grid = null
@@ -51,7 +54,7 @@ object IcePathSolver {
         currentSolution.clear()
     }
 
-    fun onTick() {
+    override fun onTick() {
         if (! inPath) return
         val center = roomCenter ?: return
         var fish = silverfish
@@ -81,7 +84,7 @@ object IcePathSolver {
         recalculatePath(fishGridPos, center)
     }
 
-    fun onRenderWorld(ctx: RenderContext) {
+    override fun onRenderWorld(ctx: RenderContext) {
         if (! inPath || currentSolution.isEmpty() || silverfish?.isRemoved == true) return
 
         currentSolution.forEachIndexed { index, segment ->

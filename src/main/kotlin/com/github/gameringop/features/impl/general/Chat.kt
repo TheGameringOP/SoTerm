@@ -3,13 +3,13 @@ package com.github.gameringop.features.impl.general
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.MouseClickEvent
 import com.github.gameringop.features.Feature
+import com.github.gameringop.init.DataDownloader
 import com.github.gameringop.interfaces.IChatComponent
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.ui.notification.NotificationManager
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.removeFormatting
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.DataDownloader
 import com.github.gameringop.utils.NumbersUtils
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.client.multiplayer.chat.GuiMessage

@@ -2,21 +2,24 @@ package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.PlayerInteractEvent
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.boxColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.clickColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.showAll
-import com.github.gameringop.utils.DataDownloader
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.boxColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.clickColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.showAll
+import com.github.gameringop.init.DataDownloader
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.ButtonBlock
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.WallSignBlock
 
-object BoulderSolver {
+object BoulderSolver: PuzzleSolver {
+    override val enabled get() = PuzzleSolvers.boulder.value
+
     private data class BoulderBox(val box: BlockPos, val click: BlockPos, val render: BlockPos)
 
     private val boulderSolutions by lazy { DataDownloader.loadJson<Map<String, List<List<Double>>>>("boulderSolutions.json") }
@@ -27,23 +30,23 @@ object BoulderSolver {
     private var rotation = 0
 
 
-    fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
+    override fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
         if (event.room.name != "Boulder") return
 
         inBoulder = true
-        rotation = (360 - event.room.rotation !! + 180)
+        rotation = event.room.rotation?.let { 360 - it + 180 } ?: return
         roomCenter = event.room.centerPos
 
         solve()
     }
 
-    fun onRenderWorld(ctx: RenderContext) {
+    override fun onRenderWorld(ctx: RenderContext) {
         if (! inBoulder || currentSolution.isEmpty()) return
         if (showAll.value) currentSolution.forEach { renderBox(ctx, it) }
         else renderBox(ctx, currentSolution.first())
     }
 
-    fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
+    override fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
         if (! inBoulder) return
         when (WorldUtils.getBlockAt(event.pos)) {
             is ButtonBlock, is LeverBlock, is WallSignBlock -> {
@@ -92,7 +95,7 @@ object BoulderSolver {
         Render3D.renderBlock(ctx, box.click, clickColor.value, phase = true)
     }
 
-    fun reset() {
+    override fun reset() {
         inBoulder = false
         roomCenter = BlockPos.ZERO
         rotation = 0

@@ -4,9 +4,10 @@ import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.ChatMessageEvent
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.PlayerInteractEvent
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.colorCorrect
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.colorWrong
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.removeChests
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.colorCorrect
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.colorWrong
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.removeChests
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.WorldUtils
@@ -23,14 +24,16 @@ import net.minecraft.world.level.block.Blocks
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.math.floor
 
-object ThreeWeirdosSolver {
+object ThreeWeirdosSolver: PuzzleSolver {
+    override val enabled get() = PuzzleSolvers.weirdos.value
+
     private val npcRegex = Regex("\\[NPC] (\\w+): (.+)")
     private var wrongPositions = CopyOnWriteArraySet<BlockPos>()
     private var correctPos: BlockPos? = null
 
     private val inThreeWeirdos get() = wrongPositions.isNotEmpty() || correctPos != null
 
-    fun onChat(event: ChatMessageEvent) {
+    override fun onChat(event: ChatMessageEvent) {
         if (! LocationUtils.inDungeon) return
         val currentRoom = ScanUtils.currentRoom.takeIf { it?.name == "Three Weirdos" } ?: return
         val (npcName, text) = npcRegex.find(event.unformattedText)?.destructured ?: return
@@ -58,7 +61,7 @@ object ThreeWeirdosSolver {
         }
     }
 
-    fun onRenderWorld(ctx: RenderContext) {
+    override fun onRenderWorld(ctx: RenderContext) {
         if (! inThreeWeirdos) return
 
         correctPos?.let { pos ->
@@ -70,20 +73,22 @@ object ThreeWeirdosSolver {
         }
     }
 
-    fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
+    override fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {
         if (! inThreeWeirdos) return
         if (LocationUtils.inBoss) return
         if (event.pos == correctPos) reset()
     }
 
-    fun onStateChange(event: DungeonEvent.RoomEvent.onStateChange) {
+    override fun onStateChange(event: DungeonEvent.RoomEvent.onStateChange) {
         if (! inThreeWeirdos) return
         if (event.room.name != "Three Weirdos") return
         if (event.newState != RoomState.DISCOVERED) return
         reset()
     }
 
-    fun reset() {
+    override fun onRoomExit() {}
+
+    override fun reset() {
         if (removeChests.value) {
             for (pos in wrongPositions) {
                 WorldUtils.setBlockAt(pos, Blocks.CHEST.defaultBlockState())

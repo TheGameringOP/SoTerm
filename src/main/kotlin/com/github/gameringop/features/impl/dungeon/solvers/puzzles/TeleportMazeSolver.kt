@@ -3,25 +3,28 @@ package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.correctTpPadColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.wrongTpPadColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.correctTpPadColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.wrongTpPadColor
+import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.dungeons.map.utils.ScanUtils
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
-import com.github.gameringop.utils.world.WorldUtils
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.level.block.Blocks
 import kotlin.math.*
 
-object TeleportMazeSolver {
+object TeleportMazeSolver: PuzzleSolver {
+    override val enabled: Boolean get() = PuzzleSolvers.tpmaze.value
+
     private var minX: Int? = null
     private var minZ: Int? = null
     private var cells: List<Cell>? = null
     private var orderedPads: MutableList<TpPad>? = null
     private var inTpMaze = false
 
-    fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
+    override fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
         if (event.room.name != "Teleport Maze") return
 
         val rotation = 360 - event.room.rotation !!
@@ -34,7 +37,7 @@ object TeleportMazeSolver {
         scan(center)
     }
 
-    fun onRenderWorld(ctx: RenderContext) {
+    override fun onRenderWorld(ctx: RenderContext) {
         if (! inTpMaze) return
         val c = cells ?: return
         val top = orderedPads?.takeIf { it.size >= 2 }?.take(2)
@@ -49,7 +52,7 @@ object TeleportMazeSolver {
         }
     }
 
-    fun onPacket(event: MainThreadPacketReceivedEvent.Pre) {
+    override fun onPacket(event: MainThreadPacketReceivedEvent.Pre) {
         if (! inTpMaze) return
         val packet = event.packet as? ClientboundPlayerPositionPacket ?: return
         val pos = packet.change.position
@@ -64,7 +67,7 @@ object TeleportMazeSolver {
         calcPadAngles(pos.x, pos.z, packet.change().yRot)
     }
 
-    fun reset() {
+    override fun reset() {
         inTpMaze = false
         minX = null
         minZ = null

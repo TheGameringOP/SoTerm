@@ -11,7 +11,9 @@ import java.awt.Color
 
 object MapConfig {
     val mapEnabled = ToggleSetting("Map Enabled", true).section("Map")
+
     val dungeonMapCheater = ToggleSetting("Cheater Map", false)
+
     val mapExtraInfo = ToggleSetting("Show Extra Info Under Map", false)
     val mapHideInBoss = ToggleSetting("Hide In Boss", false)
     val printPlayersClearInfo = ToggleSetting("Player Clear Info", false)
@@ -31,9 +33,11 @@ object MapConfig {
     val centerStyle = ToggleSetting("Center Checkmark", true)
     val hideQuestionCheckmarks = ToggleSetting("Hide Unknown Room Checkmark", false).showIf { dungeonMapCheckmarkStyle.value == 0 }
     val limitRoomNameSize = ToggleSetting("Limit Room Name Size", true).showIf { dungeonMapCheckmarkStyle.value == 2 || dungeonMapCheckmarkStyle.value == 3 }
+
     val highlightMimicRoom = ToggleSetting("Highlight Mimic Room", true)
 
     val mapPlayerHeadColor = ColorSetting("Head Border", Color(0, 0, 0), true).section("Colors")
+    val mapVanillaMarkerColor = ColorSetting("Vanilla Head Marker", Color(0, 255, 0), true)
     val mapPlayerHeadColorClassBased = ToggleSetting("Head Border Class Base", false)
     val mapPlayerNameClassColorBased = ToggleSetting("Player Names Class Base", false)
 
@@ -67,12 +71,12 @@ object MapConfig {
             checkmarkSize, playerHeadScale, playerNameScale, mapBackground,
             mapBorderColor, mapBorderWidth, dungeonMapCheckmarkStyle, centerStyle,
             hideQuestionCheckmarks, limitRoomNameSize, highlightMimicRoom,
-            mapPlayerHeadColor, mapPlayerHeadColorClassBased, mapPlayerNameClassColorBased,
-            colorBlood, colorEntrance, colorFairy, colorMiniboss, colorRoom, colorPuzzle,
-            colorMimic, colorRare, colorTrap, colorUnopened, colorBloodDoor,
-            colorEntranceDoor, colorRoomDoor, colorWitherDoor, colorOpenWitherDoor,
-            colorUnopenedDoor, boxWitherDoors, witherDoorNoKeyColor, witherDoorKeyColor,
-            witherDoorFill
+            mapPlayerHeadColor, mapVanillaMarkerColor, mapPlayerHeadColorClassBased,
+            mapPlayerNameClassColorBased, colorBlood, colorEntrance, colorFairy,
+            colorMiniboss, colorRoom, colorPuzzle, colorMimic, colorRare, colorTrap,
+            colorUnopened, colorBloodDoor, colorEntranceDoor, colorRoomDoor,
+            colorWitherDoor, colorOpenWitherDoor, colorUnopenedDoor, boxWitherDoors,
+            witherDoorNoKeyColor, witherDoorKeyColor, witherDoorFill
         )
     }
 }
