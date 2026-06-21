@@ -4,7 +4,7 @@ import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.event.EventBus.register
 import com.github.gameringop.event.EventDispatcher
 import com.github.gameringop.event.impl.WorldChangeEvent
-import com.github.gameringop.utils.DataDownloader
+import com.github.gameringop.init.DataDownloader
 import com.github.gameringop.utils.MathUtils.add
 import com.github.gameringop.utils.MathUtils.destructured
 import com.github.gameringop.utils.ThreadUtils

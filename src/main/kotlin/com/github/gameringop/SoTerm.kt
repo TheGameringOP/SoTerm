@@ -7,7 +7,6 @@ import com.github.gameringop.features.FeatureManager
 import com.github.gameringop.init.NetworkLoop
 import com.github.gameringop.utils.*
 import com.github.gameringop.utils.dungeons.DungeonListener
-import com.github.gameringop.utils.network.data.ElectionData
 import com.github.gameringop.utils.render.OPRenderPipelines
 import com.github.gameringop.websocket.WebSocket
 import kotlinx.coroutines.CoroutineName
@@ -19,7 +18,6 @@ import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 object SoTerm: ClientModInitializer {
     const val MOD_ID = "soterm"
@@ -54,8 +52,6 @@ object SoTerm: ClientModInitializer {
         }
 
     override fun onInitializeClient() {
-        DataDownloader.downloadData()
-
         OPRenderPipelines.init()
         EventDispatcher.init()
         DungeonListener.init()

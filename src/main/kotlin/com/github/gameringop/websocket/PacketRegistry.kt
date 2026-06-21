@@ -6,13 +6,14 @@ object PacketRegistry {
     val packets = mutableMapOf<String, Class<out WebSocketPacket>>()
 
     fun init() {
+        register<C2SPacketDungeonStart>("dungeon_start")
         register<S2CPacketChat>("chat")
         register<S2CPacketDungeonDoor>("dungeondoor")
         register<S2CPacketDungeonMimic>("dungeonmimic")
         register<S2CPacketDungeonPrince>("dungeonprince")
         register<S2CPacketDungeonRoom>("dungeonroom")
-        register<S2CPacketRoomSecrets>("dungeonroomsecrets")
         register<S2CPacketM7Dragon>("m7dragon")
+        register<S2CPacketRoomSecrets>("dungeonroomsecrets")
         register<S2CPacketSocketInfo>("socket_info")
     }
 

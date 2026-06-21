@@ -5,11 +5,12 @@ import com.github.gameringop.event.EventListener
 import com.github.gameringop.event.impl.CheckEntityGlowEvent
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.event.impl.TickEvent
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.blazeCount
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.firstBlazeColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.lineColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.secondBlazeColor
-import com.github.gameringop.features.impl.dungeon.solvers.puzzles.PuzzleSolvers.thirdBlazeColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.blazeCount
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.firstBlazeColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.lineColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.secondBlazeColor
+import com.github.gameringop.features.impl.dungeon.solvers.PuzzleSolvers.thirdBlazeColor
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.add
 import com.github.gameringop.utils.render.Render3D
@@ -18,17 +19,20 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.Blaze
 import java.awt.Color
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
-object BlazeSolver {
+object BlazeSolver: PuzzleSolver {
+    override val enabled get() = PuzzleSolvers.blaze.value
     private val blazeHpRegex = Regex("^\\[Lv15].+Blaze [\\d,]+/([\\d,]+)❤$")
+    private val blazes = CopyOnWriteArrayList<Entity>()
+    private val hpMap = ConcurrentHashMap<Int, Int>()
 
     private var inBlaze = false
     private var reversed = false
 
-    private val blazes = mutableListOf<Entity>()
-    private val hpMap = mutableMapOf<Int, Int>()
 
-    fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
+    override fun onRoomEnter(event: DungeonEvent.RoomEvent.onEnter) {
         if (! event.room.name.contains("Blaze")) return
 
         inBlaze = true
@@ -36,14 +40,14 @@ object BlazeSolver {
         tickListener.register()
     }
 
-    fun onEntityGlow(event: CheckEntityGlowEvent) {
+    override fun onEntityGlow(event: CheckEntityGlowEvent) {
         if (! inBlaze || blazes.isEmpty()) return
         event.color = blazes.withIndex().find {
             it.value.id == event.entity.id && it.index < blazeCount.value
         }?.let { getBlazeColor(it.index) } ?: return
     }
 
-    fun onRenderWorld(ctx: RenderContext) {
+    override fun onRenderWorld(ctx: RenderContext) {
         if (! inBlaze || blazes.isEmpty()) return
         blazes.forEachIndexed { i, entity ->
             if (i >= blazeCount.value) return@forEachIndexed
@@ -83,7 +87,7 @@ object BlazeSolver {
         if (reversed) blazes.reverse()
     }
 
-    fun reset() {
+    override fun reset() {
         tickListener.unregister()
         inBlaze = false
         reversed = false

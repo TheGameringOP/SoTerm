@@ -19,8 +19,8 @@ import kotlin.math.sqrt
 object Render2D {
     fun Slot.highlight(ctx: GuiGraphics, color: Color) = drawRect(ctx, x, y, 16, 16, color)
 
-    fun drawTexture(ctx: GuiGraphics, texture: ResourceLocation, x: Number, y: Number, width: Number, height: Number) {
-        ctx.blitSprite(RenderPipelines.GUI_TEXTURED, texture, x.toInt(), y.toInt(), width.toInt(), height.toInt())
+    fun drawTexture(ctx: GuiGraphics, texture: ResourceLocation, x: Number, y: Number, width: Number, height: Number, color: Color = Color.WHITE) {
+        ctx.blit(RenderPipelines.GUI_TEXTURED, texture, x.toInt(), y.toInt(), 0f, 0f, width.toInt(), height.toInt(), width.toInt(), height.toInt(), color.rgb)
     }
 
     fun drawRect(ctx: GuiGraphics, x: Number, y: Number, width: Number, height: Number, color: Color = Color.WHITE) {
@@ -148,6 +148,7 @@ object Render2D {
         pose.rotate(- angle)
         pose.translate(- fx, - (fy + fh))
     }
+
     /**
      * Draws a gradient from Color1 (Top) to Color2 (Bottom)
      */

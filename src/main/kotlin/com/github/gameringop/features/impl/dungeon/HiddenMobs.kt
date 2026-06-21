@@ -2,8 +2,8 @@ package com.github.gameringop.features.impl.dungeon
 
 import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
 import com.github.gameringop.features.Feature
+import com.github.gameringop.init.DataDownloader
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.utils.DataDownloader
 import com.github.gameringop.utils.location.LocationUtils
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket

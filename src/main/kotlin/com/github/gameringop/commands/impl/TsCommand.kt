@@ -8,13 +8,11 @@ import com.github.gameringop.commands.BaseCommand
 import com.github.gameringop.commands.CommandNodeBuilder
 import com.github.gameringop.event.EventBus
 import com.github.gameringop.event.impl.ChatMessageEvent
-import com.github.gameringop.features.impl.dev.HypixelAPI
 import com.github.gameringop.features.impl.dungeon.LeapMenu
 import com.github.gameringop.ui.clickgui.ClickGuiScreen
 import com.github.gameringop.ui.hud.HudEditorScreen
 import com.github.gameringop.utils.*
 import com.github.gameringop.utils.ChatUtils.addColor
-import com.github.gameringop.utils.JsonUtils.json
 import com.github.gameringop.utils.StringUtils.decodeBase64
 import com.github.gameringop.utils.dungeons.DungeonListener
 import com.github.gameringop.utils.dungeons.enums.DungeonClass

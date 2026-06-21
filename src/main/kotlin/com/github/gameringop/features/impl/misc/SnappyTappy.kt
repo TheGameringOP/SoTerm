@@ -2,6 +2,9 @@ package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
+import com.github.gameringop.features.impl.general.AutoHotbar
+import com.github.gameringop.utils.location.LocationUtils
+import com.github.gameringop.utils.location.WorldType
 import com.mojang.blaze3d.platform.InputConstants
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.KeyMapping
@@ -15,8 +18,8 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
 
     override fun init() {
         register<TickEvent.Start> {
-            val windowHandle = mc.window?.handle() ?: return@register
-            val opts = mc.options
+            if (AutoHotbar.isSwapping) return@register
+            if (LocationUtils.world == WorldType.Garden) return@register
 
             if (mc.screen != null) {
                 if (pressTicks.isNotEmpty()) {
@@ -27,7 +30,7 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
             }
 
             for (key in movementKeys) {
-                if (isKeyDown(windowHandle, key)) {
+                if (isKeyDown(key)) {
                     if (! pressTicks.containsKey(key)) {
                         pressTicks[key] = System.currentTimeMillis()
                     }
@@ -39,8 +42,8 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
                 }
             }
 
-            resolveConflict(opts.keyLeft, opts.keyRight)
-            resolveConflict(opts.keyUp, opts.keyDown)
+            resolveConflict(mc.options.keyLeft, mc.options.keyRight)
+            resolveConflict(mc.options.keyUp, mc.options.keyDown)
         }
     }
 
@@ -52,7 +55,8 @@ object SnappyTappy: Feature("Prevents standing still when pressing opposing dire
         else a.isDown = false
     }
 
-    private fun isKeyDown(handle: Long, key: KeyMapping): Boolean {
+    private fun isKeyDown(key: KeyMapping): Boolean {
+        val handle = mc.window.handle()
         val bound = KeyBindingHelper.getBoundKeyOf(key) ?: return false
         return if (bound.type == InputConstants.Type.MOUSE) {
             GLFW.glfwGetMouseButton(handle, bound.value) == GLFW.GLFW_PRESS
