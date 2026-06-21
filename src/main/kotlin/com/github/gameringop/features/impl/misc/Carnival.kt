@@ -14,7 +14,7 @@ import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.WorldUtils
 import com.github.gameringop.utils.items.ItemUtils.skyblockId
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.entity.monster.Zombie
+import net.minecraft.world.entity.monster.zombie.Zombie
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks

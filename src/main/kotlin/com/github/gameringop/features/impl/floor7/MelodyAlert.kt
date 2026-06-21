@@ -1,18 +1,21 @@
 package com.github.gameringop.features.impl.floor7
 
-import com.github.gameringop.event.impl.ContainerEvent
+import com.github.gameringop.event.impl.MainThreadPacketReceivedEvent
+import com.github.gameringop.event.impl.PacketEvent
 import com.github.gameringop.event.impl.TickEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.TextInputSetting
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.ChatUtils.unformattedText
-import com.github.gameringop.utils.ThreadUtils
 import com.github.gameringop.utils.location.LocationUtils
+import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.world.item.Items
 
 object MelodyAlert: Feature() {
-    private val msg by TextInputSetting("Melody Message", "Melody")
+    private val msg by TextInputSetting("Melody Message", "I ❤ Melody")
     private val mode by DropdownSetting("Progress Mode", 0, listOf("1/4", "25%"))
 
     private val progressSlots = intArrayOf(25, 34, 43)
@@ -20,19 +23,29 @@ object MelodyAlert: Feature() {
     private var currentStage = - 1
 
     override fun init() {
-        register<ContainerEvent.Open> {
+        register<MainThreadPacketReceivedEvent.Post> {
             if (msg.value.isBlank()) return@register
             if (LocationUtils.F7Phase != 3) return@register
+            val packet = event.packet as? ClientboundOpenScreenPacket ?: return@register
+            if (packet.title.unformattedText != "Click the button on time!") return@register
 
+            ChatUtils.sendPartyMessage(msg.value)
+            isMelodyOpen = true
+            currentStage = - 1
+        }
+
+        register<MainThreadPacketReceivedEvent.Post> {
+            if (! isMelodyOpen) return@register
+            if (event.packet !is ClientboundContainerClosePacket) return@register
             isMelodyOpen = false
             currentStage = - 1
+        }
 
-            ThreadUtils.scheduledTask(2) {
-                if (event.screen.title.unformattedText == "Click the button on time!") {
-                    isMelodyOpen = true
-                    ChatUtils.sendPartyMessage(msg.value)
-                }
-            }
+        register<PacketEvent.Sent> {
+            if (! isMelodyOpen) return@register
+            if (event.packet !is ServerboundContainerClosePacket) return@register
+            isMelodyOpen = false
+            currentStage = - 1
         }
 
         register<TickEvent.Start> {

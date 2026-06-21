@@ -7,6 +7,8 @@ import com.github.gameringop.event.impl.ContainerFullyOpenedEvent
 import com.github.gameringop.features.impl.dungeon.LeapMenu
 import com.github.gameringop.mixin.IKeyMapping
 import com.github.gameringop.ui.utils.Animation.Companion.easeInOutCubic
+import com.github.gameringop.utils.ActionUtils.waitTicks
+import com.github.gameringop.utils.ChatUtils.formattedText
 import com.github.gameringop.utils.ChatUtils.modMessage
 import com.github.gameringop.utils.ChatUtils.unformattedText
 import com.github.gameringop.utils.MathUtils.interpolateYaw
@@ -173,7 +175,7 @@ object PlayerUtils {
         if (! Inventory.isHotbarSlot(slot)) return
         if (mc.player?.inventory?.selectedSlot == slot) return
         if (SoTerm.debugFlags.contains("slot")) {
-            modMessage("swapped to hotbar Slot $slot")
+            modMessage("swapped to hotbar Slot $slot (${mc.player?.inventory?.getSlot(slot)?.get()?.hoverName?.formattedText}&r)")
         }
         mc.player?.inventory?.selectedSlot = slot
     }
@@ -189,7 +191,7 @@ object PlayerUtils {
         if (! inLeapMenu) {
             if (mc.player?.inventory?.selectedSlot != leapIndex) {
                 swapToSlot(leapIndex)
-                delay(80)
+                waitTicks(2)
             }
             rightClick()
             LEAP_TARGET = leapTarget
@@ -211,21 +213,16 @@ object PlayerUtils {
         val found = findHotbarSlot { it.item == Items.FISHING_ROD } ?: return
 
         swapToSlot(found)
-        delay(100)
-        rightClick()
-        delay(100)
-        swapToSlot(prev)
+        waitTicks(2, ::rightClick)
+        waitTicks(2) { swapToSlot(prev) }
         delay(100)
     }
 
     init {
         register<ContainerFullyOpenedEvent> {
-            val title = event.title.unformattedText
-
-            when {
-                title.equals("your equipment and stats", true) -> {
+            when (event.title.unformattedText.lowercase().trim()) {
+                "your equipment and stats" -> {
                     if (awaiting4EQ.isBlank()) return@register
-                    if (! event.title.unformattedText.equals("your equipment and stats", true)) return@register
 
                     ThreadUtils.scheduledTask(7) {
                         val con = mc.player?.containerMenu?.slots ?: return@scheduledTask
@@ -240,7 +237,7 @@ object PlayerUtils {
                     }
                 }
 
-                title.equals("spirit leap", true) -> {
+                "spirit leap" -> {
                     if (LEAP_TARGET == null) return@register
 
                     ThreadUtils.scheduledTask(2) {

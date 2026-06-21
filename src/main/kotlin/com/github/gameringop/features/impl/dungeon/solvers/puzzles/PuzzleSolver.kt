@@ -2,7 +2,7 @@ package com.github.gameringop.features.impl.dungeon.solvers.puzzles
 
 import com.github.gameringop.event.impl.*
 import com.github.gameringop.utils.render.RenderContext
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 
 sealed interface PuzzleSolver {
     val enabled: Boolean
@@ -16,6 +16,6 @@ sealed interface PuzzleSolver {
     fun onChat(event: ChatMessageEvent) {}
     fun onEntityGlow(event: CheckEntityGlowEvent) {}
     fun onRenderWorld(ctx: RenderContext) {}
-    fun onRenderOverlay(ctx: GuiGraphics) {}
+    fun onRenderOverlay(ctx: GuiGraphicsExtractor) {}
     fun onInteract(event: PlayerInteractEvent.RIGHT_CLICK.BLOCK) {}
 }

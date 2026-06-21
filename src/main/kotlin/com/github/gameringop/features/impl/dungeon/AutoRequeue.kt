@@ -3,26 +3,24 @@ package com.github.gameringop.features.impl.dungeon
 import com.github.gameringop.event.impl.DungeonEvent
 import com.github.gameringop.features.Feature
 import com.github.gameringop.features.impl.general.PartyHelper
+import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ChatUtils
 import com.github.gameringop.utils.PartyUtils
 import com.github.gameringop.utils.ThreadUtils
+import com.github.gameringop.utils.dungeons.DungeonUtils
 import com.github.gameringop.utils.location.LocationUtils
 
 object AutoRequeue: Feature() {
+    private val requeueCmd by DropdownSetting("Requeue Command", 0, listOf("/joininstance", "/instancerequeue"))
     private val checkParty by ToggleSetting("Check Party", true).withDescription("Should the auto check the party state before running the command.")
     private val delay by SliderSetting("Delay", 5L, 1L, 10L, 1L).withDescription("Delay in Seconds.")
     private val feedback by ToggleSetting("Feedback", true).withDescription("Print feedback messages from auto in chat.")
 
     private const val prefix = "&bAutoRequeue &f>"
-    private val NUMBERS_TO_TEXT = mapOf(
-        0 to "ENTRANCE", 1 to "ONE", 2 to "TWO", 3 to "THREE",
-        4 to "FOUR", 5 to "FIVE", 6 to "SIX", 7 to "SEVEN"
-    )
-
     private val masterMode get() = if (LocationUtils.isMasterMode) "MASTER_" else ""
-    private val floor get() = NUMBERS_TO_TEXT[LocationUtils.dungeonFloorNumber ?: 0]
+    private val floor get() = DungeonUtils.FLOOR_NAMES[LocationUtils.dungeonFloorNumber ?: 0]
 
     private fun feedBackMessage(msg: String) {
         if (! feedback.value) return
@@ -38,8 +36,9 @@ object AutoRequeue: Feature() {
             }
 
             ThreadUtils.setTimeout(delay.value * 1000) {
-                if (checkParty.value && PartyUtils.isLeader()) return@setTimeout feedBackMessage("You are not the party leader!")
-                ChatUtils.sendMessage("/joininstance ${masterMode}CATACOMBS_FLOOR_${floor}")
+                if (checkParty.value && ! PartyUtils.isLeader()) return@setTimeout feedBackMessage("You are not the party leader!")
+                if (requeueCmd.value == 0) ChatUtils.sendMessage("/joininstance ${masterMode}CATACOMBS_FLOOR_${floor}")
+                else ChatUtils.sendMessage("/instancerequeue")
             }
         }
     }

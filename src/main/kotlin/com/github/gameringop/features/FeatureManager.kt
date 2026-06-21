@@ -1,7 +1,6 @@
 package com.github.gameringop.features
 
 import com.github.gameringop.SoTerm
-import com.github.gameringop.SoTerm.MOD_NAME
 import com.github.gameringop.SoTerm.mc
 import com.github.gameringop.config.Config
 import com.github.gameringop.event.EventBus.register
@@ -12,7 +11,6 @@ import com.github.gameringop.ui.hud.HudElement
 import com.github.gameringop.ui.utils.Resolution
 import com.github.gameringop.utils.render.Render2D.width
 import io.github.classgraph.ClassGraph
-import net.minecraft.util.profiling.Profiler
 
 object FeatureManager {
     val hudElements = mutableListOf<HudElement>()
@@ -52,13 +50,11 @@ object FeatureManager {
 
         register<RenderOverlayEvent> {
             if (mc.screen == HudEditorScreen) return@register
-            val profiler = Profiler.get()
-            profiler.push("$MOD_NAME-Hud")
+
             Resolution.refresh()
             Resolution.push(event.context)
             hudElements.forEach { if (it.shouldDraw) it.renderElement(event.context, false) }
             Resolution.pop(event.context)
-            profiler.pop()
         }
     }
 

@@ -14,18 +14,17 @@ import com.github.gameringop.utils.location.LocationUtils
 import com.github.gameringop.utils.render.Render2D
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.CustomData
 import kotlin.jvm.optionals.getOrDefault
 import kotlin.jvm.optionals.getOrNull
 
-
 object ItemRarity: Feature(name = "Item Rarity", description = "Draws the rarity of item behind the slot.") {
     @JvmStatic val drawOnHotbar by ToggleSetting("Draw on Hotbar", true)
     private val rarityOpacity by SliderSetting("Rarity Opacity", 30f, 10f, 100f, 1f)
     private val style by DropdownSetting("Rarity Style", 0, listOf("Filled", "Outline", "Filled Outline", "Circle"))
-    private val circleTexture = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/circle.png")
+    private val circleTexture = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/circle.png")
 
     private val baseStatBoost by ToggleSetting("Show Item Quality", true).section("Lore")
         .withDescription("Shows the base stats boost of dungeon items as well as the floor they were dropped on")

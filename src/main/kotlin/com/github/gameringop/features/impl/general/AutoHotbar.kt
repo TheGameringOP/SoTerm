@@ -1,162 +1,187 @@
-package com.github.gameringop.features.impl.general
-
-import com.github.gameringop.SoTerm
-import com.github.gameringop.config.PogObject
-import com.github.gameringop.event.Event
-import com.github.gameringop.event.EventPriority
-import com.github.gameringop.event.impl.*
-import com.github.gameringop.features.Feature
-import com.github.gameringop.ui.clickgui.ClickGuiScreen
-import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
-import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
-import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
-import com.github.gameringop.ui.gui.AutoHotbarScreen
-import com.github.gameringop.utils.MathUtils
-import com.github.gameringop.utils.ServerUtils
-import com.github.gameringop.utils.items.ItemUtils.itemUUID
-import com.github.gameringop.utils.items.ItemUtils.skyblockId
-import com.github.gameringop.utils.render.Render2D
-import com.github.gameringop.utils.render.Render2D.width
-import net.minecraft.world.inventory.ClickType
-import java.util.*
-
-object AutoHotbar: Feature("Automatically swaps items to specific hotbar slots upon chat triggers.") {
-    val config by PogObject("autoHotbar.json", AutoSwapConfig())
-
-    data class SwapRule(val id: String, val hotbarSlot: Int)
-
-    data class Profile(
-        val triggers: MutableMap<String, String> = mutableMapOf(),
-        val rules: MutableMap<String, MutableList<SwapRule>> = mutableMapOf(),
-        val disabled: MutableSet<String> = mutableSetOf()
-    )
-
-    data class AutoSwapConfig(
-        var activeProfile: String = "Default",
-        var profiles: MutableMap<String, Profile> = mutableMapOf("Default" to Profile())
-    ) {
-        val currentProfile: Profile get() = profiles.getOrPut(activeProfile) { Profile() }
-        val activeTriggers: MutableMap<String, String> get() = currentProfile.triggers
-        val activeRules: MutableMap<String, MutableList<SwapRule>> get() = currentProfile.rules
-        val activeDisabled: MutableSet<String> get() = currentProfile.disabled
-    }
-
-    private val swapDelay by SliderSetting("Base Delay", 100, 0, 500, 5).withDescription("How much time to wait between slot swapping").section("Timing (ms)")
-    private val jitter by SliderSetting("Random Delay", 50, 0, 100, 1).withDescription("Random Delay to add on top of the Base Delay")
-    private val pingDelay by SliderSetting("Stop Delay", 200, 0, 500, 5).withDescription("how much time to wait after you are not moving.")
-    private val showTitles by ToggleSetting("HUD Info", true).withDescription("Shows the currnt auto swap progress on screen")
-    private val openGuiBtn by ButtonSetting("Open Config") {
-        ClickGuiScreen.selectedFeature = null
-        SoTerm.screen = AutoHotbarScreen()
-    }.withDescription("Opens the GUI to visually map your inventory to hotbar slots.")
-
-    private val swapQueue = ArrayDeque<SwapRule>()
-    private val triggeredMessages = mutableSetOf<String>()
-
-    private var movementLockEndTime = 0L
-    private var stationaryTicks = 0
-    private var nextSwapTime = 0L
-    var isSwapping = false
-
-    private val keys by lazy {
-        listOf(
-            mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight,
-            mc.options.keyJump, mc.options.keySprint, mc.options.keyShift,
-            mc.options.keyAttack, mc.options.keyUse
-        )
-    }
-
-    override fun init() {
-        register<WorldChangeEvent> {
-            swapQueue.clear()
-            triggeredMessages.clear()
-            isSwapping = false
-            stationaryTicks = 0
-            movementLockEndTime = 0L
-        }
-
-        register<ChatMessageEvent>(EventPriority.HIGH) {
-            val key = config.currentProfile.triggers.entries.find { it.value == event.unformattedText }?.key ?: return@register
-            if (key in config.currentProfile.disabled) return@register
-            if (key in triggeredMessages) return@register
-            val rules = config.currentProfile.rules[key] ?: return@register
-            if (rules.isEmpty()) return@register
-            triggeredMessages.add(key)
-
-            val inv = mc.player?.inventory?.withIndex()
-            val swaps = rules.filter { rule ->
-                inv?.find { (i, stack) -> stack.itemUUID.ifBlank { stack.skyblockId }.ifBlank { stack.hoverName.string } == rule.id && i != rule.hotbarSlot + 36 } != null
-            }
-
-            swapQueue.clear()
-            swapQueue.addAll(swaps)
-            nextSwapTime = System.currentTimeMillis() + pingDelay.value.toLong()
-        }
-
-        fun blockInput(event: Event) {
-            if (! isSwapping && System.currentTimeMillis() >= movementLockEndTime) return
-            event.isCanceled = true
-            keys.forEach { it.isDown = false }
-        }
-
-        register<MouseClickEvent>(priority = EventPriority.LOWEST) { blockInput(event) }
-        register<KeyboardEvent.CharTyped>(priority = EventPriority.LOWEST) { blockInput(event) }
-        register<KeyboardEvent.KeyPressed>(priority = EventPriority.LOWEST) { blockInput(event) }
-
-        register<TickEvent.Start> {
-            if (swapQueue.isEmpty()) {
-                if (isSwapping) {
-                    isSwapping = false
-                    movementLockEndTime = System.currentTimeMillis() + 250
-                }
-                return@register
-            }
-
-            val player = mc.player ?: return@register
-            val now = System.currentTimeMillis()
-
-            if (player.deltaMovement.horizontalDistanceSqr() > 0.001) {
-                stationaryTicks = 0
-                nextSwapTime = now + 250
-                return@register
-            }
-
-            stationaryTicks ++
-
-            if (stationaryTicks < 10) return@register
-            if (now < nextSwapTime) return@register
-            if (ServerUtils.tps < 18f || ServerUtils.currentPing > 500) return@register
-            if (mc.screen != null) {
-                stationaryTicks = 0
-                nextSwapTime = now + pingDelay.value.toLong()
-                return@register
-            }
-
-            isSwapping = true
-            mc.player?.sendOpenInventory()
-            val rule = swapQueue.removeFirst()
-            val container = player.containerMenu
-
-            val foundSlot = container.slots.find {
-                it.item.itemUUID.ifBlank { it.item.skyblockId }.ifBlank { it.item.hoverName.string } == rule.id
-            } ?: return@register
-
-            if (foundSlot.index == rule.hotbarSlot + 36) {
-                nextSwapTime = System.currentTimeMillis() + MathUtils.gaussianRandom(swapDelay.value, swapDelay.value + jitter.value)
-                return@register
-            }
-
-            mc.gameMode?.handleInventoryMouseClick(container.containerId, foundSlot.index, rule.hotbarSlot, ClickType.SWAP, player)
-            nextSwapTime = System.currentTimeMillis() + MathUtils.gaussianRandom(swapDelay.value, swapDelay.value + jitter.value)
-        }
-
-        hudElement("AutoSwap Status", enabled = { showTitles.value }, shouldDraw = { swapQueue.isNotEmpty() }, centered = true) { ctx, example ->
-            val text = if (example) "&bSwapping &f3 left"
-            else if (stationaryTicks < 10) "&cStop Moving!"
-            else "&bSwapping &f${swapQueue.size} left"
-
-            Render2D.drawCenteredString(ctx, text, 0, 0)
-            return@hudElement text.width().toFloat() to 9f
-        }
-    }
-}
+//package com.github.gameringop.features.impl.general
+//
+//import com.github.gameringop.SoTerm
+//import com.github.gameringop.SoTerm.MOD_NAME
+//import com.github.gameringop.event.EventPriority
+//import com.github.gameringop.event.impl.ChatMessageEvent
+//import com.github.gameringop.event.impl.TickEvent
+//import com.github.gameringop.event.impl.WorldChangeEvent
+//import com.github.gameringop.features.Feature
+//import com.github.gameringop.mixin.IKeyMapping
+//import com.github.gameringop.ui.clickgui.ClickGuiScreen
+//import com.github.gameringop.ui.clickgui.components.impl.ButtonSetting
+//import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
+//import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
+//import com.github.gameringop.ui.gui.AutoHotbarScreen
+//import com.github.gameringop.utils.JsonUtils
+//import com.github.gameringop.utils.MathUtils
+//import com.github.gameringop.utils.ServerUtils
+//import com.github.gameringop.utils.items.ItemUtils.itemUUID
+//import com.github.gameringop.utils.items.ItemUtils.skyblockId
+//import com.github.gameringop.utils.render.Render2D
+//import com.github.gameringop.utils.render.Render2D.width
+//import net.minecraft.world.item.ItemStack
+//import java.io.File
+//import java.io.FileReader
+//import java.util.*
+//
+//object AutoHotbar: Feature("Automatically swaps items to specific hotbar slots upon chat triggers.") {
+//    private val configFile = File(mc.gameDirectory, "config/$MOD_NAME/autoHotbar.json")
+//    var config = AutoSwapConfig(mutableMapOf(), mutableMapOf(), mutableSetOf())
+//
+//    val disabledTriggers: MutableSet<String>
+//        get() {
+//            val current = config.disabled
+//            if (current != null) return current
+//            val created = mutableSetOf<String>()
+//            config.disabled = created
+//            return created
+//        }
+//
+//    fun isTriggerEnabled(trigger: String) = trigger !in disabledTriggers
+//
+//    fun setTriggerEnabled(trigger: String, enabled: Boolean) {
+//        if (enabled) disabledTriggers.remove(trigger) else disabledTriggers.add(trigger)
+//    }
+//
+//    private val swapDelay by SliderSetting("Base Delay", 100, 0, 500, 5).withDescription("How much time to wait between slot swapping").section("Timing (ms)")
+//    private val jitter by SliderSetting("Random Delay", 50, 0, 100, 1).withDescription("Random Delay to add on top of the Base Delay")
+//    private val pingDelay by SliderSetting("Stop Delay", 200, 0, 500, 5).withDescription("how much time to wait after you are not moving.")
+//    private val showTitles by ToggleSetting("HUD Info", true).withDescription("Shows the currnt auto swap progress on screen")
+//    private val openGuiBtn by ButtonSetting("Open Config") {
+//        ClickGuiScreen.selectedFeature = null
+//        SoTerm.screen = AutoHotbarScreen()
+//    }.withDescription("Opens the GUI to visually map your inventory to hotbar slots.")
+//
+//    private val swapQueue = ArrayDeque<SwapRule>()
+//    private val triggeredMessages = mutableSetOf<String>()
+//    private var selectedItem: ItemStack? = null
+//
+//    private var nextSwapTime = 0L
+//    private var isSwapping = false
+//    private var stationaryTicks = 0
+//    private var movementLockEndTime = 0L
+//
+//    private val movementKeys by lazy {
+//        listOf(
+//            mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight,
+//            mc.options.keyJump, mc.options.keySprint, mc.options.keyShift
+//        )
+//    }
+//
+//    override fun init() {
+//        loadConfig()
+//        Runtime.getRuntime().addShutdownHook(Thread { saveConfig() })
+//
+//        register<WorldChangeEvent> {
+//            swapQueue.clear()
+//            triggeredMessages.clear()
+//            selectedItem = null
+//            isSwapping = false
+//            stationaryTicks = 0
+//            movementLockEndTime = 0L
+//        }
+//
+//        register<ChatMessageEvent>(EventPriority.HIGH) {
+//            val key = config.triggers.entries.find { it.value == event.unformattedText }?.key ?: return@register
+//            if (key in disabledTriggers) return@register
+//            if (key in triggeredMessages) return@register
+//            val rules = config.rules[key] ?: return@register
+//            if (rules.isEmpty()) return@register
+//            triggeredMessages.add(key)
+//
+//            val inv = mc.player?.inventory?.withIndex()
+//            val swaps = rules.filter { rule ->
+//                inv?.find { (i, stack) -> stack.itemUUID.ifBlank { stack.skyblockId }.ifBlank { stack.hoverName.string } == rule.id && i != rule.hotbarSlot + 36 } != null
+//            }
+//
+//            swapQueue.clear()
+//            swapQueue.addAll(swaps)
+//            nextSwapTime = System.currentTimeMillis() + pingDelay.value.toLong()
+//        }
+//
+//        register<TickEvent.Start> {
+//            if (! isSwapping && System.currentTimeMillis() >= movementLockEndTime) return@register
+//            movementKeys.forEach { it.isDown = false }
+//            (mc.options.keyUse as IKeyMapping).clickCount = 0
+//            (mc.options.keyAttack as IKeyMapping).clickCount = 0
+//            mc.player?.isSprinting = false
+//
+//        }
+//
+//        register<TickEvent.Start> {
+//            if (swapQueue.isEmpty()) {
+//                if (isSwapping) {
+//                    isSwapping = false
+//                    movementLockEndTime = System.currentTimeMillis() + 250
+//                }
+//                return@register
+//            }
+//
+//            val player = mc.player ?: return@register
+//            val now = System.currentTimeMillis()
+//
+//            if (player.deltaMovement.horizontalDistanceSqr() > 0.001) {
+//                stationaryTicks = 0
+//                nextSwapTime = now + 250
+//                return@register
+//            }
+//
+//            stationaryTicks ++
+//
+//            if (stationaryTicks < 10) return@register
+//            if (now < nextSwapTime) return@register
+//            if (ServerUtils.tps < 18f || ServerUtils.currentPing > 500) return@register
+//            if (mc.screen != null) {
+//                stationaryTicks = 0
+//                nextSwapTime = now + pingDelay.value.toLong()
+//                return@register
+//            }
+//
+//            isSwapping = true
+//            val rule = swapQueue.removeFirst()
+//            val container = player.containerMenu
+//
+//            val foundSlot = container.slots.find {
+//                it.item.itemUUID.ifBlank { it.item.skyblockId }.ifBlank { it.item.hoverName.string } == rule.id
+//            } ?: return@register
+//
+//            if (foundSlot.index == rule.hotbarSlot + 36) {
+//                nextSwapTime = System.currentTimeMillis() + MathUtils.gaussianRandom(swapDelay.value, swapDelay.value + jitter.value)
+//                return@register
+//            }
+//
+//            mc.gameMode?.handleInventoryMouseClick(container.containerId, foundSlot.index, rule.hotbarSlot, ClickType.SWAP, player)
+//            nextSwapTime = System.currentTimeMillis() + MathUtils.gaussianRandom(swapDelay.value, swapDelay.value + jitter.value)
+//        }
+//
+//        hudElement("AutoSwap Status", enabled = { showTitles.value }, shouldDraw = { swapQueue.isNotEmpty() }, centered = true) { ctx, example ->
+//            val text = if (example) "&bSwapping &f3 left"
+//            else if (stationaryTicks < 10) "&cStop Moving!"
+//            else "&bSwapping &f${swapQueue.size} left"
+//
+//            Render2D.drawCenteredString(ctx, text, 0, 0)
+//            return@hudElement text.width().toFloat() to 9f
+//        }
+//    }
+//
+//    private fun loadConfig() {
+//        if (! configFile.exists()) return
+//        config = FileReader(configFile).use {
+//            JsonUtils.gsonBuilder.fromJson(it, AutoSwapConfig::class.java)
+//        }
+//    }
+//
+//    fun saveConfig() {
+//        configFile.parentFile.mkdirs()
+//        JsonUtils.toJson(configFile, config)
+//    }
+//
+//    data class SwapRule(val id: String, val hotbarSlot: Int)
+//
+//    data class AutoSwapConfig(
+//        var triggers: MutableMap<String, String>,
+//        var rules: MutableMap<String, MutableList<SwapRule>>,
+//        var disabled: MutableSet<String>
+//    )
+//}

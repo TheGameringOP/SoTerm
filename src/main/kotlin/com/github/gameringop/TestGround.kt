@@ -75,14 +75,14 @@ class TestGround {
             if (! rotation) return@register
             DungeonScanner.clayBlocksCorners.forEachIndexed { index, (dx, dz) ->
                 DungeonInfo.uniqueRooms.values.forEach { room ->
-                    val center = BlockPos(room.mainRoom.x, room.highestBlock ?: ScanUtils.getHighestY(room.mainRoom.x, room.mainRoom.z), room.mainRoom.z)
+                    val centerr = BlockPos(room.mainRoom.x, room.highestBlock ?: ScanUtils.getHighestY(room.mainRoom.x, room.mainRoom.z), room.mainRoom.z)
                     Render3D.renderBlock(
                         event.ctx,
-                        center.add(x = dx, z = dz),
+                        centerr.add(x = dx, z = dz),
                         (if (room.rotation?.div(90) == index) Color.GREEN else Color.red).withAlpha(60)
                     )
 
-                    Render3D.renderString("$index", center.x + dx + 0.5, center.y, center.z + dz + 0.5, phase = true, scale = 3)
+                    Render3D.renderString("$index", centerr.x + dx + 0.5, centerr.y, centerr.z + dz + 0.5, phase = true, scale = 3)
                 }
             }
         }
@@ -101,7 +101,8 @@ class TestGround {
         EventBus.register<ContainerEvent.SlotClick> {
             if (! slot) return@register
             val stack = event.screen.menu.getSlot(event.slotId).item
-            ChatUtils.modMessage(stack.skyblockId)
+            ChatUtils.modMessage("skyblockid: " + stack.skyblockId)
+            ChatUtils.modMessage("index: " + event.slotId)
         }
 
         EventBus.register<MainThreadPacketReceivedEvent.Pre> {

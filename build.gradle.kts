@@ -100,7 +100,7 @@ kotlin {
 }
 
 tasks.named<Jar>("jar") {
-    archiveFileName.set("$mod_name - $version.jar")
+    archiveFileName.set("$mod_name-$mod_version - $minecraft_version.jar")
 
     from("LICENSE") {
         rename { "${it}_${mod_name}" }

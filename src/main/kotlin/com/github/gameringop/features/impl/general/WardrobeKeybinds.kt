@@ -18,7 +18,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import org.lwjgl.glfw.GLFW
 
-
 object WardrobeKeybinds: Feature("Make it possible to bind armor slots to your keyboard.") {
     private val wardrobeMenuRegex = Regex("^Wardrobe \\(\\d/\\d\\)$")
     private var lastClick = System.currentTimeMillis()
@@ -61,6 +60,23 @@ object WardrobeKeybinds: Feature("Make it possible to bind armor slots to your k
             if (System.currentTimeMillis() - lastClick < 300) return@register
             if (event.key.equalsOneOf(GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_E)) return@register
             val index = if (useHotbarBinds.value) hotbarKeyMap[event.key] ?: return@register
+            else keybinds.withIndex().find { (_, key) -> key.isDown() }?.index ?: return@register
+            val slot = keyMap[index]?.takeUnless { mc.player !!.containerMenu.getSlot(it).item == ItemStack.EMPTY } ?: return@register
+            event.isCanceled = true
+
+            if (isSlotEquipped(slot) && preventUnequip.value) return@register
+
+            GuiUtils.clickSlot(slot, GuiUtils.ButtonType.LEFT)
+
+            lastClick = System.currentTimeMillis()
+            if (closeAfterUse.value) mc.player !!.closeContainer()
+        }
+
+        register<ContainerEvent.MouseClick> {
+            if (! inWardrobeMenu) return@register
+            if (System.currentTimeMillis() - lastClick < 300) return@register
+            if (event.button.equalsOneOf(0, 1, 2)) return@register
+            val index = if (useHotbarBinds.value) hotbarKeyMap[event.button] ?: return@register
             else keybinds.withIndex().find { (_, key) -> key.isDown() }?.index ?: return@register
             val slot = keyMap[index]?.takeUnless { mc.player !!.containerMenu.getSlot(it).item == ItemStack.EMPTY } ?: return@register
             event.isCanceled = true

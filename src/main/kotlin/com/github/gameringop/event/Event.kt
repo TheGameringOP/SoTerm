@@ -7,7 +7,7 @@ abstract class Event(val cancelable: Boolean = false) {
             field = value
         }
 
-    fun cancel() {
+    open fun cancel() {
         isCanceled = true
     }
 }
