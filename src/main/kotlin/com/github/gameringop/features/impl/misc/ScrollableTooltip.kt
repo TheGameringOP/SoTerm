@@ -6,7 +6,6 @@ import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import org.lwjgl.glfw.GLFW
 
 object ScrollableTooltip: Feature("Allows you to scroll through long tooltips.") {

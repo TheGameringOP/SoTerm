@@ -1,7 +1,6 @@
 package com.github.gameringop.features.impl.misc
 
 import com.github.gameringop.features.Feature
-import com.github.gameringop.utils.items.EtherwarpHelper
 import com.github.gameringop.ui.clickgui.components.impl.ColorSetting
 import com.github.gameringop.ui.clickgui.components.impl.DropdownSetting
 import com.github.gameringop.ui.clickgui.components.impl.SliderSetting
@@ -9,6 +8,7 @@ import com.github.gameringop.ui.clickgui.components.impl.ToggleSetting
 import com.github.gameringop.utils.ColorUtils.withAlpha
 import com.github.gameringop.utils.Utils
 import com.github.gameringop.utils.equalsOneOf
+import com.github.gameringop.utils.items.EtherwarpHelper
 import com.github.gameringop.utils.render.Render3D
 import com.github.gameringop.utils.render.RenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
